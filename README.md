@@ -1,0 +1,24 @@
+# ENV file
+- MONGO_URL = YOUR MONGO URL
+- NGROK_AUTHTOKEN = YOUR NGROK AUTH TOKEN
+- JWT_SECRET = YOUR JWT SECRET
+- CLOUDINARY_NAME = YOUR CLOUD NAME
+- CLOUDINARY_API_KEY = CLOUDINARY API KEY
+- CLOUDINARY_API_SECRET = CLOUDINARY API SECRET
+- PORT = YOUR SERVER'S PORT (I USE 5000)
+
+# JWT SECRET
+- Open terminal
+- Type "openssl rand -base64 64"
+- Ctrl + C and Ctrl + V
+
+# CLOUDINARY
+- Create in Cloudinary
+
+# SET UP BACKEND
+- cd server
+- npm i
+- npm run dev
+
+# SET UP FRONTEND
+- Updating...
