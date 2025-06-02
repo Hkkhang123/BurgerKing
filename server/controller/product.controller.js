@@ -9,16 +9,9 @@ export const createProducts = async (req, res) => {
       discountPrice,
       countInStock,
       category,
-      brand,
-      size,
-      colors,
-      collections,
       material,
-      gender,
       sku,
       image,
-      isFeatured,
-      isPublished,
       tag,
       dimension,
       weight,
@@ -47,16 +40,9 @@ export const createProducts = async (req, res) => {
       discountPrice,
       countInStock,
       category,
-      brand,
-      size,
-      colors,
-      collections,
       material,
-      gender,
       sku,
       image: uploadedImages,
-      isFeatured,
-      isPublished,
       tag,
       dimension,
       weight,
@@ -78,16 +64,9 @@ export const updateProduct = async (req, res) => {
       discountPrice,
       countInStock,
       category,
-      brand,
-      size,
-      colors,
-      collections,
       material,
-      gender,
       sku,
       image,
-      isFeatured,
-      isPublished,
       tag,
       dimension,
       weight,
@@ -101,18 +80,9 @@ export const updateProduct = async (req, res) => {
       product.discountPrice = discountPrice || product.discountPrice;
       product.countInStock = countInStock || product.countInStock;
       product.category = category || product.category;
-      product.brand = brand || product.brand;
-      product.size = size || product.size;
-      product.colors = colors || product.colors; 
-      product.collections = collections || product.collections;
       product.material = material || product.materials;
-      product.gender = gender || product.gender;
       product.sku = sku || product.sku;
       product.image = image || product.image;
-      product.isFeatured =
-        isFeatured !== undefined ? isFeatured : product.isFeatured;
-      product.isPublished =
-        isPublished !== undefined ? isPublished : product.isPublished;
       product.tag = tag || product.tag;
       product.dimension = dimension || product.dimension;
       product.weight = weight || product.weight;
@@ -144,54 +114,24 @@ export const deleteProduct = async (req, res) => {
 export const getProducts = async (req, res) => {
   try {
     const {
-      collections,
-      size,
-      colors,
-      gender,
       minPrice,
       maxPrice,
       sortBy,
       search,
       category,
-      material,
-      brand,
       limit,
     } = req.query;
 
     let query = {};
 
-    if (collections && collections.toLowerCase() !== "all") {
-      query.collections = collections;
-    }
-
     if (category && category.toLowerCase() !== "all") {
       query.category = category;
-    }
-
-    if (size) {
-      query.size = { $in: size.split(",") };
-    }
-
-    if (colors) {
-      query.colors = { $in: [colors] };
     }
 
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
-    }
-
-    if (gender) {
-      query.gender = gender;
-    }
-
-    if (material) {
-      query.material = { $in: material.split(",") };
-    }
-
-    if (brand) {
-      query.brand = { $in: brand.split(",") };
     }
 
     if (search) {
@@ -250,7 +190,6 @@ export const getSimilarProducts = async (req, res) => {
 
     const getSimilarProducts = await Product.find({
       _id: { $ne: id },
-      gender: product.gender,
       category: product.category,
     }).limit(4);
 

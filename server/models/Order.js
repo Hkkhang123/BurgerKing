@@ -18,8 +18,6 @@ const orderItemSchema = mongoose.Schema({
         type: Number,
         required: true,
     },
-    size: String,
-    colors: String,
     quantity: {
         type: Number,
         required: true,

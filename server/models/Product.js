@@ -31,28 +31,8 @@ const productSchema = mongoose.Schema({
         type: String,
         required: true,
     },
-    brand: {
-        type: String,
-
-    },
-    size: {
-        type: [String],
-        required: true,
-    },
-    colors: {
-        type: [String],
-        required: true,
-    },
-    collections: {
-        type: String,
-        required: true,
-    },
     material: {
         type: String,
-    },
-    gender: {
-        type: String,
-        enum: ["Nam", "Nữ", "unisex"],
     },
     image: [{
         url: {
@@ -63,14 +43,6 @@ const productSchema = mongoose.Schema({
             type: String,
         }
     }],
-    isFeatured: {
-        type: Boolean,
-        default: false
-    },
-    isPublished: {
-        type: Boolean,
-        default: false
-    },
     rating: {
         type: Number,
         default: 0

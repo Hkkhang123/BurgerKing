@@ -11,7 +11,6 @@ import cartRoutes from "./routes/cart.routes.js";
 import checkoutRoutes from "./routes/checkout.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import uploadRoutes from "./config/uploadRoute.js";
-import subcriberRoutes from "./routes/subcriber.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 
 dotenv.config();
@@ -34,7 +33,6 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/order", orderRoutes);
 app.use("/api/upload", uploadRoutes);
-app.use("/api", subcriberRoutes);
 app.use("/api/admin", adminRoutes);
 
 if (process.env.NODE_ENV === "production") {

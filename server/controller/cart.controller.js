@@ -9,7 +9,7 @@ const checkCart = async (userId, guestId) => {
   }
 };
 export const addToCart = async (req, res) => {
-  const { productId, quantity, size, color, guestId, userId } = req.body;
+  const { productId, quantity, guestId, userId } = req.body;
   try {
     const product = await Product.findById(productId);
     if (!product) return res.status(404).json({ message: "Product not found" });
@@ -19,9 +19,7 @@ export const addToCart = async (req, res) => {
     if (cart) {
       const productIndex = cart.products.findIndex(
         (p) =>
-          p.productId.toString() === productId &&
-          p.size === size &&
-          p.color === color
+          p.productId.toString() === productId
       );
       if (productIndex > -1) {
         cart.products[productIndex].quantity += quantity;
@@ -31,8 +29,6 @@ export const addToCart = async (req, res) => {
           name: product.name,
           image: product.image[0].url,
           price: product.price,
-          size,
-          color,
           quantity,
         });
       }
@@ -52,8 +48,6 @@ export const addToCart = async (req, res) => {
             name: product.name,
             image: product.image[0].url,
             price: product.price,
-            size,
-            color,
             quantity,
           },
         ],
@@ -67,16 +61,14 @@ export const addToCart = async (req, res) => {
 };
 
 export const updateCart = async (req, res) => {
-  const { productId, quantity, size, color, guestId, userId } = req.body;
+  const { productId, quantity, guestId, userId } = req.body;
   try {
     let cart = await checkCart(userId, guestId);
     if (!cart) return res.status(404).json({ message: "Cart not found" });
 
     const productIndex = cart.products.findIndex(
       (p) =>
-        p.productId.toString() === productId &&
-        p.size === size &&
-        p.color === color
+        p.productId.toString() === productId
     );
 
     if (productIndex > -1) {
@@ -101,15 +93,13 @@ export const updateCart = async (req, res) => {
 };
 
 export const deleteCart = async (req, res) => {
-  const { productId, quantity, size, color, guestId, userId } = req.body;
+  const { productId, quantity, guestId, userId } = req.body;
   try {
     let cart = await checkCart(userId, guestId);
     if (!cart) return res.status(404).json({ message: "Cart not found" });
     const productIndex = cart.products.findIndex(
       (p) =>
-        p.productId.toString() === productId &&
-        p.size === size &&
-        p.color === color
+        p.productId.toString() === productId
     );
     if (productIndex > -1) {
       cart.products.splice(productIndex, 1);
@@ -155,9 +145,7 @@ export const mergeCart = async (req, res) => {
         guestCart.products.forEach((guestItem) => {
           const productIndex = userCart.products.findIndex(
             (p) =>
-              p.productId.toString() === guestItem.productId.toString() &&
-              p.size === guestItem.size &&
-              p.color === guestItem.color
+              p.productId.toString() === guestItem.productId.toString()
           );
           if (productIndex > -1) {
             userCart.products[productIndex].quantity += guestItem.quantity;
