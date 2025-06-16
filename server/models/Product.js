@@ -71,7 +71,6 @@ const productSchema = mongoose.Schema({
         width: Number,
         height: Number
     },
-    weight: Number
 }, {timeStamps: true});
 
 export default mongoose.model("Product", productSchema)

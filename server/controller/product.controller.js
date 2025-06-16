@@ -13,8 +13,7 @@ export const createProducts = async (req, res) => {
       sku,
       image,
       tag,
-      dimension,
-      weight,
+      dimension
     } = req.body;
 
     let uploadedImages = [];
@@ -45,7 +44,6 @@ export const createProducts = async (req, res) => {
       image: uploadedImages,
       tag,
       dimension,
-      weight,
       user: req.user._id,
     });
     const createdProduct = await product.save();
@@ -68,8 +66,7 @@ export const updateProduct = async (req, res) => {
       sku,
       image,
       tag,
-      dimension,
-      weight,
+      dimension, 
     } = req.body;
 
     const product = await Product.findById(req.params.id);
@@ -85,7 +82,6 @@ export const updateProduct = async (req, res) => {
       product.image = image || product.image;
       product.tag = tag || product.tag;
       product.dimension = dimension || product.dimension;
-      product.weight = weight || product.weight;
 
       const updatedProduct = await product.save();
       res.json(updatedProduct);
