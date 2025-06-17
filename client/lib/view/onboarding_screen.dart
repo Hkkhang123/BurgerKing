@@ -25,13 +25,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ),
     OnboardingItem(
       image: 'assets/images/intro1.png',
-      title: 'Flame-Grilled Since 1954',
+      title: 'Chất lượng tốt',
       description:
           'Hương vị nướng than hồng đặc trưng - Bí quyết làm nên hương vị độc đáo của Burger King',
     ),
     OnboardingItem(
       image: 'assets/images/intro2.png',
-      title: 'Home of the Whopper',
+      title: 'ABC',
       description:
           'Thưởng thức Whopper huyền thoại - Burger ngon nhất thế giới với 100% thịt bò nướng than hồng',
     ),
@@ -40,7 +40,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _handleGetStarted() {
     final AuthController authController = Get.find<AuthController>();
     authController.setFirstTimeDone();
-    Get.off(() => const SigninScreen());
+    Get.off(() => SigninScreen());
   }
 
   @override

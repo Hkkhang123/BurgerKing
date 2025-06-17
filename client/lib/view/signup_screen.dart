@@ -1,16 +1,18 @@
 import 'package:client/controller/auth_controller.dart';
 import 'package:client/utils/app_textstyle.dart';
 import 'package:client/view/main_screen.dart';
-import 'package:client/view/signup_screen.dart';
+import 'package:client/view/signin_screen.dart';
 import 'package:client/view/widget/custom_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class SigninScreen extends StatelessWidget {
-  SigninScreen({super.key});
+class SignupScreen extends StatelessWidget {
+  SignupScreen({super.key});
 
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
@@ -19,6 +21,24 @@ class SigninScreen extends StatelessWidget {
     final AuthController authController = Get.find<AuthController>();
     
     return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Đăng ký',
+          style: AppTextStyle.withColor(
+            AppTextStyle.h2,
+            Theme.of(context).textTheme.bodyLarge!.color!,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios,
+            color: Theme.of(context).textTheme.bodyLarge!.color,
+          ),
+          onPressed: () => Get.back(),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -27,9 +47,9 @@ class SigninScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
                 Text(
-                  'Chào mừng quay trở lại',
+                  'Tạo tài khoản mới',
                   style: AppTextStyle.withColor(
                     AppTextStyle.h1,
                     Theme.of(context).textTheme.bodyLarge!.color!,
@@ -37,7 +57,7 @@ class SigninScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Đăng nhập để tiếp tục mua hàng',
+                  'Điền thông tin để tạo tài khoản',
                   style: AppTextStyle.withColor(
                     AppTextStyle.bodyLarge,
                     isDark ? Colors.grey[400]! : Colors.grey[600]!,
@@ -92,7 +112,25 @@ class SigninScreen extends StatelessWidget {
                   return const SizedBox.shrink();
                 }),
                 
-                //email text field
+                // Name text field
+                CustomTextfield(
+                  label: 'Họ và tên',
+                  prefixIcon: Icons.person_outline,
+                  keyboardType: TextInputType.name,
+                  controller: _nameController,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Vui lòng nhập họ và tên';
+                    }
+                    if (value.length < 2) {
+                      return 'Họ và tên phải có ít nhất 2 ký tự';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                
+                // Email text field
                 CustomTextfield(
                   label: 'Email',
                   prefixIcon: Icons.email_outlined,
@@ -109,9 +147,10 @@ class SigninScreen extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 16),
-                //password text field
+                
+                // Password text field
                 CustomTextfield(
-                  label: 'Password',
+                  label: 'Mật khẩu',
                   prefixIcon: Icons.lock_outlined,
                   keyboardType: TextInputType.visiblePassword,
                   controller: _passwordController,
@@ -126,25 +165,31 @@ class SigninScreen extends StatelessWidget {
                     return null;
                   },
                 ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      'Quên mật khẩu?',
-                      style: AppTextStyle.withColor(
-                        AppTextStyle.buttonMedium,
-                        Theme.of(context).primaryColor,
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 16),
+                
+                // Confirm password text field
+                CustomTextfield(
+                  label: 'Xác nhận mật khẩu',
+                  prefixIcon: Icons.lock_outlined,
+                  keyboardType: TextInputType.visiblePassword,
+                  controller: _confirmPasswordController,
+                  isPassword: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Vui lòng xác nhận mật khẩu';
+                    }
+                    if (value != _passwordController.text) {
+                      return 'Mật khẩu xác nhận không khớp';
+                    }
+                    return null;
+                  },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
+                
                 Obx(() => SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: authController.isLoading ? null : _handleSignIn,
+                    onPressed: authController.isLoading ? null : _handleSignUp,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -162,7 +207,7 @@ class SigninScreen extends StatelessWidget {
                             ),
                           )
                         : Text(
-                            'Đăng nhập',
+                            'Đăng ký',
                             style: AppTextStyle.withColor(
                               AppTextStyle.buttonMedium,
                               Colors.white,
@@ -175,16 +220,16 @@ class SigninScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Chưa có tài khoản?',
+                      'Đã có tài khoản?',
                       style: AppTextStyle.withColor(
                         AppTextStyle.bodyMedium,
                         isDark ? Colors.grey[400]! : Colors.grey[600]!,
                       ),
                     ),
                     TextButton(
-                      onPressed: () => Get.to(() => SignupScreen()),
+                      onPressed: () => Get.off(() => SigninScreen()),
                       child: Text(
-                        'Đăng ký',
+                        'Đăng nhập',
                         style: AppTextStyle.withColor(
                           AppTextStyle.buttonMedium,
                           Theme.of(context).primaryColor,
@@ -193,23 +238,6 @@ class SigninScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                // Debug button (only in debug mode)
-                if (true) // Change to false in production
-                  Center(
-                    child: TextButton(
-                      onPressed: () async {
-                        await authController.debugConnection();
-                      },
-                      child: Text(
-                        '�� Debug Connection',
-                        style: AppTextStyle.withColor(
-                          AppTextStyle.bodySmall,
-                          Colors.grey[600]!,
-                        ),
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
@@ -218,7 +246,7 @@ class SigninScreen extends StatelessWidget {
     );
   }
 
-  void _handleSignIn() async {
+  void _handleSignUp() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -235,7 +263,8 @@ class SigninScreen extends StatelessWidget {
       return;
     }
     
-    final success = await authController.loginWithApi(
+    final success = await authController.registerWithApi(
+      _nameController.text.trim(),
       _emailController.text.trim(),
       _passwordController.text,
     );
