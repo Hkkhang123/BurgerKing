@@ -10,10 +10,35 @@ import {
   getSimilarProducts,
   updateProduct,
 } from "../controller/product.controller.js";
+import multer from "multer";
 
 const router = express.Router();
 
+// Cấu hình multer cho upload files
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Chỉ cho phép upload file hình ảnh!'), false);
+    }
+  }
+});
+
+// Route tạo sản phẩm với URL images (không có file upload)
 router.post("/", protectRoutes, isAdmin, createProducts);
+
+// Route tạo sản phẩm với single file upload
+router.post("/with-image", protectRoutes, isAdmin, upload.single('image'), createProducts);
+
+// Route tạo sản phẩm với multiple files upload
+router.post("/with-images", protectRoutes, isAdmin, upload.array('images', 10), createProducts);
+
 router.put("/:id", protectRoutes, isAdmin, updateProduct);
 router.delete("/:id", protectRoutes, isAdmin, deleteProduct);
 router.get("/", getProducts);

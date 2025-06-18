@@ -1,678 +1,477 @@
-// product.js:
-
-const products = [
+const product = [
+  // ===== ĐỒ ĂN =====
   {
-    name: "AIRism Cotton Áo Thun Dáng Rộng",
-    description: "Mã sản phẩm: 475355",
-    price: 391000,
-    discountPrice: 0,
-    countInStock: 20,
-    sku: "475355",
-    category: "Áo",
-    brand: "UNIQLO",
-    size: ["XS", "S", "M", "L", "XL", "XXL"],
-    colors: ["White", "Light Gray", "Brown", "Red", "Blue", "Yellow"],
-    collections: "Bộ sưu tập áo thun",
-    material: "Vải Cotton",
-    gender: "Nam",
-    image: [
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/vn/imagesgoods/465185/sub/vngoods_465185_sub1_3x4.jpg",
-        altText: "",
-      },
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/vn/imagesgoods/465185/sub/vngoods_465185_sub17_3x4.jpg",
-        altText: "",
-      },
-    ],
-  },
-
-  {
-    name: "Áo Thun | Bánh mì",
-    description:
-      "Mã sản phẩm: 481275",
-    price: 391000,
-    discountPrice: 0,
-    countInStock: 35,
-    sku: "481275-001",
-    category: "Áo",
-    brand: "UNIQLO",
-    size: ["XS","S", "M", "L", "XL"],
-    colors: ["White"],
-    collections: "Bộ sưu tập áo thun",
-    material: "Vải Cotton",
-    gender: "Nam",
-    image: [
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/vn/imagesgoods/481275003/item/vngoods_51_481275003_3x4.jpg",
-        altText: "",
-      },
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/vn/imagesgoods/481275003/sub/vngoods_481275003_sub2_3x4.jpg",
-        altText: "",
-      },
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/AsianCommon/imagesgoods/481275003/sub/goods_481275003_sub18_3x4.jpg",
-        altText: "",
-      },
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/AsianCommon/imagesgoods/481275003/sub/goods_481275003_sub17_3x4.jpg",
-        altText: "",
-      }
-    ],
-  },
-  {
-    name: "Áo Thun | Cà phê",
-    description:
-      "Mã sản phẩm: 481275",
-    price: 391000,
-    discountPrice: 0,
-    countInStock: 15,
-    sku: "481275-002",
-    category: "Áo",
-    brand: "UNIQLO",
-    size: ["XS","S", "M", "L", "XL"],
-    colors: ["White"],
-    collections: "Bộ sưu tập áo thun",
-    material: "Vải Cotton",
-    gender: "Nam",
-    image: [
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/vn/imagesgoods/481275002/item/vngoods_41_481275002_3x4.jpg",
-        altText: "",
-      },
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/AsianCommon/imagesgoods/481275002/sub/goods_481275002_sub18_3x4.jpg",
-        altText: "",
-      },
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/AsianCommon/imagesgoods/481275002/sub/goods_481275002_sub17_3x4.jpg",
-        altText: "",
-      }
-    ],
-  },
-  {
-    name: "Áo Thun Dry Cổ Tròn Nhiều Màu",
-    description:
-      "Vải pha cotton và polyester với công nghệ DRY nhanh khô. Cổ tròn cổ điển. Kiểu dáng cơ bản, phù hợp để mặc riêng lẻ hoặc như một lớp áo bên trong.",
-    price: 146000,
-    discountPrice: 0,
-    countInStock: 25,
-    sku: "481275-003",
-    category: "Áo",
-    brand: "UNIQLO",
-    size: ["XS","S", "M", "L", "XL", "XXL"],
-    colors: ["Yellow", "Gray", "Black", "Green", "Blue", "Navy"],
-    collections: "Bộ sưu tập áo thun",
-    material: "Nguyên liệu tái chế",
-    gender: "Nam",
-    image: [
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/vn/imagesgoods/465187/item/vngoods_69_465187_3x4.jpg",
-        altText: "",
-      },
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/vn/imagesgoods/465187/sub/vngoods_465187_sub7_3x4.jpg",
-        altText: "",
-      },
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/AsianCommon/imagesgoods/465187/sub/goods_465187_sub13_3x4.jpg",
-        altText: "",
-      },
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/AsianCommon/imagesgoods/465187/sub/goods_465187_sub14_3x4.jpg",
-        altText: "",
-      }
-    ],
-  },
-
-  {
-    name: "Áo Thun Cổ Tròn",
-    description:
-      "The Uniqlo U collection is the realization of a dedicated and skilled team of international designers based at our Paris Research and Development Center led by Artistic Director Christophe Lemaire.",
-    price: 293000,
-    discountPrice: 0,
-    countInStock: 30,
-    sku: "SLIM-EIR-005",
-    category: "Áo",
-    brand: "UNIQLO",
-    size: ["XS", "S", "M", "L", "XL", "XXL"],
-    colors: ["Purple", "Gray", "Black", "Brown", "White", "Blue"],
-    collections: "Bộ sưu tập áo thun",
-    material: "Vải Bông",
-    gender: "Nam",
-    image: [
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/AsianCommon/imagesgoods/422992/sub/goods_422992_sub14_3x4.jpg",
-        altText: "",
-      },
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/vn/imagesgoods/422992/item/vngoods_75_422992_3x4.jpg",
-        altText: "",
-      },
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/AsianCommon/imagesgoods/422992/sub/goods_422992_sub13_3x4.jpg",
-        altText: "",
-      },
-    ],
-  },
-  {
-    name: "Áo Thun Vải Jersey",
-    description:
-      "Relaxed silhouette and short length for cool comfort. Wide, boxy silhouette pairs well with both pants and skirts",
-    price: 293000,
-    discountPrice: 0,
+    name: "Burger Bò Phô Mai",
+    description: "Burger bò thơm ngon với phô mai tan chảy, rau xanh tươi và sốt đặc biệt",
+    price: 85000,
+    discountPrice: 75000,
     countInStock: 50,
-    sku: "476076",
-    category: "Áo",
-    brand: "UNIQLO",
-    size: ["XS", "S", "M", "L", "XL", "XXL"],
-    colors: ["Blue","Black","Yellow"],
-    collections: "Bộ sưu tập áo thun",
-    material: "Vải Bông",
-    gender: "Nữ",
+    sku: "BURGER-001",
+    category: "Đồ ăn",
+    material: "Bò, phô mai, rau xanh, bánh mì",
     image: [
       {
-        url: "https://image.uniqlo.com/UQ/ST3/AsianCommon/imagesgoods/476076/sub/goods_476076_sub14_3x4.jpg",
-        altText: "",
-      },
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/vn/imagesgoods/476076/item/vngoods_68_476076_3x4.jpg",
-        altText: "",
-      },
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/AsianCommon/imagesgoods/476076/sub/goods_476076_sub13_3x4.jpg",
-        altText: "",
+        url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500",
+        altText: "Burger bò phô mai"
       }
-    ],
-  },
-  {
-    name: "Áo Thun Vải Gân Cổ Thuyền | Tay Lửng | Kẻ Sọc",
-    description:
-      "- Ống tay suôn mượt với độ dài vừa vặn che phủ cánh tay trên. Thiết kế cổ thuyền tôn dáng, trông rất thời trang khi mặc riêng lẻ. Thiết kế đa năng, phù hợp với vô vàn phong cách phối đồ. Vải gân tạo cảm giác ôm sát thoải mái. Chất vải dày dặn vừa phải, tạo nên vẻ ngoài thanh lịch, gọn gàng nhưng không quá ôm cơ thể. Họa tiết sọc đa năng.",
-    price: 293000,
-    discountPrice: 0,
-    countInStock: 40,
-    sku: "475842",
-    category: "Áo",
-    brand: "UNIQLO",
-    size: ["XS", "S", "M", "L", "XL", "XXL"],
-    colors: ["Black", "White", "Navy"],
-    collections: "Bộ sưu tập áo thun",
-    material: "Vải Bông",
-    gender: "Nữ",
-    image: [
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/vn/imagesgoods/475842/sub/vngoods_475842_sub7_3x4.jpg",
-        altText: "",
-      },
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/AsianCommon/imagesgoods/475842/sub/goods_475842_sub13_3x4.jpg",
-        altText: "",
-      },
-      {
-        url: "https://image.uniqlo.com/UQ/ST3/AsianCommon/imagesgoods/475842/sub/goods_475842_sub14_3x4.jpg",
-        altText: "",
-      }
-    ],
-  },
-  {
-    name: "Regular-Fit Henley Shirt",
-    description:
-      "A modern take on the classic Henley shirt, this regular-fit style features a buttoned placket and ribbed cuffs. Made from a soft cotton blend with a touch of elastane for stretch.",
-    price: 645000,
-    discountPrice: 632000,
-    countInStock: 35,
-    sku: "REG-HEN-008",
-    category: "Áo",
-    brand: "Heritage Wear",
-    size: ["S", "M", "L", "XL"],
-    colors: ["Heather Gray", "Olive", "Black"],
-    collections: "Casual Wear",
-    material: "Vải Cotton",
-    gender: "Nam",
-    image: [
-      {
-        url: "https://picsum.photos/500/500?random=6",
-        altText: "Regular-Fit Henley Shirt Front View",
-      },
     ],
     rating: 4.5,
-    numReviews: 25,
+    numReviews: 128,
+    tag: ["burger", "bò", "phô mai", "đồ ăn"],
+    metaTitle: "Burger Bò Phô Mai - Hương vị đặc biệt",
+    metaDescription: "Thưởng thức burger bò với phô mai tan chảy thơm ngon",
+    dimension: {
+      length: 15,
+      width: 12,
+      height: 8
+    }
   },
   {
-    name: "Long-Sleeve Thermal Tee",
-    description:
-      "Stay warm with this long-sleeve thermal tee, made from soft cotton with a waffle-knit texture. Ideal for layering in cooler months, the slim-fit design ensures a snug yet comfortable fit.",
-    price: 200000,
-    discountPrice: 198000,
-    countInStock: 20,
-    sku: "LST-THR-009",
-    category: "Áo",
-    brand: "Winter Basics",
-    size: ["S", "M", "L", "XL", "XXL"],
-    colors: ["Charcoal", "Dark Green", "Navy"],
-    collections: "Winter Essentials",
-    material: "Vải Cotton",
-    gender: "Nam",
+    name: "Burger Gà Rán",
+    description: "Burger gà rán giòn với sốt mayonnaise và rau củ tươi ngon",
+    price: 75000,
+    discountPrice: 65000,
+    countInStock: 45,
+    sku: "BURGER-002",
+    category: "Đồ ăn",
+    material: "Gà rán, mayonnaise, rau củ, bánh mì",
     image: [
       {
-        url: "https://picsum.photos/500/500?random=7",
-        altText: "Long-Sleeve Thermal Tee Front View",
-      },
-    ],
-    rating: 4.4,
-    numReviews: 18,
-  },
-  {
-    name: "V-Neck Classic T-Shirt",
-    description:
-      "A classic V-neck t-shirt for everyday wear. This regular-fit tee is made from breathable cotton and features a clean, simple design with a flattering V-neckline. Lightweight fabric and soft texture make it perfect for casual looks.",
-    price: 555000,
-    discountPrice: 532000,
-    countInStock: 60,
-    sku: "VNECK-CLS-010",
-    category: "Áo",
-    brand: "Everyday Comfort",
-    size: ["S", "M", "L", "XL"],
-    colors: ["White", "Black", "Navy"],
-    collections: "Basics",
-    material: "Vải Cotton",
-    gender: "Nam",
-    image: [
-      {
-        url: "https://picsum.photos/500/500?random=8",
-        altText: "V-Neck Classic T-Shirt Front View",
-      },
-    ],
-    rating: 4.7,
-    numReviews: 28,
-  },
-  {
-    name: "Tapered Sweatpants",
-    description:
-      "Tapered sweatpants designed for comfort. Elastic waistband with adjustable drawstring, perfect for lounging or athletic activities.",
-    price: 1500000,
-    discountPrice: 1000000,
-    countInStock: 25,
-    sku: "BW-003",
-    category: "Quần",
-    brand: "ChillZone",
-    size: ["S", "M", "L", "XL"],
-    colors: ["Gray", "Charcoal", "Blue"],
-    collections: "Lounge Collection",
-    material: "Vải Fleece",
-    gender: "Nam",
-    image: [
-      {
-        url: "https://picsum.photos/500/500?random=11",
-        altText: "Tapered Sweatpants Front View",
-      },
+        url: "https://images.unsplash.com/photo-1606755962773-d324e0a13086?w=500",
+        altText: "Burger gà rán"
+      }
     ],
     rating: 4.3,
-    numReviews: 18,
+    numReviews: 95,
+    tag: ["burger", "gà", "rán", "đồ ăn"],
+    metaTitle: "Burger Gà Rán - Giòn tan hương vị",
+    metaDescription: "Burger gà rán giòn với sốt mayonnaise đặc biệt",
+    dimension: {
+      length: 14,
+      width: 11,
+      height: 7
+    }
   },
   {
-    name: "Denim Jeans",
-    description:
-      "Classic slim-fit denim jeans with a slight stretch for comfort. Features a zip fly and five-pocket styling for a timeless look.",
-    price: 2000000,
-    discountPrice: 1790000,
+    name: "Burger Bacon",
+    description: "Burger với bacon nướng thơm, phô mai và sốt BBQ đậm đà",
+    price: 90000,
+    discountPrice: 80000,
     countInStock: 30,
-    sku: "BW-004",
-    category: "Quần",
-    brand: "DenimCo",
-    size: ["S", "M", "L", "XL"],
-    colors: ["Dark Blue", "Light Blue"],
-    collections: "Denim Collection",
-    material: "Vải Fleece",
-    gender: "Nam",
+    sku: "BURGER-003",
+    category: "Đồ ăn",
+    material: "Bacon, phô mai, sốt BBQ, bánh mì",
     image: [
       {
-        url: "https://picsum.photos/500/500?random=12",
-        altText: "Denim Jeans Front View",
-      },
+        url: "https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=500",
+        altText: "Burger bacon"
+      }
+    ],
+    rating: 4.7,
+    numReviews: 156,
+    tag: ["burger", "bacon", "BBQ", "đồ ăn"],
+    metaTitle: "Burger Bacon - Hương vị đậm đà",
+    metaDescription: "Burger bacon với sốt BBQ đặc biệt thơm ngon",
+    dimension: {
+      length: 16,
+      width: 13,
+      height: 9
+    }
+  },
+  {
+    name: "Gà Rán Giòn",
+    description: "Gà rán giòn rụm với lớp vỏ vàng ươm, thịt mềm ngọt",
+    price: 120000,
+    discountPrice: 100000,
+    countInStock: 40,
+    sku: "CHICKEN-001",
+    category: "Đồ ăn",
+    material: "Gà tươi, bột chiên, gia vị",
+    image: [
+      {
+        url: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=500",
+        altText: "Gà rán giòn"
+      }
     ],
     rating: 4.6,
-    numReviews: 22,
+    numReviews: 203,
+    tag: ["gà", "rán", "giòn", "đồ ăn"],
+    metaTitle: "Gà Rán Giòn - Giòn tan hương vị",
+    metaDescription: "Gà rán giòn với lớp vỏ vàng ươm thơm ngon",
+    dimension: {
+      length: 20,
+      width: 15,
+      height: 10
+    }
   },
   {
-    name: "Chino Pants",
-    description:
-      "Slim-fit chino pants made from stretch cotton twill. Features a button closure and front and back pockets. Ideal for both casual and semi-formal wear.",
-    price: 998000,
-    discountPrice: 742600,
-    countInStock: 40,
-    sku: "BW-005",
-    category: "Quần",
-    brand: "CasualLook",
-    size: ["S", "M", "L", "XL"],
-    colors: ["Beige", "Navy", "Black"],
-    collections: "Smart Casual Collection",
-    material: "Vải Cotton",
-    gender: "Nam",
+    name: "Khoai Tây Chiên",
+    description: "Khoai tây chiên giòn với muối và gia vị đặc biệt",
+    price: 35000,
+    discountPrice: 30000,
+    countInStock: 80,
+    sku: "FRIES-001",
+    category: "Đồ ăn",
+    material: "Khoai tây, dầu ăn, muối, gia vị",
     image: [
       {
-        url: "https://picsum.photos/500/500?random=13",
-        altText: "Chino Pants Front View",
-      },
+        url: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500",
+        altText: "Khoai tây chiên"
+      }
     ],
-    rating: 4.8,
-    numReviews: 15,
+    rating: 4.4,
+    numReviews: 167,
+    tag: ["khoai tây", "chiên", "snack", "đồ ăn"],
+    metaTitle: "Khoai Tây Chiên - Giòn tan",
+    metaDescription: "Khoai tây chiên giòn với gia vị đặc biệt",
+    dimension: {
+      length: 12,
+      width: 8,
+      height: 6
+    }
   },
   {
-    name: "Track Pants",
-    description:
-      "Comfortable track pants with an elasticated waistband and tapered leg. Features side stripes for a sporty look. Ideal for athletic and casual wear.",
-    price: 1000900,
-    discountPrice: 1000800,
-    countInStock: 20,
-    sku: "BW-006",
-    category: "Quần",
-    brand: "SportX",
-    size: ["S", "M", "L", "XL"],
-    colors: ["Black", "Red", "Blue"],
-    collections: "Activewear Collection",
-    material: "Vải Polyester",
-    gender: "Nam",
+    name: "Cánh Gà Nướng",
+    description: "Cánh gà nướng mật ong với sốt BBQ đậm đà",
+    price: 85000,
+    discountPrice: 75000,
+    countInStock: 35,
+    sku: "WINGS-001",
+    category: "Đồ ăn",
+    material: "Cánh gà, mật ong, sốt BBQ",
     image: [
       {
-        url: "https://picsum.photos/500/500?random=14",
-        altText: "Track Pants Front View",
-      },
+        url: "https://images.unsplash.com/photo-1567620832904-9d843b3c8b10?w=500",
+        altText: "Cánh gà nướng"
+      }
+    ],
+    rating: 4.5,
+    numReviews: 89,
+    tag: ["cánh gà", "nướng", "BBQ", "đồ ăn"],
+    metaTitle: "Cánh Gà Nướng - Hương vị đặc biệt",
+    metaDescription: "Cánh gà nướng mật ong với sốt BBQ",
+    dimension: {
+      length: 18,
+      width: 14,
+      height: 8
+    }
+  },
+
+  // ===== THỨC UỐNG =====
+  {
+    name: "Coca Cola",
+    description: "Nước ngọt Coca Cola mát lạnh, hương vị đặc trưng",
+    price: 25000,
+    discountPrice: 20000,
+    countInStock: 100,
+    sku: "DRINK-001",
+    category: "Thức uống",
+    material: "Nước có ga, đường, hương liệu",
+    image: [
+      {
+        url: "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=500",
+        altText: "Coca Cola"
+      }
     ],
     rating: 4.2,
-    numReviews: 17,
+    numReviews: 234,
+    tag: ["nước ngọt", "coca cola", "có ga", "thức uống"],
+    metaTitle: "Coca Cola - Hương vị đặc trưng",
+    metaDescription: "Nước ngọt Coca Cola mát lạnh",
+    dimension: {
+      length: 8,
+      width: 8,
+      height: 12
+    }
   },
   {
-    name: "Slim Fit Trousers",
-    description:
-      "Tailored slim-fit trousers with belt loops and a hook-and-eye closure. Suitable for formal occasions or smart-casual wear.",
-    price: 2000000,
-    discountPrice: 1980000,
-    countInStock: 15,
-    sku: "BW-007",
-    category: "Quần",
-    brand: "ExecutiveStyle",
-    size: ["M", "L", "XL"],
-    colors: ["Gray", "Black"],
-    collections: "Office Wear",
-    material: "Vải Polyester",
-    gender: "Nam",
+    name: "Pepsi",
+    description: "Nước ngọt Pepsi với hương vị độc đáo",
+    price: 25000,
+    discountPrice: 20000,
+    countInStock: 95,
+    sku: "DRINK-002",
+    category: "Thức uống",
+    material: "Nước có ga, đường, hương liệu",
     image: [
       {
-        url: "https://picsum.photos/500/500?random=15",
-        altText: "Slim Fit Trousers Front View",
-      },
+        url: "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=500",
+        altText: "Pepsi"
+      }
     ],
-    rating: 4.7,
-    numReviews: 10,
+    rating: 4.1,
+    numReviews: 187,
+    tag: ["nước ngọt", "pepsi", "có ga", "thức uống"],
+    metaTitle: "Pepsi - Hương vị độc đáo",
+    metaDescription: "Nước ngọt Pepsi mát lạnh",
+    dimension: {
+      length: 8,
+      width: 8,
+      height: 12
+    }
   },
   {
-    name: "High-Waist Skinny Jeans",
-    description:
-      "High-waist skinny jeans in stretch denim with a button and zip fly. Features a flattering fit that hugs your curves and enhances your silhouette.",
-    price: 500000,
-    discountPrice: 450000,
-    countInStock: 30,
-    sku: "BW-W-001",
-    category: "Quần",
-    brand: "DenimStyle",
-    size: ["XS", "S", "M", "L", "XL"],
-    colors: ["Dark Blue", "Black", "Light Blue"],
-    collections: "Casual Collection",
-    material: "Lụa",
-    gender: "Nữ",
-    image: [
-      {
-        url: "https://picsum.photos/500/500?random=19",
-        altText: "High-Waist Skinny Jeans",
-      },
-    ],
-    rating: 4.8,
-    numReviews: 20,
-  },
-  {
-    name: "Wide-Leg Trousers",
-    description:
-      "Flowy, wide-leg trousers with a high waist and side pockets. Perfect for an elegant look that combines comfort and style.",
-    price: 767000,
-    discountPrice: 755000,
+    name: "Sinh Tố Dâu",
+    description: "Sinh tố dâu tây tươi ngon với sữa và đá",
+    price: 45000,
+    discountPrice: 40000,
     countInStock: 25,
-    sku: "BW-W-002",
-    category: "Quần",
-    brand: "ElegantWear",
-    size: ["S", "M", "L", "XL"],
-    colors: ["Beige", "Black", "White"],
-    collections: "Formal Collection",
-    material: "Vải Polyester",
-    gender: "Nữ",
+    sku: "DRINK-003",
+    category: "Thức uống",
+    material: "Dâu tây, sữa, đường, đá",
     image: [
       {
-        url: "https://picsum.photos/500/500?random=20",
-        altText: "Wide-Leg Trousers Front View",
-      },
-    ],
-    rating: 4.7,
-    numReviews: 15,
-  },
-  {
-    name: "Stretch Leggings",
-    description:
-      "Soft, stretch leggings in a high-rise style. Perfect for lounging, working out, or casual wear, with a smooth fit that flatters your body.",
-    price: 327000,
-    discountPrice: 315000,
-    countInStock: 40,
-    sku: "BW-W-003",
-    category: "Quần",
-    brand: "ComfyFit",
-    size: ["S", "M", "L", "XL"],
-    colors: ["Black", "Gray", "Navy"],
-    collections: "Activewear Collection",
-    material: "Vải Cotton",
-    gender: "Nữ",
-    image: [
-      {
-        url: "https://picsum.photos/500/500?random=21",
-        altText: "Stretch Leggings Front View",
-      },
-    ],
-    rating: 4.5,
-    numReviews: 30,
-  },
-  {
-    name: "Pleated Midi Skirt",
-    description:
-      "Elegant pleated midi skirt with a high waistband and soft fabric that drapes beautifully. Ideal for both formal and casual occasions.",
-    price: 890000,
-    discountPrice: 870000,
-    countInStock: 20,
-    sku: "BW-W-004",
-    category: "Quần",
-    brand: "ChicStyle",
-    size: ["S", "M", "L"],
-    colors: ["Pink", "Navy", "Black"],
-    collections: "Spring Collection",
-    material: "Vải Polyester",
-    gender: "Nữ",
-    image: [
-      {
-        url: "https://picsum.photos/500/500?random=22",
-        altText: "Pleated Midi Skirt Front View",
-      },
+        url: "https://images.unsplash.com/photo-1505252585461-04db1eb84625?w=500",
+        altText: "Sinh tố dâu"
+      }
     ],
     rating: 4.6,
-    numReviews: 18,
+    numReviews: 76,
+    tag: ["sinh tố", "dâu", "tươi", "thức uống"],
+    metaTitle: "Sinh Tố Dâu - Tươi ngon",
+    metaDescription: "Sinh tố dâu tây tươi với sữa",
+    dimension: {
+      length: 10,
+      width: 10,
+      height: 15
+    }
   },
   {
-    name: "Flared Palazzo Pants",
-    description:
-      "High-waist palazzo pants with a loose, flowing fit. Comfortable and stylish, making them perfect for casual outings or beach days.",
-    price: 432000,
-    discountPrice: 411000,
-    countInStock: 35,
-    sku: "BW-W-005",
-    category: "Quần",
-    brand: "BreezyVibes",
-    size: ["S", "M", "L", "XL"],
-    colors: ["White", "Beige", "Light Blue"],
-    collections: "Summer Collection",
-    material: "Vải Vicose",
-    gender: "Nữ",
+    name: "Sinh Tố Xoài",
+    description: "Sinh tố xoài chín ngọt với sữa đặc",
+    price: 40000,
+    discountPrice: 35000,
+    countInStock: 30,
+    sku: "DRINK-004",
+    category: "Thức uống",
+    material: "Xoài chín, sữa đặc, đường, đá",
     image: [
       {
-        url: "https://picsum.photos/500/500?random=23",
-        altText: "Flared Palazzo Pants Front View",
-      },
+        url: "https://images.unsplash.com/photo-1505252585461-04db1eb84625?w=500",
+        altText: "Sinh tố xoài"
+      }
     ],
     rating: 4.4,
-    numReviews: 22,
+    numReviews: 92,
+    tag: ["sinh tố", "xoài", "ngọt", "thức uống"],
+    metaTitle: "Sinh Tố Xoài - Ngọt ngào",
+    metaDescription: "Sinh tố xoài chín với sữa đặc",
+    dimension: {
+      length: 10,
+      width: 10,
+      height: 15
+    }
   },
   {
-    name: "High-Rise Joggers",
-    description:
-      "Comfortable high-rise joggers with an elastic waistband and drawstring for a perfect fit. Great for lounging or working out.",
-    price: 345000,
-    discountPrice: 333000,
-    countInStock: 30,
-    sku: "BW-W-006",
-    category: "Quần",
-    brand: "ActiveWear",
-    size: ["XS", "S", "M", "L"],
-    colors: ["Black", "Gray", "Pink"],
-    collections: "Loungewear Collection",
-    material: "Lụa",
-    gender: "Nữ",
+    name: "Cà Phê Sữa Đá",
+    description: "Cà phê đậm đà với sữa đặc và đá lạnh",
+    price: 35000,
+    discountPrice: 30000,
+    countInStock: 60,
+    sku: "DRINK-005",
+    category: "Thức uống",
+    material: "Cà phê, sữa đặc, đường, đá",
     image: [
       {
-        url: "https://picsum.photos/500/500?random=24",
-        altText: "High-Rise Joggers Front View",
-      },
+        url: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500",
+        altText: "Cà phê sữa đá"
+      }
     ],
     rating: 4.3,
-    numReviews: 25,
+    numReviews: 145,
+    tag: ["cà phê", "sữa đá", "đậm đà", "thức uống"],
+    metaTitle: "Cà Phê Sữa Đá - Đậm đà",
+    metaDescription: "Cà phê đậm đà với sữa đặc",
+    dimension: {
+      length: 9,
+      width: 9,
+      height: 12
+    }
   },
   {
-    name: "Paperbag Waist Shorts",
-    description:
-      "Stylish paperbag waist shorts with a belted waist and wide legs. Perfect for summer outings and keeping cool in style.",
-    price: 200000,
-    discountPrice: 110000,
-    countInStock: 20,
-    sku: "BW-W-007",
-    category: "Quần",
-    brand: "SunnyStyle",
-    size: ["S", "M", "L"],
-    colors: ["White", "Khaki", "Blue"],
-    collections: "Summer Collection",
-    material: "Vải Cotton",
-    gender: "Nữ",
-    image: [
-      {
-        url: "https://picsum.photos/500/500?random=25",
-        altText: "Paperbag Waist Shorts Front View",
-      },
-    ],
-    rating: 4.5,
-    numReviews: 19,
-  },
-  
-  {
-    name: "Boho Floral Blouse",
-    description:
-      "Flowy boho blouse with floral patterns, featuring a relaxed fit and balloon sleeves. Ideal for casual summer days.",
-    price: 541900,
-    discountPrice: 539000,
-    countInStock: 30,
-    sku: "TW-W-002",
-    category: "Áo",
-    brand: "BohoVibes",
-    size: ["S", "M", "L", "XL"],
-    colors: ["White", "Pink"],
-    collections: "Summer Collection",
-    material: "Vải Viscose",
-    gender: "Nữ",
-    image: [
-      {
-        url: "https://picsum.photos/500/500?random=30",
-        altText: "Boho Floral Blouse",
-      },
-    ],
-    rating: 4.7,
-    numReviews: 20,
-  },
-  {
-    name: "Casual T-Shirt",
-    description:
-      "A soft, breathable casual t-shirt with a classic fit. Features a round neckline and short sleeves, perfect for everyday wear.",
-    price: 100000,
-    discountPrice: 90000,
-    countInStock: 50,
-    sku: "TW-W-003",
-    category: "Áo",
-    brand: "ComfyTees",
-    size: ["S", "M", "L", "XL"],
-    colors: ["Black", "White", "Gray"],
-    collections: "Essentials",
-    material: "Vải Cotton",
-    gender: "Nữ",
-    image: [
-      {
-        url: "https://picsum.photos/500/500?random=31",
-        altText: "Casual T-Shirt",
-      },
-    ],
-    rating: 4.5,
-    numReviews: 25,
-  },
-  {
-    name: "Off-Shoulder Top",
-    description:
-      "An elegant off-shoulder top with ruffled sleeves and a flattering fit. Ideal for adding a touch of femininity to your outfit.",
-    price: 867000,
-    discountPrice: 775000,
-    countInStock: 35,
-    sku: "TW-W-004",
-    category: "Áo",
-    brand: "Elegance",
-    size: ["S", "M", "L"],
-    colors: ["Red", "White", "Blue"],
-    collections: "Evening Collection",
-    material: "Vải Polyester",
-    gender: "Nữ",
-    image: [
-      {
-        url: "https://picsum.photos/500/500?random=32",
-        altText: "Off-Shoulder Top",
-      },
-    ],
-    rating: 4.7,
-    numReviews: 18,
-  },
-  {
-    name: "Lace-Trimmed Cami Top",
-    description:
-      "A delicate cami top with lace trim and adjustable straps. The lightweight fabric makes it perfect for layering or wearing alone during warmer weather.",
-    price: 436000,
-    discountPrice: 420000,
+    name: "Trà Sữa Trân Châu",
+    description: "Trà sữa thơm ngon với trân châu đen",
+    price: 50000,
+    discountPrice: 45000,
     countInStock: 40,
-    sku: "TW-W-005",
-    category: "Áo",
-    brand: "DelicateWear",
-    size: ["S", "M", "L"],
-    colors: ["Black", "White"],
-    collections: "Lingerie-Inspired",
-    material: "Lụa",
-    gender: "Nữ",
+    sku: "DRINK-006",
+    category: "Thức uống",
+    material: "Trà, sữa, trân châu, đường",
     image: [
       {
-        url: "https://picsum.photos/500/500?random=33",
-        altText: "Lace-Trimmed Cami Top",
-      },
+        url: "https://images.unsplash.com/photo-1558857563-b371033873b8?w=500",
+        altText: "Trà sữa trân châu"
+      }
     ],
-    rating: 4.8,
-    numReviews: 22,
+    rating: 4.5,
+    numReviews: 178,
+    tag: ["trà sữa", "trân châu", "ngọt", "thức uống"],
+    metaTitle: "Trà Sữa Trân Châu - Thơm ngon",
+    metaDescription: "Trà sữa với trân châu đen",
+    dimension: {
+      length: 10,
+      width: 10,
+      height: 18
+    }
   },
+
+  // ===== ĐỒ ĂN VẶT =====
+  {
+    name: "Bánh Donut",
+    description: "Bánh donut mềm mại với lớp kem ngọt ngào",
+    price: 30000,
+    discountPrice: 25000,
+    countInStock: 50,
+    sku: "SNACK-001",
+    category: "Đồ ăn vặt",
+    material: "Bột mì, đường, kem, hương liệu",
+    image: [
+      {
+        url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500",
+        altText: "Bánh donut"
+      }
+    ],
+    rating: 4.4,
+    numReviews: 89,
+    tag: ["bánh", "donut", "kem", "đồ ăn vặt"],
+    metaTitle: "Bánh Donut - Ngọt ngào",
+    metaDescription: "Bánh donut mềm với kem ngọt",
+    dimension: {
+      length: 8,
+      width: 8,
+      height: 4
+    }
+  },
+  {
+    name: "Kem Vanilla",
+    description: "Kem vanilla mát lạnh với hương vị thơm ngon",
+    price: 35000,
+    discountPrice: 30000,
+    countInStock: 30,
+    sku: "SNACK-002",
+    category: "Đồ ăn vặt",
+    material: "Sữa, kem, vanilla, đường",
+    image: [
+      {
+        url: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=500",
+        altText: "Kem vanilla"
+      }
+    ],
+    rating: 4.6,
+    numReviews: 112,
+    tag: ["kem", "vanilla", "mát lạnh", "đồ ăn vặt"],
+    metaTitle: "Kem Vanilla - Mát lạnh",
+    metaDescription: "Kem vanilla thơm ngon mát lạnh",
+    dimension: {
+      length: 6,
+      width: 6,
+      height: 8
+    }
+  },
+  {
+    name: "Kem Chocolate",
+    description: "Kem chocolate đậm đà với hạt cacao",
+    price: 40000,
+    discountPrice: 35000,
+    countInStock: 25,
+    sku: "SNACK-003",
+    category: "Đồ ăn vặt",
+    material: "Sữa, kem, chocolate, hạt cacao",
+    image: [
+      {
+        url: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=500",
+        altText: "Kem chocolate"
+      }
+    ],
+    rating: 4.7,
+    numReviews: 98,
+    tag: ["kem", "chocolate", "đậm đà", "đồ ăn vặt"],
+    metaTitle: "Kem Chocolate - Đậm đà",
+    metaDescription: "Kem chocolate với hạt cacao",
+    dimension: {
+      length: 6,
+      width: 6,
+      height: 8
+    }
+  },
+  {
+    name: "Bánh Muffin",
+    description: "Bánh muffin mềm mại với hương vị đặc biệt",
+    price: 25000,
+    discountPrice: 20000,
+    countInStock: 40,
+    sku: "SNACK-004",
+    category: "Đồ ăn vặt",
+    material: "Bột mì, trứng, sữa, hương liệu",
+    image: [
+      {
+        url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500",
+        altText: "Bánh muffin"
+      }
+    ],
+    rating: 4.3,
+    numReviews: 67,
+    tag: ["bánh", "muffin", "mềm", "đồ ăn vặt"],
+    metaTitle: "Bánh Muffin - Mềm mại",
+    metaDescription: "Bánh muffin mềm với hương vị đặc biệt",
+    dimension: {
+      length: 7,
+      width: 7,
+      height: 5
+    }
+  },
+  {
+    name: "Snack Khoai Tây",
+    description: "Snack khoai tây giòn với hương vị đặc biệt",
+    price: 20000,
+    discountPrice: 15000,
+    countInStock: 80,
+    sku: "SNACK-005",
+    category: "Đồ ăn vặt",
+    material: "Khoai tây, dầu ăn, gia vị",
+    image: [
+      {
+        url: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500",
+        altText: "Snack khoai tây"
+      }
+    ],
+    rating: 4.2,
+    numReviews: 156,
+    tag: ["snack", "khoai tây", "giòn", "đồ ăn vặt"],
+    metaTitle: "Snack Khoai Tây - Giòn tan",
+    metaDescription: "Snack khoai tây giòn với gia vị đặc biệt",
+    dimension: {
+      length: 15,
+      width: 10,
+      height: 3
+    }
+  },
+  {
+    name: "Bánh Cookie",
+    description: "Bánh cookie giòn với chocolate chip",
+    price: 18000,
+    discountPrice: 15000,
+    countInStock: 60,
+    sku: "SNACK-006",
+    category: "Đồ ăn vặt",
+    material: "Bột mì, chocolate chip, bơ, đường",
+    image: [
+      {
+        url: "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=500",
+        altText: "Bánh cookie"
+      }
+    ],
+    rating: 4.5,
+    numReviews: 134,
+    tag: ["bánh", "cookie", "chocolate", "đồ ăn vặt"],
+    metaTitle: "Bánh Cookie - Giòn ngọt",
+    metaDescription: "Bánh cookie giòn với chocolate chip",
+    dimension: {
+      length: 6,
+      width: 6,
+      height: 2
+    }
+  }
 ];
 
-export default products;
+export default product;

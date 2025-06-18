@@ -1,5 +1,7 @@
 import Product from "../models/Product.js";
 import cloudinary from "../config/cloudinary.js";
+import streamifier from "streamifier";
+
 export const createProducts = async (req, res) => {
   try {
     const {
@@ -18,17 +20,103 @@ export const createProducts = async (req, res) => {
 
     let uploadedImages = [];
 
+    // Xử lý image từ request body (URL)
     if (Array.isArray(image)) {
       for (const img of image) {
         if (img.url) {
-          const cloudinaryRes = await cloudinary.uploader.upload(img.url, {
-            folder: "product",
-          });
+          // Kiểm tra xem URL đã là Cloudinary URL chưa
+          if (img.url.includes('cloudinary.com')) {
+            // Nếu đã là Cloudinary URL, sử dụng trực tiếp
+            uploadedImages.push({
+              url: img.url,
+              altText: img.altText || "",
+            });
+          } else {
+            // Nếu là URL khác, upload lên Cloudinary
+            try {
+              const cloudinaryRes = await cloudinary.uploader.upload(img.url, {
+                folder: "product",
+              });
+              uploadedImages.push({
+                url: cloudinaryRes.secure_url,
+                altText: img.altText || "",
+              });
+            } catch (uploadError) {
+              console.error("Lỗi upload image:", uploadError);
+              // Nếu upload thất bại, vẫn lưu URL gốc
+              uploadedImages.push({
+                url: img.url,
+                altText: img.altText || "",
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // Xử lý file upload từ multer (nếu có)
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        try {
+          const streamUpload = (fileBuffer) => {
+            return new Promise((resolve, reject) => {
+              const stream = cloudinary.uploader.upload_stream(
+                {
+                  folder: "product",
+                  resource_type: "auto"
+                },
+                (error, result) => {
+                  if (result) {
+                    resolve(result)
+                  } else {
+                    reject(error)
+                  }
+                }
+              )
+              streamifier.createReadStream(fileBuffer).pipe(stream)
+            })
+          }
+          
+          const cloudinaryRes = await streamUpload(file.buffer);
           uploadedImages.push({
             url: cloudinaryRes.secure_url,
-            altText: img.altText || "", // Giữ altText nếu có
+            altText: file.originalname || "",
           });
+        } catch (uploadError) {
+          console.error("Lỗi upload file:", uploadError);
         }
+      }
+    }
+
+    // Xử lý single file upload (nếu có)
+    if (req.file) {
+      try {
+        const streamUpload = (fileBuffer) => {
+          return new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              {
+                folder: "product",
+                resource_type: "auto"
+              },
+              (error, result) => {
+                if (result) {
+                  resolve(result)
+                } else {
+                  reject(error)
+                }
+              }
+            )
+            streamifier.createReadStream(fileBuffer).pipe(stream)
+          })
+        }
+        
+        const cloudinaryRes = await streamUpload(req.file.buffer);
+        uploadedImages.push({
+          url: cloudinaryRes.secure_url,
+          altText: req.file.originalname || "",
+        });
+      } catch (uploadError) {
+        console.error("Lỗi upload single file:", uploadError);
       }
     }
 
