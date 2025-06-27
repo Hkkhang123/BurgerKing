@@ -5,7 +5,6 @@ const product = [
     description: "Burger bò thơm ngon với phô mai tan chảy, rau xanh tươi và sốt đặc biệt",
     price: 85000,
     discountPrice: 75000,
-    countInStock: 50,
     sku: "BURGER-001",
     category: "Đồ ăn",
     material: "Bò, phô mai, rau xanh, bánh mì",
@@ -20,18 +19,14 @@ const product = [
     tag: ["burger", "bò", "phô mai", "đồ ăn"],
     metaTitle: "Burger Bò Phô Mai - Hương vị đặc biệt",
     metaDescription: "Thưởng thức burger bò với phô mai tan chảy thơm ngon",
-    dimension: {
-      length: 15,
-      width: 12,
-      height: 8
-    }
+    purchaseCount: 17,
+    isFavorite: false
   },
   {
     name: "Burger Gà Rán",
     description: "Burger gà rán giòn với sốt mayonnaise và rau củ tươi ngon",
     price: 75000,
     discountPrice: 65000,
-    countInStock: 45,
     sku: "BURGER-002",
     category: "Đồ ăn",
     material: "Gà rán, mayonnaise, rau củ, bánh mì",
@@ -46,18 +41,14 @@ const product = [
     tag: ["burger", "gà", "rán", "đồ ăn"],
     metaTitle: "Burger Gà Rán - Giòn tan hương vị",
     metaDescription: "Burger gà rán giòn với sốt mayonnaise đặc biệt",
-    dimension: {
-      length: 14,
-      width: 11,
-      height: 7
-    }
+    purchaseCount: 23,
+    isFavorite: false
   },
   {
     name: "Burger Bacon",
     description: "Burger với bacon nướng thơm, phô mai và sốt BBQ đậm đà",
     price: 90000,
     discountPrice: 80000,
-    countInStock: 30,
     sku: "BURGER-003",
     category: "Đồ ăn",
     material: "Bacon, phô mai, sốt BBQ, bánh mì",
@@ -72,18 +63,14 @@ const product = [
     tag: ["burger", "bacon", "BBQ", "đồ ăn"],
     metaTitle: "Burger Bacon - Hương vị đậm đà",
     metaDescription: "Burger bacon với sốt BBQ đặc biệt thơm ngon",
-    dimension: {
-      length: 16,
-      width: 13,
-      height: 9
-    }
+    purchaseCount: 29,
+    isFavorite: false
   },
   {
     name: "Gà Rán Giòn",
     description: "Gà rán giòn rụm với lớp vỏ vàng ươm, thịt mềm ngọt",
     price: 120000,
     discountPrice: 100000,
-    countInStock: 40,
     sku: "CHICKEN-001",
     category: "Đồ ăn",
     material: "Gà tươi, bột chiên, gia vị",
@@ -98,18 +85,14 @@ const product = [
     tag: ["gà", "rán", "giòn", "đồ ăn"],
     metaTitle: "Gà Rán Giòn - Giòn tan hương vị",
     metaDescription: "Gà rán giòn với lớp vỏ vàng ươm thơm ngon",
-    dimension: {
-      length: 20,
-      width: 15,
-      height: 10
-    }
+    purchaseCount: 14,
+    isFavorite: false
   },
   {
     name: "Khoai Tây Chiên",
     description: "Khoai tây chiên giòn với muối và gia vị đặc biệt",
     price: 35000,
     discountPrice: 30000,
-    countInStock: 80,
     sku: "FRIES-001",
     category: "Đồ ăn",
     material: "Khoai tây, dầu ăn, muối, gia vị",
@@ -124,18 +107,14 @@ const product = [
     tag: ["khoai tây", "chiên", "snack", "đồ ăn"],
     metaTitle: "Khoai Tây Chiên - Giòn tan",
     metaDescription: "Khoai tây chiên giòn với gia vị đặc biệt",
-    dimension: {
-      length: 12,
-      width: 8,
-      height: 6
-    }
+    purchaseCount: 25,
+    isFavorite: false
   },
   {
     name: "Cánh Gà Nướng",
     description: "Cánh gà nướng mật ong với sốt BBQ đậm đà",
     price: 85000,
     discountPrice: 75000,
-    countInStock: 35,
     sku: "WINGS-001",
     category: "Đồ ăn",
     material: "Cánh gà, mật ong, sốt BBQ",
@@ -150,11 +129,8 @@ const product = [
     tag: ["cánh gà", "nướng", "BBQ", "đồ ăn"],
     metaTitle: "Cánh Gà Nướng - Hương vị đặc biệt",
     metaDescription: "Cánh gà nướng mật ong với sốt BBQ",
-    dimension: {
-      length: 18,
-      width: 14,
-      height: 8
-    }
+    purchaseCount: 19,
+    isFavorite: false
   },
 
   // ===== THỨC UỐNG =====
@@ -163,7 +139,6 @@ const product = [
     description: "Nước ngọt Coca Cola mát lạnh, hương vị đặc trưng",
     price: 25000,
     discountPrice: 20000,
-    countInStock: 100,
     sku: "DRINK-001",
     category: "Thức uống",
     material: "Nước có ga, đường, hương liệu",
@@ -178,18 +153,14 @@ const product = [
     tag: ["nước ngọt", "coca cola", "có ga", "thức uống"],
     metaTitle: "Coca Cola - Hương vị đặc trưng",
     metaDescription: "Nước ngọt Coca Cola mát lạnh",
-    dimension: {
-      length: 8,
-      width: 8,
-      height: 12
-    }
+    purchaseCount: 28,
+    isFavorite: false
   },
   {
     name: "Pepsi",
     description: "Nước ngọt Pepsi với hương vị độc đáo",
     price: 25000,
     discountPrice: 20000,
-    countInStock: 95,
     sku: "DRINK-002",
     category: "Thức uống",
     material: "Nước có ga, đường, hương liệu",
@@ -204,18 +175,14 @@ const product = [
     tag: ["nước ngọt", "pepsi", "có ga", "thức uống"],
     metaTitle: "Pepsi - Hương vị độc đáo",
     metaDescription: "Nước ngọt Pepsi mát lạnh",
-    dimension: {
-      length: 8,
-      width: 8,
-      height: 12
-    }
+    purchaseCount: 12,
+    isFavorite: false
   },
   {
     name: "Sinh Tố Dâu",
     description: "Sinh tố dâu tây tươi ngon với sữa và đá",
     price: 45000,
     discountPrice: 40000,
-    countInStock: 25,
     sku: "DRINK-003",
     category: "Thức uống",
     material: "Dâu tây, sữa, đường, đá",
@@ -230,18 +197,14 @@ const product = [
     tag: ["sinh tố", "dâu", "tươi", "thức uống"],
     metaTitle: "Sinh Tố Dâu - Tươi ngon",
     metaDescription: "Sinh tố dâu tây tươi với sữa",
-    dimension: {
-      length: 10,
-      width: 10,
-      height: 15
-    }
+    purchaseCount: 21,
+    isFavorite: false
   },
   {
     name: "Sinh Tố Xoài",
     description: "Sinh tố xoài chín ngọt với sữa đặc",
     price: 40000,
     discountPrice: 35000,
-    countInStock: 30,
     sku: "DRINK-004",
     category: "Thức uống",
     material: "Xoài chín, sữa đặc, đường, đá",
@@ -256,18 +219,14 @@ const product = [
     tag: ["sinh tố", "xoài", "ngọt", "thức uống"],
     metaTitle: "Sinh Tố Xoài - Ngọt ngào",
     metaDescription: "Sinh tố xoài chín với sữa đặc",
-    dimension: {
-      length: 10,
-      width: 10,
-      height: 15
-    }
+    purchaseCount: 16,
+    isFavorite: false
   },
   {
     name: "Cà Phê Sữa Đá",
     description: "Cà phê đậm đà với sữa đặc và đá lạnh",
     price: 35000,
     discountPrice: 30000,
-    countInStock: 60,
     sku: "DRINK-005",
     category: "Thức uống",
     material: "Cà phê, sữa đặc, đường, đá",
@@ -282,18 +241,14 @@ const product = [
     tag: ["cà phê", "sữa đá", "đậm đà", "thức uống"],
     metaTitle: "Cà Phê Sữa Đá - Đậm đà",
     metaDescription: "Cà phê đậm đà với sữa đặc",
-    dimension: {
-      length: 9,
-      width: 9,
-      height: 12
-    }
+    purchaseCount: 27,
+    isFavorite: false
   },
   {
     name: "Trà Sữa Trân Châu",
     description: "Trà sữa thơm ngon với trân châu đen",
     price: 50000,
     discountPrice: 45000,
-    countInStock: 40,
     sku: "DRINK-006",
     category: "Thức uống",
     material: "Trà, sữa, trân châu, đường",
@@ -308,11 +263,8 @@ const product = [
     tag: ["trà sữa", "trân châu", "ngọt", "thức uống"],
     metaTitle: "Trà Sữa Trân Châu - Thơm ngon",
     metaDescription: "Trà sữa với trân châu đen",
-    dimension: {
-      length: 10,
-      width: 10,
-      height: 18
-    }
+    purchaseCount: 13,
+    isFavorite: false
   },
 
   // ===== ĐỒ ĂN VẶT =====
@@ -321,7 +273,6 @@ const product = [
     description: "Bánh donut mềm mại với lớp kem ngọt ngào",
     price: 30000,
     discountPrice: 25000,
-    countInStock: 50,
     sku: "SNACK-001",
     category: "Đồ ăn vặt",
     material: "Bột mì, đường, kem, hương liệu",
@@ -336,18 +287,14 @@ const product = [
     tag: ["bánh", "donut", "kem", "đồ ăn vặt"],
     metaTitle: "Bánh Donut - Ngọt ngào",
     metaDescription: "Bánh donut mềm với kem ngọt",
-    dimension: {
-      length: 8,
-      width: 8,
-      height: 4
-    }
+    purchaseCount: 22,
+    isFavorite: false
   },
   {
     name: "Kem Vanilla",
     description: "Kem vanilla mát lạnh với hương vị thơm ngon",
     price: 35000,
     discountPrice: 30000,
-    countInStock: 30,
     sku: "SNACK-002",
     category: "Đồ ăn vặt",
     material: "Sữa, kem, vanilla, đường",
@@ -362,18 +309,14 @@ const product = [
     tag: ["kem", "vanilla", "mát lạnh", "đồ ăn vặt"],
     metaTitle: "Kem Vanilla - Mát lạnh",
     metaDescription: "Kem vanilla thơm ngon mát lạnh",
-    dimension: {
-      length: 6,
-      width: 6,
-      height: 8
-    }
+    purchaseCount: 30,
+    isFavorite: false
   },
   {
     name: "Kem Chocolate",
     description: "Kem chocolate đậm đà với hạt cacao",
     price: 40000,
     discountPrice: 35000,
-    countInStock: 25,
     sku: "SNACK-003",
     category: "Đồ ăn vặt",
     material: "Sữa, kem, chocolate, hạt cacao",
@@ -388,18 +331,14 @@ const product = [
     tag: ["kem", "chocolate", "đậm đà", "đồ ăn vặt"],
     metaTitle: "Kem Chocolate - Đậm đà",
     metaDescription: "Kem chocolate với hạt cacao",
-    dimension: {
-      length: 6,
-      width: 6,
-      height: 8
-    }
+    purchaseCount: 11,
+    isFavorite: false
   },
   {
     name: "Bánh Muffin",
     description: "Bánh muffin mềm mại với hương vị đặc biệt",
     price: 25000,
     discountPrice: 20000,
-    countInStock: 40,
     sku: "SNACK-004",
     category: "Đồ ăn vặt",
     material: "Bột mì, trứng, sữa, hương liệu",
@@ -414,18 +353,14 @@ const product = [
     tag: ["bánh", "muffin", "mềm", "đồ ăn vặt"],
     metaTitle: "Bánh Muffin - Mềm mại",
     metaDescription: "Bánh muffin mềm với hương vị đặc biệt",
-    dimension: {
-      length: 7,
-      width: 7,
-      height: 5
-    }
+    purchaseCount: 18,
+    isFavorite: false
   },
   {
     name: "Snack Khoai Tây",
     description: "Snack khoai tây giòn với hương vị đặc biệt",
     price: 20000,
     discountPrice: 15000,
-    countInStock: 80,
     sku: "SNACK-005",
     category: "Đồ ăn vặt",
     material: "Khoai tây, dầu ăn, gia vị",
@@ -440,18 +375,14 @@ const product = [
     tag: ["snack", "khoai tây", "giòn", "đồ ăn vặt"],
     metaTitle: "Snack Khoai Tây - Giòn tan",
     metaDescription: "Snack khoai tây giòn với gia vị đặc biệt",
-    dimension: {
-      length: 15,
-      width: 10,
-      height: 3
-    }
+    purchaseCount: 24,
+    isFavorite: false
   },
   {
     name: "Bánh Cookie",
     description: "Bánh cookie giòn với chocolate chip",
     price: 18000,
     discountPrice: 15000,
-    countInStock: 60,
     sku: "SNACK-006",
     category: "Đồ ăn vặt",
     material: "Bột mì, chocolate chip, bơ, đường",
@@ -466,11 +397,8 @@ const product = [
     tag: ["bánh", "cookie", "chocolate", "đồ ăn vặt"],
     metaTitle: "Bánh Cookie - Giòn ngọt",
     metaDescription: "Bánh cookie giòn với chocolate chip",
-    dimension: {
-      length: 6,
-      width: 6,
-      height: 2
-    }
+    purchaseCount: 15,
+    isFavorite: false
   }
 ];
 

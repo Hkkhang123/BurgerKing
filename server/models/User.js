@@ -24,7 +24,14 @@ const userSchema = mongoose.Schema({
         enum: ["customer", "admin"],
         default: "customer"
     },
-
+    image: {
+        type: String,
+        default: 'person.png', // Ảnh mặc định khi tạo tài khoản mới
+    },
+    favorites: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product',
+    }],
 }, {timestamps: true});
 
 userSchema.pre("save", async function (next) {

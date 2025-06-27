@@ -9,6 +9,9 @@ import {
   getProducts,
   getSimilarProducts,
   updateProduct,
+  toggleFavoriteProduct,
+  getProductReviews,
+  addProductReview
 } from "../controller/product.controller.js";
 import multer from "multer";
 
@@ -46,5 +49,9 @@ router.get("/best-seller", getBestSellerProducts);
 router.get("/new-arrival", getNewArrivalProducts)
 router.get("/:id", getProductById);
 router.get("/similar/:id", getSimilarProducts);
+router.patch("/favorite/:productId", protectRoutes, toggleFavoriteProduct);
+router.get("/:id/reviews", getProductReviews);
+router.post("/:id/reviews", protectRoutes, addProductReview);
 
 export default router;
+ 

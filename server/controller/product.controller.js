@@ -1,6 +1,7 @@
 import Product from "../models/Product.js";
 import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
+import User from "../models/User.js";
 
 export const createProducts = async (req, res) => {
   try {
@@ -9,13 +10,11 @@ export const createProducts = async (req, res) => {
       description,
       price,
       discountPrice,
-      countInStock,
       category,
       material,
       sku,
       image,
       tag,
-      dimension
     } = req.body;
 
     let uploadedImages = [];
@@ -125,13 +124,11 @@ export const createProducts = async (req, res) => {
       description,
       price,
       discountPrice,
-      countInStock,
       category,
       material,
       sku,
       image: uploadedImages,
       tag,
-      dimension,
       user: req.user._id,
     });
     const createdProduct = await product.save();
@@ -148,13 +145,11 @@ export const updateProduct = async (req, res) => {
       description,
       price,
       discountPrice,
-      countInStock,
       category,
       material,
       sku,
       image,
       tag,
-      dimension, 
     } = req.body;
 
     const product = await Product.findById(req.params.id);
@@ -163,13 +158,11 @@ export const updateProduct = async (req, res) => {
       product.description = description || product.description;
       product.price = price || product.price;
       product.discountPrice = discountPrice || product.discountPrice;
-      product.countInStock = countInStock || product.countInStock;
       product.category = category || product.category;
       product.material = material || product.materials;
       product.sku = sku || product.sku;
       product.image = image || product.image;
       product.tag = tag || product.tag;
-      product.dimension = dimension || product.dimension;
 
       const updatedProduct = await product.save();
       res.json(updatedProduct);
@@ -285,11 +278,12 @@ export const getSimilarProducts = async (req, res) => {
 
 export const getBestSellerProducts = async (req, res) => {
   try {
-    const bestSeller = await Product.findOne().sort({ rating: -1 });
-    if (bestSeller) {
-      res.json(bestSeller);
+    const bestSellers = await Product.find({ purchaseCount: { $gt: 20 } })
+      .sort({ purchaseCount: -1 });
+    if (bestSellers && bestSellers.length > 0) {
+      res.json(bestSellers);
     } else {
-      res.status(404).json({ message: "Product not found" });
+      res.status(404).json({ message: "No best seller products found" });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -302,5 +296,78 @@ export const getNewArrivalProducts = async (req, res) => {
     res.json(newArrival);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Toggle sản phẩm yêu thích cho user hiện tại
+export const toggleFavoriteProduct = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { productId } = req.params;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const index = user.favorites.findIndex(
+      (id) => id.toString() === productId
+    );
+    let action = '';
+    if (index > -1) {
+      // Đã có, xóa khỏi favorites
+      user.favorites.splice(index, 1);
+      action = 'removed';
+    } else {
+      // Chưa có, thêm vào favorites
+      user.favorites.push(productId);
+      action = 'added';
+    }
+    await user.save();
+    res.json({ message: `Favorite ${action} successfully`, favorites: user.favorites });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Lấy danh sách đánh giá của sản phẩm
+export const getProductReviews = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).select('reviews');
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    res.json(product.reviews);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Thêm đánh giá mới cho sản phẩm
+export const addProductReview = async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    // Kiểm tra nếu user đã đánh giá
+    const alreadyReviewed = product.reviews.find(
+      (r) => r.user.toString() === req.user._id.toString()
+    );
+    if (alreadyReviewed) {
+      return res.status(400).json({ message: 'Bạn đã đánh giá sản phẩm này rồi' });
+    }
+
+    const review = {
+      user: req.user._id,
+      name: req.user.name,
+      rating: Number(rating),
+      comment,
+    };
+    product.reviews.push(review);
+    product.numReviews = product.reviews.length;
+    product.rating =
+      product.reviews.reduce((acc, item) => item.rating + acc, 0) /
+      product.reviews.length;
+    await product.save();
+    res.status(201).json({ message: 'Đã thêm đánh giá' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };

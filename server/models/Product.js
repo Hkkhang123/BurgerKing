@@ -17,11 +17,6 @@ const productSchema = mongoose.Schema({
     discountPrice: {
         type: Number,
     },
-    countInStock: {
-        type: Number,
-        required: true,
-        default: 0
-    },
     sku: {
         type: String,
         unique: true,
@@ -66,11 +61,24 @@ const productSchema = mongoose.Schema({
     metaKeywords: {
         type: String,
     },
-    dimension: {
-        length: Number,
-        width: Number,
-        height: Number
+
+    purchaseCount: {
+        type: Number,
+        default: 0
     },
+    isFavorite: {
+        type: Boolean,
+        default: false
+    },
+    reviews: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+        name: { type: String, required: true },
+        rating: { type: Number, required: true },
+        comment: { type: String },
+        createdAt: { type: Date, default: Date.now }
+      }
+    ]
 }, {timeStamps: true});
 
 export default mongoose.model("Product", productSchema)

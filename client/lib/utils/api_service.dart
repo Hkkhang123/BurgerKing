@@ -213,4 +213,111 @@ class ApiService {
       };
     }
   }
+
+  // Lấy danh sách sản phẩm bán chạy
+  static Future<List<dynamic>> fetchBestSellerProducts() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/products/best-seller'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        return [];
+      }
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // Toggle favorite product
+  static Future<Map<String, dynamic>> toggleFavoriteProduct(String token, String productId) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/api/products/favorite/$productId'),
+        headers: getAuthHeaders(token),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': jsonDecode(response.body),
+          'statusCode': response.statusCode,
+        };
+      } else {
+        Map<String, dynamic> errorData = {};
+        try {
+          errorData = jsonDecode(response.body);
+        } catch (e) {
+          errorData = {'message': 'Lỗi không xác định'};
+        }
+
+        return {
+          'success': false,
+          'data': errorData,
+          'statusCode': response.statusCode,
+          'error': errorData['message'] ?? 'Đã xảy ra lỗi không xác định.',
+        };
+      }
+    } on http.ClientException {
+      return {
+        'success': false,
+        'error': 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
+        'statusCode': 0,
+      };
+    } catch (e) {
+      String errorMessage = 'Lỗi kết nối: $e';
+      
+      if (e.toString().contains('SocketException') || 
+          e.toString().contains('Connection refused') ||
+          e.toString().contains('Failed host lookup')) {
+        errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+      } else if (e.toString().contains('TimeoutException')) {
+        errorMessage = 'Kết nối bị timeout. Vui lòng thử lại.';
+      }
+      
+      return {
+        'success': false,
+        'error': errorMessage,
+        'statusCode': 0,
+      };
+    }
+  }
+
+  // Lấy danh sách đánh giá sản phẩm
+  static Future<List<dynamic>> fetchProductReviews(String productId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/products/$productId/reviews'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        return [];
+      }
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>> submitProductReview(
+      String productId, double rating, String comment, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/products/$productId/reviews'),
+        headers: getAuthHeaders(token),
+        body: jsonEncode({'rating': rating, 'comment': comment}),
+      );
+      if (response.statusCode == 201) {
+        return {'success': true};
+      } else {
+        final data = jsonDecode(response.body);
+        return {'success': false, 'error': data['message'] ?? 'Lỗi'};
+      }
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
 } 

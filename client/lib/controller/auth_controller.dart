@@ -223,4 +223,17 @@ class AuthController extends GetxController{
       duration: const Duration(seconds: 2),
     );
   }
+
+  // Lấy lại profile user từ server và cập nhật local storage
+  Future<List<String>> fetchAndUpdateProfile() async {
+    final token = getToken();
+    if (token == null) return [];
+    final result = await ApiService.getProfile(token);
+    if (result['success']) {
+      final user = result['data'];
+      _storage.write('user', user);
+      return (user['favorites'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+    }
+    return [];
+  }
 }

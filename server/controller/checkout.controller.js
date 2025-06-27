@@ -73,6 +73,15 @@ export const finalizeCheckout = async (req, res) => {
       checkout.finalizedAt = Date.now();
       await checkout.save();
 
+      // Cập nhật purchaseCount cho từng sản phẩm
+      for (const item of checkout.checkoutItem) {
+        await Product.findByIdAndUpdate(
+          item.productId,
+          { $inc: { purchaseCount: item.quantity } },
+          { new: true }
+        );
+      }
+
       await Cart.findOneAndDelete({ user: checkout.user });
       res.status(200).json(finalOrder);
     } else if (checkout.isFinalized) {
