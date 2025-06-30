@@ -58,6 +58,7 @@ class AuthController extends GetxController{
         _storage.write('user', data['user']);
         _storage.write('token', data['token']);
         _storage.write('isLoggedIn', true);
+        print('[AuthController] Đăng nhập thành công, userId: ' + (data['user']?['_id']?.toString() ?? 'null'));
         
         _isLoggedIn.value = true;
         _isLoading.value = false;
@@ -235,5 +236,54 @@ class AuthController extends GetxController{
       return (user['favorites'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
     }
     return [];
+  }
+
+  // Upload avatar
+  Future<bool> uploadAvatar(List<int> imageBytes, String fileName) async {
+    final token = getToken();
+    if (token == null) return false;
+    
+    final result = await ApiService.uploadAvatar(token, imageBytes, fileName);
+    if (result['success']) {
+      // Cập nhật user data với avatar mới
+      final currentUser = getCurrentUser();
+      if (currentUser != null) {
+        currentUser['image'] = result['data']['imageUrl'];
+        _storage.write('user', currentUser);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  // Refresh user data from server
+  Future<bool> refreshUserData() async {
+    final token = getToken();
+    if (token == null) return false;
+    
+    final result = await ApiService.getProfile(token);
+    if (result['success']) {
+      final user = result['data'];
+      _storage.write('user', user);
+      return true;
+    }
+    return false;
+  }
+
+  // Clear avatar cache and force refresh
+  Future<void> clearAvatarCache() async {
+    // This would clear any cached avatar images
+    // For now, just refresh user data
+    await refreshUserData();
+  }
+
+  // Set default avatar for user
+  Future<void> setDefaultAvatar() async {
+    final currentUser = getCurrentUser();
+    if (currentUser != null && (currentUser['image'] == null || currentUser['image'].isEmpty)) {
+      // Set a default avatar URL or use local asset
+      currentUser['image'] = null; // Let UI handle default avatar
+      _storage.write('user', currentUser);
+    }
   }
 }

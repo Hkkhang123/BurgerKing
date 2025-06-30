@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 class CategoryChip extends StatefulWidget {
-  const CategoryChip({super.key});
+  final Function(String category)? onCategorySelected;
+  const CategoryChip({super.key, this.onCategorySelected});
 
   @override
   State<CategoryChip> createState() => _CategoryChipState();
@@ -55,6 +56,9 @@ class _CategoryChipState extends State<CategoryChip> {
                   setState(() {
                     selectedIndex = selected ? index : selectedIndex;
                   });
+                  if (widget.onCategorySelected != null) {
+                    widget.onCategorySelected!(categories[selectedIndex]);
+                  }
                 },
                 selectedColor: Theme.of(context).primaryColor,
                 backgroundColor: isDark ? Colors.grey[800] : Colors.grey[100],
@@ -64,12 +68,12 @@ class _CategoryChipState extends State<CategoryChip> {
                 elevation: selectedIndex == index ? 2 : 0,
                 pressElevation: 0,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+                  horizontal: 8,
+                  vertical: 2,
                 ),
                 labelPadding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 1,
+                  horizontal: 4,
+                  vertical: 0,
                 ),
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 side: BorderSide(

@@ -193,6 +193,41 @@ class ApiService {
     }
   }
 
+  // Upload avatar
+  static Future<Map<String, dynamic>> uploadAvatar(String token, List<int> imageBytes, String fileName) async {
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/api/auth/avatar'),
+      );
+      
+      request.headers.addAll(getAuthHeaders(token));
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image',
+          imageBytes,
+          filename: fileName,
+        ),
+      );
+
+      final response = await request.send();
+      final responseData = await response.stream.bytesToString();
+      final jsonData = jsonDecode(responseData);
+
+      return {
+        'success': response.statusCode == 200,
+        'data': jsonData,
+        'statusCode': response.statusCode,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Lỗi kết nối: $e',
+        'statusCode': 0,
+      };
+    }
+  }
+
   // Test connection to server
   static Future<Map<String, dynamic>> testConnection() async {
     try {
@@ -318,6 +353,170 @@ class ApiService {
       }
     } catch (e) {
       return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  // Generic GET method for making HTTP GET requests
+  static Future<Map<String, dynamic>> get(String endpoint, {Map<String, dynamic>? queryParams, String? token}) async {
+    try {
+      Uri uri = Uri.parse('$baseUrl$endpoint');
+      
+      // Add query parameters if provided
+      if (queryParams != null) {
+        uri = uri.replace(queryParameters: queryParams.map((key, value) => MapEntry(key, value.toString())));
+      }
+      
+      final headers = token != null ? getAuthHeaders(token) : _headers;
+      
+      final response = await http.get(uri, headers: headers).timeout(const Duration(seconds: 10));
+      
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': jsonDecode(response.body),
+          'statusCode': response.statusCode,
+        };
+      } else {
+        Map<String, dynamic> errorData = {};
+        try {
+          errorData = jsonDecode(response.body);
+        } catch (e) {
+          errorData = {'message': 'Lỗi không xác định'};
+        }
+
+        return {
+          'success': false,
+          'data': errorData,
+          'statusCode': response.statusCode,
+          'error': errorData['message'] ?? 'Đã xảy ra lỗi không xác định.',
+        };
+      }
+    } on http.ClientException {
+      return {
+        'success': false,
+        'error': 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
+        'statusCode': 0,
+      };
+    } catch (e) {
+      String errorMessage = 'Lỗi kết nối: $e';
+      
+      if (e.toString().contains('SocketException') || 
+          e.toString().contains('Connection refused') ||
+          e.toString().contains('Failed host lookup')) {
+        errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+      } else if (e.toString().contains('TimeoutException')) {
+        errorMessage = 'Kết nối bị timeout. Vui lòng thử lại.';
+      }
+      
+      return {
+        'success': false,
+        'error': errorMessage,
+        'statusCode': 0,
+      };
+    }
+  }
+
+  // Thêm sản phẩm vào giỏ hàng
+  static Future<Map<String, dynamic>> addToCart(String? token, String productId, {int quantity = 1, String? guestId}) async {
+    try {
+      final body = {
+        'productId': productId,
+        'quantity': quantity,
+      };
+      if (guestId != null) body['guestId'] = guestId;
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/cart'),
+        headers: token != null ? getAuthHeaders(token) : _headers,
+        body: jsonEncode(body),
+      );
+      return {
+        'success': response.statusCode == 200 || response.statusCode == 201,
+        'data': jsonDecode(response.body),
+        'statusCode': response.statusCode,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Lỗi kết nối: $e',
+        'statusCode': 0,
+      };
+    }
+  }
+
+  // Lấy thông tin giỏ hàng
+  static Future<Map<String, dynamic>> getCart(String? token, {String? guestId}) async {
+    try {
+      final uri = guestId != null
+          ? Uri.parse('$baseUrl/api/cart?guestId=$guestId')
+          : Uri.parse('$baseUrl/api/cart');
+      final response = await http.get(
+        uri,
+        headers: token != null ? getAuthHeaders(token) : _headers,
+      );
+      return {
+        'success': response.statusCode == 200,
+        'data': jsonDecode(response.body),
+        'statusCode': response.statusCode,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Lỗi kết nối: $e',
+        'statusCode': 0,
+      };
+    }
+  }
+
+  // Xóa sản phẩm khỏi giỏ hàng
+  static Future<Map<String, dynamic>> deleteFromCart(String? token, String productId, {String? guestId}) async {
+    try {
+      final body = {
+        'productId': productId,
+      };
+      if (guestId != null) body['guestId'] = guestId;
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/cart'),
+        headers: token != null ? getAuthHeaders(token) : _headers,
+        body: jsonEncode(body),
+      );
+      return {
+        'success': response.statusCode == 200,
+        'data': jsonDecode(response.body),
+        'statusCode': response.statusCode,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Lỗi kết nối: $e',
+        'statusCode': 0,
+      };
+    }
+  }
+
+  // Cập nhật số lượng sản phẩm trong giỏ hàng
+  static Future<Map<String, dynamic>> updateCart(String? token, String productId, int quantity, {String? guestId}) async {
+    try {
+      final body = {
+        'productId': productId,
+        'quantity': quantity,
+      };
+      if (guestId != null) body['guestId'] = guestId;
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/cart'),
+        headers: token != null ? getAuthHeaders(token) : _headers,
+        body: jsonEncode(body),
+      );
+      return {
+        'success': response.statusCode == 200,
+        'data': jsonDecode(response.body),
+        'statusCode': response.statusCode,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Lỗi kết nối: $e',
+        'statusCode': 0,
+      };
     }
   }
 } 

@@ -26,7 +26,7 @@ const userSchema = mongoose.Schema({
     },
     image: {
         type: String,
-        default: 'person.png', // Ảnh mặc định khi tạo tài khoản mới
+        default: null, // Không set default value để tránh lỗi URL
     },
     favorites: [{
         type: mongoose.Schema.Types.ObjectId,
@@ -48,5 +48,5 @@ userSchema.methods.matchPassword = async function (password) {
     return await bcrypt.compare(password, this.password);
 }
 
-export default mongoose.model("User", userSchema)
+export default mongoose.model("User", userSchema);
 

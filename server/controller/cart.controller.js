@@ -9,7 +9,9 @@ const checkCart = async (userId, guestId) => {
   }
 };
 export const addToCart = async (req, res) => {
-  const { productId, quantity, guestId, userId } = req.body;
+  const { productId, quantity, guestId } = req.body;
+  // Lấy userId từ req.user nếu đã đăng nhập
+  const userId = req.user ? req.user._id : null;
   try {
     const product = await Product.findById(productId);
     if (!product) return res.status(404).json({ message: "Product not found" });
@@ -41,7 +43,7 @@ export const addToCart = async (req, res) => {
     } else {
       const newCart = await Cart.create({
         user: userId ? userId : undefined,
-        guestId: guestId ? guestId : "guest_" + new Date().getTime(),
+        guestId: !userId ? (guestId ? guestId : "guest_" + new Date().getTime()) : undefined,
         products: [
           {
             productId,
@@ -61,7 +63,9 @@ export const addToCart = async (req, res) => {
 };
 
 export const updateCart = async (req, res) => {
-  const { productId, quantity, guestId, userId } = req.body;
+  const { productId, quantity, guestId } = req.body;
+  // Lấy userId từ req.user nếu đã đăng nhập
+  const userId = req.user ? req.user._id : null;
   try {
     let cart = await checkCart(userId, guestId);
     if (!cart) return res.status(404).json({ message: "Cart not found" });
@@ -93,7 +97,9 @@ export const updateCart = async (req, res) => {
 };
 
 export const deleteCart = async (req, res) => {
-  const { productId, quantity, guestId, userId } = req.body;
+  const { productId, quantity, guestId } = req.body;
+  // Lấy userId từ req.user nếu đã đăng nhập
+  const userId = req.user ? req.user._id : null;
   try {
     let cart = await checkCart(userId, guestId);
     if (!cart) return res.status(404).json({ message: "Cart not found" });
@@ -118,7 +124,9 @@ export const deleteCart = async (req, res) => {
 };
 
 export const getCart = async (req, res) => {
-  const { userId, guestId } = req.query;
+  // Lấy userId từ req.user nếu đã đăng nhập
+  const userId = req.user ? req.user._id : null;
+  const guestId = req.query.guestId;
   try {
     const cart = await checkCart(userId, guestId);
     if (cart) {

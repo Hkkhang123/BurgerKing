@@ -2,6 +2,7 @@ import 'package:client/controller/auth_controller.dart';
 import 'package:client/controller/theme_controller.dart';
 import 'package:client/utils/app_themes.dart';
 import 'package:client/view/splash_screen.dart';
+import 'package:client/view/signin_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -27,6 +28,10 @@ class MyApp extends StatelessWidget {
       themeMode: themeController.theme,
       defaultTransition: Transition.fade,
       home: SplashScreen(),
+      getPages: [
+        GetPage(name: '/signin', page: () => SigninScreen()),
+        // Thêm các route khác nếu cần
+      ],
     );
   }
 }

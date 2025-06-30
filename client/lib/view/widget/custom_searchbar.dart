@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 class CustomSearchbar extends StatelessWidget {
-  const CustomSearchbar({super.key});
+  final ValueChanged<String>? onSearchChanged;
+  const CustomSearchbar({super.key, this.onSearchChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +51,7 @@ class CustomSearchbar extends StatelessWidget {
             ),
           ),
         ),
+        onChanged: onSearchChanged,
       ),
     );
   }

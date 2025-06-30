@@ -196,47 +196,82 @@ export const getProducts = async (req, res) => {
       sortBy,
       search,
       category,
+      minRating,
       limit,
+      page,
     } = req.query;
 
     let query = {};
 
+    // Filter theo danh mục món ăn
     if (category && category.toLowerCase() !== "all") {
       query.category = category;
     }
 
+    // Filter theo khoảng giá
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
+    // Filter theo đánh giá
+    if (minRating) {
+      query.rating = { $gte: Number(minRating) };
+    }
+
+    // Tìm kiếm theo tên hoặc mô tả
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
       ];
     }
+
+    // Sắp xếp theo các tiêu chí
     let sort = {};
     if (sortBy) {
       switch (sortBy) {
         case "priceAsc":
-          sort = { price: 1 };
+          sort = { price: 1 }; // Giá tăng dần
           break;
         case "priceDesc":
-          sort = { price: -1 };
+          sort = { price: -1 }; // Giá giảm dần
+          break;
+        case "ratingDesc":
+          sort = { rating: -1 }; // Đánh giá cao nhất
+          break;
+        case "ratingAsc":
+          sort = { rating: 1 }; // Đánh giá thấp nhất
+          break;
+        case "newest":
+          sort = { createdAt: -1 }; // Mới nhất
+          break;
+        case "oldest":
+          sort = { createdAt: 1 }; // Cũ nhất
           break;
         case "popularity":
-          sort = { rating: -1 };
+          sort = { purchaseCount: -1 }; // Phổ biến nhất
           break;
         default:
+          sort = { createdAt: -1 }; // Mặc định sắp xếp theo thời gian tạo mới nhất
           break;
       }
+    } else {
+      // Mặc định sắp xếp theo thời gian tạo mới nhất
+      sort = { createdAt: -1 };
     }
+
+    // Pagination
+    const pageNumber = Number(page) || 1;
+    const limitNumber = Number(limit) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
 
     let products = await Product.find(query)
       .sort(sort)
-      .limit(Number(limit) || 0);
+      .skip(skip)
+      .limit(limitNumber);
+    
     res.json(products);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -304,13 +339,18 @@ export const toggleFavoriteProduct = async (req, res) => {
   try {
     const userId = req.user._id;
     const { productId } = req.params;
+    
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+    
+    // Convert productId to string for comparison
+    const productIdStr = productId.toString();
     const index = user.favorites.findIndex(
-      (id) => id.toString() === productId
+      (id) => id.toString() === productIdStr
     );
+    
     let action = '';
     if (index > -1) {
       // Đã có, xóa khỏi favorites
@@ -321,8 +361,17 @@ export const toggleFavoriteProduct = async (req, res) => {
       user.favorites.push(productId);
       action = 'added';
     }
+    
     await user.save();
-    res.json({ message: `Favorite ${action} successfully`, favorites: user.favorites });
+    
+    // Convert ObjectIds to strings for response
+    const favoritesStrings = user.favorites.map(id => id.toString());
+    
+    res.json({ 
+      message: `Favorite ${action} successfully`, 
+      favorites: favoritesStrings,
+      action: action
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

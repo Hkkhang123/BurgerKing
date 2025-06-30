@@ -17,4 +17,5 @@ router.get("/product", protectRoutes, isAdmin, getProducts)
 router.get("/order", protectRoutes, isAdmin, getOrders)
 router.put("/order/:id", protectRoutes, isAdmin, updateOrder)
 router.delete("/order/:id", protectRoutes, isAdmin, deleteOrder)
-export default router
+
+export default router;

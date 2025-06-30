@@ -2,6 +2,7 @@ import 'package:client/controller/auth_controller.dart';
 import 'package:client/view/main_screen.dart';
 import 'package:client/view/onboarding_screen.dart';
 import 'package:client/view/signin_screen.dart';
+import 'package:client/view/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -15,13 +16,7 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     //navigate to login screen after 2.5 second
     Future.delayed(const Duration(milliseconds: 2500), () {
-      if (authController.isFirstTime) {
-        Get.off(() => const OnboardingScreen());
-      } else if (authController.isLoggedIn) {
-        Get.off(() => const MainScreen());
-      } else {
-        Get.off(() => SigninScreen());
-      }
+      Get.off(() => HomeScreen());
     });
 
     return Scaffold(

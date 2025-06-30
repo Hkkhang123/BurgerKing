@@ -8,4 +8,4 @@ router.post("/", protectRoutes, createCheckout)
 router.put("/:id/pay", protectRoutes, updateCheckout)
 router.post("/:id/finalize", protectRoutes, finalizeCheckout)
 
-export default router
+export default router;

@@ -22,7 +22,7 @@ export const dangky = async (req, res) => {
     const { email, password, name } = req.body;
     const userExist = await User.findOne({ email });
     if (userExist) {
-      return res.status(400).json({ message: "User đã tồn tại" });
+      return res.status(400).json({ message: "User đã tồn tại" });
     }
     const user = await User.create({ name, email, password });
     await user.save();
@@ -49,6 +49,7 @@ export const dangky = async (req, res) => {
               name: user.name,
               email: user.email,
               role: user.role,
+              image: user.image || null,
             },
             token,
           });
@@ -88,6 +89,7 @@ export const dangNhap = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                image: user.image || null,
               },
               token,
               message: "Success",

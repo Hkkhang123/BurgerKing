@@ -22,7 +22,7 @@ class CustomBottomNavbar extends StatelessWidget {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_bag_outlined),
-            label: 'Giỏ hàng',
+            label: 'Đặt đồ ăn',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outlined),

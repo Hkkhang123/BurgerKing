@@ -7,4 +7,4 @@ const router = express.Router();
 router.get("/my-order", protectRoutes, myOrder)
 router.get("/:id", protectRoutes, getOrders)
 
-export default router
+export default router;
