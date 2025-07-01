@@ -217,46 +217,46 @@ class _ProductCardState extends State<ProductCard> {
           ),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.all(screenWidth * 0.02),
+              padding: EdgeInsets.all(screenWidth * 0.012),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     widget.product['name'],
                     style: AppTextStyle.withColor(
-                      AppTextStyle.withWeight(AppTextStyle.h3, FontWeight.bold),
+                      AppTextStyle.withWeight(AppTextStyle.h3.copyWith(fontSize: 15), FontWeight.bold),
                       Theme.of(context).textTheme.bodyLarge!.color!,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: screenWidth * 0.01),
+                  SizedBox(height: screenWidth * 0.008),
                   Text(
                     widget.product['category'],
                     style: AppTextStyle.withColor(
-                      AppTextStyle.bodyMedium,
+                      AppTextStyle.bodyMedium.copyWith(fontSize: 12),
                       isDark ? Colors.grey[400]! : Colors.grey[600]!,
                     ),
                   ),
-                  SizedBox(height: screenWidth * 0.01),
+                  SizedBox(height: screenWidth * 0.008),
                   Row(
                     children: [
                       Text(
                         '${widget.product['discountPrice'].toStringAsFixed(0)} đ',
                         style: AppTextStyle.withColor(
                           AppTextStyle.withWeight(
-                            AppTextStyle.bodyLarge,
+                            AppTextStyle.bodyLarge.copyWith(fontSize: 14),
                             FontWeight.bold,
                           ),
                           Theme.of(context).textTheme.bodyLarge!.color!,
                         ),
                       ),
                       if (widget.product['price'] != null)
-                        SizedBox(width: screenWidth * 0.01),
+                        SizedBox(width: screenWidth * 0.008),
                       Text(
                         '${widget.product['price'].toStringAsFixed(0)} đ',
                         style: AppTextStyle.withColor(
-                          AppTextStyle.bodySmall,
+                          AppTextStyle.bodySmall.copyWith(fontSize: 11),
                           isDark ? Colors.grey[400]! : Colors.grey[600]!,
                         ).copyWith(
                           decoration: TextDecoration.lineThrough
@@ -264,7 +264,7 @@ class _ProductCardState extends State<ProductCard> {
                       ),
                     ],
                   ),
-                  Spacer(),
+                  SizedBox(height: 8),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -307,7 +307,7 @@ class _ProductCardState extends State<ProductCard> {
                           );
                         }
                       },
-                      icon: const Icon(Icons.add_shopping_cart),
+                      icon: const Icon(Icons.add_shopping_cart, size: 18),
                       label: const Text('Thêm vào giỏ hàng'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).primaryColor,
@@ -315,8 +315,8 @@ class _ProductCardState extends State<ProductCard> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),

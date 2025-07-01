@@ -3,8 +3,9 @@ import 'dart:convert';
 
 
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:5000'; // For Android emulator - port 5000
+  //static const String baseUrl = 'http://10.0.2.2:5000'; // For Android emulator - port 5000
   // static const String baseUrl = 'http://localhost:5000'; // For iOS simulator - port 5000
+  static const String baseUrl = 'https://burgerking-j92p.onrender.com';
 
   // Headers
   static Map<String, String> get _headers => {
