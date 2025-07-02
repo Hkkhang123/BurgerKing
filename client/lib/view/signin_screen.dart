@@ -5,6 +5,9 @@ import 'package:client/view/signup_screen.dart';
 import 'package:client/view/widget/custom_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SigninScreen extends StatelessWidget {
   SigninScreen({super.key});
@@ -170,6 +173,24 @@ class SigninScreen extends StatelessWidget {
                           ),
                   ),
                 )),
+                const SizedBox(height: 16),
+                // Nút đăng nhập Google
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: Icon(Icons.login, color: Colors.red), // Hoặc dùng Asset Google logo nếu có
+                    label: Text('Đăng nhập bằng Google', style: TextStyle(color: Colors.black)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Colors.grey.shade300),
+                      ),
+                    ),
+                    onPressed: () => _handleGoogleSignIn(context),
+                  ),
+                ),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -244,6 +265,50 @@ class SigninScreen extends StatelessWidget {
       // Delay 2 giây để hiển thị thông báo thành công trước khi chuyển màn hình
       await Future.delayed(const Duration(seconds: 2));
       Get.offAll(() => const MainScreen());
+    }
+  }
+
+  Future<void> _handleGoogleSignIn(BuildContext context) async {
+    final GoogleSignIn _googleSignIn = GoogleSignIn(
+      scopes: ['email', 'profile'],
+    );
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đăng nhập Google bị hủy')),
+        );
+        return;
+      }
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final String? idToken = googleAuth.idToken;
+      if (idToken == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không lấy được idToken')),
+        );
+        return;
+      }
+      // Gửi idToken lên backend
+      final response = await http.post(
+        Uri.parse('https://burgerking-j92p.onrender.com/api/auth/google'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'idToken': idToken}),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đăng nhập Google thành công!')),
+        );
+        // TODO: Lưu token, chuyển màn hình, v.v. ở đây nếu muốn
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi backend: \\${response.body}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi: \\${e.toString()}')),
+      );
     }
   }
 }

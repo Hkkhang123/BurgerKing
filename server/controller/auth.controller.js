@@ -3,6 +3,7 @@ import User from "../models/User.js";
 import multer from 'multer';
 import streamifier from 'streamifier';
 import cloudinary from '../config/cloudinary.js';
+import { OAuth2Client } from 'google-auth-library';
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -16,6 +17,8 @@ const upload = multer({
     }
   }
 });
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const dangky = async (req, res) => {
   try {
@@ -150,3 +153,66 @@ export const uploadAvatar = [
     }
   },
 ];
+
+export const loginWithGoogle = async (req, res) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) {
+      return res.status(400).json({ message: 'No idToken provided' });
+    }
+    // Xác thực token với Google
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { sub, email, name, picture } = payload;
+    // Tìm user theo googleId hoặc email
+    let user = await User.findOne({ $or: [ { googleId: sub }, { email } ] });
+    if (!user) {
+      // Nếu chưa có user, tạo mới
+      user = await User.create({
+        name,
+        email,
+        googleId: sub,
+        image: picture,
+        password: Math.random().toString(36).slice(-8) // random password
+      });
+    } else if (!user.googleId) {
+      // Nếu user đã có email nhưng chưa có googleId, cập nhật
+      user.googleId = sub;
+      if (!user.image && picture) user.image = picture;
+      await user.save();
+    }
+    // Tạo JWT
+    const jwtPayload = {
+      user: {
+        id: user._id,
+        role: user.role,
+      },
+    };
+    jwt.sign(
+      jwtPayload,
+      process.env.JWT_SECRET,
+      { expiresIn: '40h' },
+      (err, token) => {
+        if (err) {
+          return res.status(500).json({ message: 'JWT error' });
+        }
+        res.json({
+          user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            image: user.image || null,
+          },
+          token,
+          message: 'Login with Google success',
+        });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

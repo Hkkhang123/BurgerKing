@@ -14,6 +14,11 @@ const userSchema = mongoose.Schema({
         unique: true,
         match: [/.+\@.+\..+/, "Vui lòng nhập email hợp lệ"]
     },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true,
+    },
     password: {
         type: String,
         required: true,
