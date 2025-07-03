@@ -4,6 +4,7 @@ import multer from 'multer';
 import streamifier from 'streamifier';
 import cloudinary from '../config/cloudinary.js';
 import { OAuth2Client } from 'google-auth-library';
+import admin from '../config/firebaseAdmin.js';
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -160,27 +161,26 @@ export const loginWithGoogle = async (req, res) => {
     if (!idToken) {
       return res.status(400).json({ message: 'No idToken provided' });
     }
-    // Xác thực token với Google
-    const ticket = await client.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
-    const { sub, email, name, picture } = payload;
-    // Tìm user theo googleId hoặc email
-    let user = await User.findOne({ $or: [ { googleId: sub }, { email } ] });
+    // Xác thực idToken với Firebase
+    let decoded;
+    try {
+      decoded = await admin.auth().verifyIdToken(idToken);
+    } catch (err) {
+      return res.status(401).json({ message: 'Invalid Firebase idToken' });
+    }
+    const { uid, email, name, picture } = decoded;
+    // Tìm user theo uid hoặc email
+    let user = await User.findOne({ $or: [ { googleId: uid }, { email } ] });
     if (!user) {
-      // Nếu chưa có user, tạo mới
       user = await User.create({
-        name,
+        name: name || email,
         email,
-        googleId: sub,
+        googleId: uid,
         image: picture,
-        password: Math.random().toString(36).slice(-8) // random password
+        password: Math.random().toString(36).slice(-8)
       });
     } else if (!user.googleId) {
-      // Nếu user đã có email nhưng chưa có googleId, cập nhật
-      user.googleId = sub;
+      user.googleId = uid;
       if (!user.image && picture) user.image = picture;
       await user.save();
     }
@@ -208,7 +208,7 @@ export const loginWithGoogle = async (req, res) => {
             image: user.image || null,
           },
           token,
-          message: 'Login with Google success',
+          message: 'Login with Google (Firebase) success',
         });
       }
     );
