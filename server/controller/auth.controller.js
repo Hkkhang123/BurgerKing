@@ -110,10 +110,19 @@ export const dangNhap = async (req, res) => {
 };
 
 export const getProfile = async (req, res) => {
-  if (!req.user) {
+  try {
+    if (!req.user) {
       return res.status(404).json({ success: false, message: "Không tìm thấy user" });
+    }
+    // Lấy user từ database để đảm bảo luôn có thông tin mới nhất
+    const user = await User.findById(req.user.id || req.user._id).select("-password");
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy user" });
+    }
+    return res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
-  res.json({ success: true, data: req.user });
 }
 
 export const uploadAvatar = [
