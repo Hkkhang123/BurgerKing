@@ -220,3 +220,14 @@ temp/
 ehthumbs.db
 Thumbs.db
 serviceAccountKey.json
+
+  # Flutter/Dart/Python/Node build outputs
+  build/
+  *.apk
+  *.ipa
+  *.bin
+  *.exe
+  *.dll
+  *.so
+  *.dylib
+  *.log

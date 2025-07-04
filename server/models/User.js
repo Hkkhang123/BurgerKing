@@ -33,11 +33,11 @@ const userSchema = mongoose.Schema({
         type: String,
         default: null, // Không set default value để tránh lỗi URL
     },
-    favorites: [{
-        type: mongoose.Schema.Types.ObjectId,
+    favorites: {
+        type: [mongoose.Schema.Types.ObjectId],
         ref: 'Product',
-        default: [],   
-    }],
+        default: []
+    },
 }, {timestamps: true});
 
 userSchema.pre("save", async function (next) {
