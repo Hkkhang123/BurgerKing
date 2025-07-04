@@ -12,7 +12,20 @@
           "package_name": "com.example.burgerking"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "919183956707-7pc94d9u85762cii0r5b65n1q8okti2q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.burgerking",
+            "certificate_hash": "e01876e012b4a67675fd350d7bd843edfa47cddb"
+          }
+        },
+        {
+          "client_id": "919183956707-vdfoamfnmbpkbuofb3qfh5ns7gm6p6fm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC_UtAYhV14zLqBECBQJfUH0T0Fh90__iA"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "919183956707-vdfoamfnmbpkbuofb3qfh5ns7gm6p6fm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -267,7 +267,7 @@ class SigninScreen extends StatelessWidget {
   }
 
   Future<void> _handleGoogleSignIn(BuildContext context) async {
-    final result = await GoogleAuthService.signInWithGoogle();
+    final result = await GoogleAuthService.signInWithGoogleAndSave();
     if (result['success'] == true) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Đăng nhập Google thành công!')),
