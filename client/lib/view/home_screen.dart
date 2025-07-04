@@ -26,12 +26,24 @@ class _HomeScreenState extends State<HomeScreen> {
   String searchQuery = '';
   List<dynamic> allProducts = [];
   List<dynamic> filteredProducts = [];
+  bool _profileFetched = false;
 
   @override
   void initState() {
     super.initState();
     authController = Get.put(AuthController());
     _loadUserData();
+    _fetchProfileIfNeeded();
+  }
+
+  void _fetchProfileIfNeeded() async {
+    final user = authController.getCurrentUser();
+    final token = authController.getToken();
+    if (user == null && token != null && !_profileFetched) {
+      _profileFetched = true;
+      await authController.fetchAndUpdateProfile();
+      if (mounted) setState(() {});
+    }
   }
 
   Future<void> _loadUserData() async {
@@ -167,6 +179,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = authController.getCurrentUser();
+    final token = authController.getToken();
+    print('[HomeScreen] Các key trong storage khi đọc: ' + GetStorage().getKeys().toString());
+    print('[HomeScreen] User lấy từ storage: ' + user.toString());
+    print('[HomeScreen] Token lấy từ storage: ' + token.toString());
+    // Đã bỏ setState trong build để tránh lặp vô hạn
     final String userName = user != null && user['name'] != null ? user['name'] : (isLoggedIn() ? 'Khách' : getGuestId());
     final String? avatarUrl = user != null && user['image'] != null ? user['image'] : null;
     

@@ -53,14 +53,17 @@ class GoogleAuthService {
 
   static Future<Map<String, dynamic>> signInWithGoogleAndSave() async {
     final result = await signInWithGoogle();
+    print('[GoogleAuthService] Kết quả từ backend: ' + result.toString());
     if (result['success']) {
       final data = result['data'];
       final user = data['user'];
       final token = data['token'];
       final storage = GetStorage();
-      storage.write('user', user);
-      storage.write('token', token);
-      storage.write('isLoggedIn', true);
+      print('[GoogleAuthService] Lưu token vào storage: ' + token.toString());
+      await storage.write('token', token);
+      await storage.write('isLoggedIn', true);
+      print('[GoogleAuthService] isLoggedIn sau lưu: ' + storage.read('isLoggedIn').toString());
+      print('[GoogleAuthService] Các key trong storage sau lưu: ' + storage.getKeys().toString());
       // Cập nhật trạng thái đăng nhập cho AuthController
       final authController = Get.isRegistered<AuthController>()
           ? Get.find<AuthController>()

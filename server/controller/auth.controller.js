@@ -110,7 +110,10 @@ export const dangNhap = async (req, res) => {
 };
 
 export const getProfile = async (req, res) => {
-    res.json(req.user)
+  if (!req.user) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy user" });
+  }
+  res.json({ success: true, data: req.user });
 }
 
 export const uploadAvatar = [

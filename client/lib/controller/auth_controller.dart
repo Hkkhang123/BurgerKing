@@ -3,6 +3,7 @@ import 'package:get_storage/get_storage.dart';
 import '../utils/api_service.dart';
 import '../utils/debug_connection.dart';
 import '../utils/success_dialog.dart';
+import 'dart:convert';
 
 class AuthController extends GetxController{
   final _storage = GetStorage();
@@ -27,16 +28,10 @@ class AuthController extends GetxController{
   void _loadInitState(){
     _isFisrtTime.value = _storage.read('isFirstTime') ?? true;
     _isLoggedIn.value = _storage.read('isLoggedIn') ?? false;
-    
-    // Load stored user data and token if user is logged in
-    if (_isLoggedIn.value) {
-      final user = _storage.read('user');
-      final token = _storage.read('token');
-      if (user == null || token == null) {
-        // If user data or token is missing, logout
-        logout();
-      }
-    }
+    // KHÔNG tự động logout nếu user/token null, chỉ log ra để debug
+    final user = _storage.read('user');
+    final token = _storage.read('token');
+    print('[AuthController] _loadInitState: user=' + user.toString() + ', token=' + token.toString());
   }
 
   void setFirstTimeDone(){
@@ -165,7 +160,27 @@ class AuthController extends GetxController{
 
   // Get stored user data
   Map<String, dynamic>? getCurrentUser() {
-    return _storage.read('user');
+    final dynamic userRaw = _storage.read('user');
+    print('[AuthController] user raw from storage: ' + userRaw.toString());
+    if (userRaw == null) {
+      // Nếu đã có token mà chưa có user, tự động fetch profile
+      final token = getToken();
+      if (token != null) {
+        fetchAndUpdateProfile(); // Gọi bất đồng bộ, lần sau sẽ có user
+      }
+      return null;
+    }
+    if (userRaw is String) {
+      try {
+        return jsonDecode(userRaw) as Map<String, dynamic>;
+      } catch (e) {
+        print('[AuthController] Lỗi decode user: $e');
+        return null;
+      }
+    }
+    if (userRaw is Map<String, dynamic>) return userRaw;
+    if (userRaw is Map) return Map<String, dynamic>.from(userRaw);
+    return null;
   }
 
   // Get stored token
@@ -230,10 +245,14 @@ class AuthController extends GetxController{
     final token = getToken();
     if (token == null) return [];
     final result = await ApiService.getProfile(token);
+    print('[AuthController] fetchAndUpdateProfile result: ' + result.toString());
     if (result['success']) {
       final user = result['data'];
-      _storage.write('user', user);
-      return (user['favorites'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+      print('[AuthController] fetchAndUpdateProfile user: ' + user.toString());
+      _storage.write('user', jsonEncode(user));
+      // Chống null khi truy cập favorites
+      final favorites = (user?['favorites'] as List<dynamic>?) ?? [];
+      return favorites.map((e) => e.toString()).toList();
     }
     return [];
   }
