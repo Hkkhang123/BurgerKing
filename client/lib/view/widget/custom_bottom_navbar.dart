@@ -25,6 +25,10 @@ class CustomBottomNavbar extends StatelessWidget {
             label: 'Đặt đồ ăn',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_border),
+            label: 'Yêu thích',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.person_outlined),
             label: 'Tài khoản',
           ),

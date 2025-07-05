@@ -28,10 +28,6 @@ class AuthController extends GetxController{
   void _loadInitState(){
     _isFisrtTime.value = _storage.read('isFirstTime') ?? true;
     _isLoggedIn.value = _storage.read('isLoggedIn') ?? false;
-    // KHÔNG tự động logout nếu user/token null, chỉ log ra để debug
-    final user = _storage.read('user');
-    final token = _storage.read('token');
-    print('[AuthController] _loadInitState: user=' + user.toString() + ', token=' + token.toString());
   }
 
   void setFirstTimeDone(){
@@ -53,7 +49,6 @@ class AuthController extends GetxController{
         _storage.write('user', data['user']);
         _storage.write('token', data['token']);
         _storage.write('isLoggedIn', true);
-        print('[AuthController] Đăng nhập thành công, userId: ' + (data['user']?['_id']?.toString() ?? 'null'));
         
         _isLoggedIn.value = true;
         _isLoading.value = false;
@@ -161,7 +156,6 @@ class AuthController extends GetxController{
   // Get stored user data
   Map<String, dynamic>? getCurrentUser() {
     final dynamic userRaw = _storage.read('user');
-    print('[AuthController] user raw from storage: ' + userRaw.toString());
     if (userRaw == null) {
       // Nếu đã có token mà chưa có user, tự động fetch profile
       final token = getToken();
@@ -174,7 +168,6 @@ class AuthController extends GetxController{
       try {
         return jsonDecode(userRaw) as Map<String, dynamic>;
       } catch (e) {
-        print('[AuthController] Lỗi decode user: $e');
         return null;
       }
     }
@@ -245,10 +238,9 @@ class AuthController extends GetxController{
     final token = getToken();
     if (token == null) return [];
     final result = await ApiService.getProfile(token);
-    print('[AuthController] fetchAndUpdateProfile result: ' + result.toString());
     if (result['success']) {
-      final user = result['data'];
-      print('[AuthController] fetchAndUpdateProfile user: ' + user.toString());
+      // Lấy user data từ result['data']['data'] vì API trả về {success: true, data: {success: true, data: user}}
+      final user = result['data']['data'] ?? result['data'];
       _storage.write('user', jsonEncode(user));
       // Chống null khi truy cập favorites
       final favorites = (user?['favorites'] as List<dynamic>?) ?? [];

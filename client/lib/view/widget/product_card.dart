@@ -293,10 +293,7 @@ class _ProductCardState extends State<ProductCard> {
                           );
                           return;
                         }
-                        print('[AddToCart] Sản phẩm: ' + widget.product.toString());
-                        print('[AddToCart] Token: ' + (token ?? 'null'));
                         final result = await ApiService.addToCart(token, widget.product['_id']);
-                        print('[AddToCart] Kết quả API: ' + result.toString());
                         if (result['success']) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Đã thêm vào giỏ hàng!')),

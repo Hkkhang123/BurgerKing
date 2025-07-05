@@ -4,6 +4,7 @@ import 'package:client/view/account_screen.dart';
 import 'package:client/view/home_screen.dart';
 import 'package:client/view/shopping_screen.dart';
 import 'package:client/view/widget/custom_bottom_navbar.dart';
+import 'package:client/view/widget/favorite_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -25,7 +26,7 @@ class MainScreen extends StatelessWidget {
                 () => IndexedStack(
                   key: ValueKey(navigationController.currentIndex.value),
                   index: navigationController.currentIndex.value,
-                  children: [HomeScreen(), ShoppingScreen(), AccountScreen()],
+                  children: [HomeScreen(), ShoppingScreen(),FavoriteScreen(), AccountScreen() ],
                 ),
               ),
             ),

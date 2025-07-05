@@ -420,3 +420,17 @@ export const addProductReview = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// Lấy nhiều sản phẩm theo danh sách ID
+export const getProductsByIds = async (req, res) => {
+  try {
+    const { ids } = req.body; // ids là mảng ID
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: "Danh sách ID không hợp lệ" });
+    }
+    const products = await Product.find({ _id: { $in: ids } });
+    res.json({ success: true, products });
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
+};

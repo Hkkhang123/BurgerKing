@@ -32,16 +32,13 @@ class _CartScreenState extends State<CartScreen> {
     });
     final authController = Get.find<AuthController>();
     final token = authController.getToken();
-    print('[CartScreen] Token: ' + (token?.toString() ?? 'null'));
     String? guestId;
     if (token == null) {
       final storage = GetStorage();
       guestId = storage.read('guestId');
-      print('[CartScreen] guestId: ' + (guestId?.toString() ?? 'null'));
       if (guestId == null) {
         guestId = 'guest_${DateTime.now().millisecondsSinceEpoch}';
         storage.write('guestId', guestId);
-        print('[CartScreen] Tạo guestId mới: ' + guestId);
       }
     }
     if (token == null && guestId == null) {
@@ -56,7 +53,7 @@ class _CartScreenState extends State<CartScreen> {
       token,
       guestId: token == null ? guestId : null,
     );
-    print('Cart API result: $result'); // DEBUG LOG
+
     if (result['success']) {
       final data = result['data'];
       setState(() {
@@ -70,7 +67,7 @@ class _CartScreenState extends State<CartScreen> {
           (result['data'] != null && result['data']['message'] != null)
               ? result['data']['message']
               : (result['error'] ?? 'Lỗi khi tải giỏ hàng');
-      print('Lỗi khi load giỏ hàng: ' + errorMessage);
+
       setState(() {
         error = errorMessage;
         isLoading = false;

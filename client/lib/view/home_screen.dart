@@ -124,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
         userFavorites = result;
       });
     } catch (e) {
-      print('Lỗi refresh favorites: $e');
+      // Handle error silently
     }
   }
 
@@ -180,10 +180,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final user = authController.getCurrentUser();
     final token = authController.getToken();
-    print('[HomeScreen] Các key trong storage khi đọc: ' + GetStorage().getKeys().toString());
-    print('[HomeScreen] User lấy từ storage: ' + user.toString());
-    print('[HomeScreen] Token lấy từ storage: ' + token.toString());
-    // Đã bỏ setState trong build để tránh lặp vô hạn
     final String userName = user != null && user['name'] != null ? user['name'] : (isLoggedIn() ? 'Khách' : getGuestId());
     final String? avatarUrl = user != null && user['image'] != null ? user['image'] : null;
     
@@ -208,7 +204,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         : AssetImage('assets/images/avatar.jpg') as ImageProvider,
                     onBackgroundImageError: (exception, stackTrace) {
                       // Fallback to default avatar if network image fails
-                      print('Error loading avatar: $exception');
                     },
                     child: isValidAvatarUrl
                         ? null

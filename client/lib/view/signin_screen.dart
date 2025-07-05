@@ -272,7 +272,7 @@ class SigninScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Đăng nhập Google thành công!')),
       );
-      print('[SignInScreen] Đăng nhập Google thành công, chuyển sang MainScreen');
+      
       await Future.delayed(const Duration(milliseconds: 500));
       Get.offAll(() => const MainScreen());
     } else {
