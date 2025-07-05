@@ -2,6 +2,7 @@ import 'package:client/utils/app_textstyle.dart';
 import 'package:flutter/material.dart';
 import 'package:client/controller/auth_controller.dart';
 import 'package:get/get.dart';
+import 'package:client/utils/api_service.dart';
 
 class FavoriteScreen extends StatefulWidget {
   const FavoriteScreen({super.key});
@@ -17,17 +18,37 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
   @override
   void initState() {
     super.initState();
-    fetchFavorites();
+    final authController = Get.find<AuthController>();
+    if (!authController.isLoggedIn) {
+      // Không fetch favorites nếu chưa đăng nhập
+      setState(() {
+        isLoading = false;
+      });
+    } else {
+      fetchFavorites();
+    }
   }
 
   Future<void> fetchFavorites() async {
     final authController = Get.find<AuthController>();
     await authController.fetchAndUpdateProfile();
     final user = authController.getCurrentUser();
+    final List<String> favoriteIds = (user?['favorites'] ?? [])
+        .whereType<String>()
+        .toList();
+
+    if (favoriteIds.isEmpty) {
+      setState(() {
+        favoriteProducts = [];
+        isLoading = false;
+      });
+      return;
+    }
+
+    // Gọi API lấy chi tiết sản phẩm
+    final products = await ApiService.getProductsByIds(favoriteIds);
     setState(() {
-      favoriteProducts = (user?['favorites'] ?? [])
-          .where((e) => e != null && e is Map<String, dynamic>)
-          .toList();
+      favoriteProducts = products;
       isLoading = false;
     });
   }
@@ -55,17 +76,122 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
           ),
         ],
       ),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: _buildSummarySection(context, favoriteProducts),
-                  ),
-                  // Đã xóa SliverList vì favoriteProducts chỉ là danh sách ID
-                ],
+            body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    final authController = Get.find<AuthController>();
+    if (!authController.isLoggedIn) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.favorite_border,
+                size: 64,
+                color: Colors.grey[400],
               ),
+              const SizedBox(height: 16),
+              Text(
+                'Bạn chưa đăng nhập',
+                style: AppTextStyle.withColor(
+                  AppTextStyle.h2,
+                  Theme.of(context).textTheme.bodyLarge!.color!,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Vui lòng đăng nhập để xem danh sách sản phẩm yêu thích của bạn.',
+                style: AppTextStyle.withColor(
+                  AppTextStyle.bodyMedium,
+                  Colors.grey[600]!,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Get.toNamed('/signin'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 12,
+                  ),
+                ),
+                child: Text(
+                  'Đăng nhập ngay',
+                  style: AppTextStyle.withColor(
+                    AppTextStyle.buttonMedium,
+                    Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (favoriteProducts.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.favorite_border,
+                size: 64,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Chưa có sản phẩm yêu thích',
+                style: AppTextStyle.withColor(
+                  AppTextStyle.h2,
+                  Theme.of(context).textTheme.bodyLarge!.color!,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Hãy thêm sản phẩm vào danh sách yêu thích để xem chúng ở đây.',
+                style: AppTextStyle.withColor(
+                  AppTextStyle.bodyMedium,
+                  Colors.grey[600]!,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: _buildSummarySection(context, favoriteProducts),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => _buildFavoriteItem(
+                context,
+                product: favoriteProducts[index],
+              ),
+              childCount: favoriteProducts.length,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -106,7 +232,30 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
           ),
           Flexible(
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () async {
+                final authController = Get.find<AuthController>();
+                final token = authController.getToken();
+                if (token == null) {
+                  Get.toNamed('/signin');
+                  return;
+                }
+                bool allSuccess = true;
+                for (final product in favoriteProducts) {
+                  final result = await ApiService.addToCart(token, product['_id']);
+                  if (!result['success']) {
+                    allSuccess = false;
+                  }
+                }
+                if (allSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã thêm tất cả vào giỏ hàng!')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Có sản phẩm thêm vào giỏ hàng bị lỗi!')),
+                  );
+                }
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
                 padding: const EdgeInsets.symmetric(
@@ -136,6 +285,14 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
     required Map<String, dynamic> product,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Lấy URL ảnh đầu tiên nếu image là mảng
+    String? imageUrl;
+    if (product['image'] is List && product['image'].isNotEmpty) {
+      final firstImage = product['image'][0];
+      if (firstImage is Map && firstImage['url'] != null) {
+        imageUrl = firstImage['url'];
+      }
+    }
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -157,9 +314,9 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
             borderRadius: const BorderRadius.horizontal(
               left: Radius.circular(12),
             ),
-            child: (product['image'] != null && product['image'].toString().startsWith('http'))
+            child: imageUrl != null
                 ? Image.network(
-                    product['image'],
+                    imageUrl,
                     width: 100,
                     height: 100,
                     fit: BoxFit.cover,
@@ -208,14 +365,49 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                       Row(
                         children: [
                           IconButton(
-                            onPressed: () {},
+                            onPressed: () async {
+                              final authController = Get.find<AuthController>();
+                              final token = authController.getToken();
+                              if (token == null) {
+                                Get.toNamed('/signin');
+                                return;
+                              }
+                              final result = await ApiService.addToCart(token, product['_id']);
+                              if (result['success']) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Đã thêm vào giỏ hàng!')),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(result['error'] ?? 'Lỗi khi thêm vào giỏ hàng')),
+                                );
+                              }
+                            },
                             icon: Icon(
                               Icons.shopping_bag_outlined,
                               color: Theme.of(context).primaryColor,
                             ),
                           ),
                           IconButton(
-                            onPressed: () {},
+                            onPressed: () async {
+                              final authController = Get.find<AuthController>();
+                              final token = authController.getToken();
+                              if (token == null) {
+                                Get.toNamed('/signin');
+                                return;
+                              }
+                              final result = await ApiService.toggleFavoriteProduct(token, product['_id']);
+                              if (result['success']) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Đã xóa khỏi yêu thích!')),
+                                );
+                                fetchFavorites();
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(result['error'] ?? 'Lỗi khi xóa khỏi yêu thích')),
+                                );
+                              }
+                            },
                             icon: Icon(
                               Icons.delete_outline,
                               color: isDark ? Colors.grey[400] : Colors.grey[600],

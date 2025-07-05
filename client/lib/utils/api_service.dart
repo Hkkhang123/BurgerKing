@@ -520,4 +520,22 @@ class ApiService {
       };
     }
   }
+
+  // Lấy chi tiết nhiều sản phẩm theo danh sách ID
+  static Future<List<Map<String, dynamic>>> getProductsByIds(List<String> ids) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/products/by-ids'),
+        headers: _headers,
+        body: jsonEncode({'ids': ids}),
+      );
+      final data = jsonDecode(response.body);
+      if (data['success'] == true && data['products'] != null) {
+        return List<Map<String, dynamic>>.from(data['products']);
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
 } 

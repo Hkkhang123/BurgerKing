@@ -1,7 +1,6 @@
 import 'package:client/utils/app_textstyle.dart';
 import 'package:flutter/material.dart';
 import 'package:client/utils/api_service.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:get/get.dart';
 
 class ProductCard extends StatefulWidget {
@@ -218,106 +217,108 @@ class _ProductCardState extends State<ProductCard> {
           Expanded(
             child: Padding(
               padding: EdgeInsets.all(screenWidth * 0.012),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.product['name'],
-                    style: AppTextStyle.withColor(
-                      AppTextStyle.withWeight(AppTextStyle.h3.copyWith(fontSize: 15), FontWeight.bold),
-                      Theme.of(context).textTheme.bodyLarge!.color!,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: screenWidth * 0.008),
-                  Text(
-                    widget.product['category'],
-                    style: AppTextStyle.withColor(
-                      AppTextStyle.bodyMedium.copyWith(fontSize: 12),
-                      isDark ? Colors.grey[400]! : Colors.grey[600]!,
-                    ),
-                  ),
-                  SizedBox(height: screenWidth * 0.008),
-                  Row(
-                    children: [
-                      Text(
-                        '${widget.product['discountPrice'].toStringAsFixed(0)} đ',
-                        style: AppTextStyle.withColor(
-                          AppTextStyle.withWeight(
-                            AppTextStyle.bodyLarge.copyWith(fontSize: 14),
-                            FontWeight.bold,
-                          ),
-                          Theme.of(context).textTheme.bodyLarge!.color!,
-                        ),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.product['name'],
+                      style: AppTextStyle.withColor(
+                        AppTextStyle.withWeight(AppTextStyle.h3.copyWith(fontSize: 15), FontWeight.bold),
+                        Theme.of(context).textTheme.bodyLarge!.color!,
                       ),
-                      if (widget.product['price'] != null)
-                        SizedBox(width: screenWidth * 0.008),
-                      Text(
-                        '${widget.product['price'].toStringAsFixed(0)} đ',
-                        style: AppTextStyle.withColor(
-                          AppTextStyle.bodySmall.copyWith(fontSize: 11),
-                          isDark ? Colors.grey[400]! : Colors.grey[600]!,
-                        ).copyWith(
-                          decoration: TextDecoration.lineThrough
-                        ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: screenWidth * 0.008),
+                    Text(
+                      widget.product['category'],
+                      style: AppTextStyle.withColor(
+                        AppTextStyle.bodyMedium.copyWith(fontSize: 12),
+                        isDark ? Colors.grey[400]! : Colors.grey[600]!,
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        String? token = widget.userToken;
-                        if (token == null) {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Bạn chưa đăng nhập'),
-                              content: const Text('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    Get.toNamed('/signin');
-                                  },
-                                  child: const Text('Đăng nhập'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: const Text('Hủy'),
-                                ),
-                              ],
+                    ),
+                    SizedBox(height: screenWidth * 0.008),
+                    Row(
+                      children: [
+                        Text(
+                          '${widget.product['discountPrice'].toStringAsFixed(0)} đ',
+                          style: AppTextStyle.withColor(
+                            AppTextStyle.withWeight(
+                              AppTextStyle.bodyLarge.copyWith(fontSize: 14),
+                              FontWeight.bold,
                             ),
-                          );
-                          return;
-                        }
-                        final result = await ApiService.addToCart(token, widget.product['_id']);
-                        if (result['success']) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Đã thêm vào giỏ hàng!')),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(result['error'] ?? 'Lỗi khi thêm vào giỏ hàng')),
-                          );
-                        }
-                      },
-                      icon: const Icon(Icons.add_shopping_cart, size: 18),
-                      label: const Text('Thêm vào giỏ hàng'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                            Theme.of(context).textTheme.bodyLarge!.color!,
+                          ),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        if (widget.product['price'] != null)
+                          SizedBox(width: screenWidth * 0.008),
+                        Text(
+                          '${widget.product['price'].toStringAsFixed(0)} đ',
+                          style: AppTextStyle.withColor(
+                            AppTextStyle.bodySmall.copyWith(fontSize: 11),
+                            isDark ? Colors.grey[400]! : Colors.grey[600]!,
+                          ).copyWith(
+                            decoration: TextDecoration.lineThrough
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          String? token = widget.userToken;
+                          if (token == null) {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Bạn chưa đăng nhập'),
+                                content: const Text('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      Get.toNamed('/signin');
+                                    },
+                                    child: const Text('Đăng nhập'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: const Text('Hủy'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            return;
+                          }
+                          final result = await ApiService.addToCart(token, widget.product['_id']);
+                          if (result['success']) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Đã thêm vào giỏ hàng!')),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(result['error'] ?? 'Lỗi khi thêm vào giỏ hàng')),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.add_shopping_cart, size: 18),
+                        label: const Text('Thêm vào giỏ hàng'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
