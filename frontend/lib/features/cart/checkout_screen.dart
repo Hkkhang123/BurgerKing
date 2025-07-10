@@ -21,6 +21,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _cityController = TextEditingController(text: 'Hồ Chí Minh');
   final _phoneController = TextEditingController(text: '0123456789');
   final _receiverController = TextEditingController(text: 'Khách hàng');
+  final _districtController = TextEditingController(text: 'Quận 1');
+  final _postalCodeController = TextEditingController(text: '700000');
   String _paymentMethod = 'Thanh toán khi nhận hàng';
   bool _isLoading = false;
   late final WebViewController _webViewController;
@@ -56,6 +58,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final shippingAddress = {
       'address': _addressController.text,
       'city': _cityController.text,
+      'district': _districtController.text,
+      'postalCode': _postalCodeController.text,
       'phone': _phoneController.text,
       'receiver': _receiverController.text,
     };
@@ -73,7 +77,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       if (_paymentMethod == 'Thanh toán Momo') {
         // Gọi API backend để lấy payUrl của Momo
         final response = await http.post(
-          Uri.parse('http://localhost:3000/api/payment/momo'), // Đổi lại domain khi deploy
+          Uri.parse('https://burgerking-j92p.onrender.com/api/payment/momo'), // Đổi lại domain khi deploy
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             'checkoutId': checkoutId,
@@ -82,6 +86,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           }),
         );
         if (response.statusCode == 200) {
+          print('Momo response: ' + response.body);
           final payUrl = jsonDecode(response.body)['payUrl'];
           if (payUrl != null) {
             await Navigator.of(context).push(MaterialPageRoute(
@@ -100,6 +105,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             Navigator.of(context).pop(true);
             return;
           }
+        } else {
+          print('Momo error: ' + response.body);
         }
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Không lấy được link thanh toán Momo!')),
@@ -152,6 +159,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     decoration: const InputDecoration(labelText: 'Thành phố'),
                   ),
                   TextField(
+                    controller: _districtController,
+                    decoration: const InputDecoration(labelText: 'Quận/Huyện'),
+                  ),
+                  TextField(
+                    controller: _postalCodeController,
+                    decoration: const InputDecoration(labelText: 'Mã bưu điện'),
+                    keyboardType: TextInputType.number,
+                  ),
+                  TextField(
                     controller: _phoneController,
                     decoration: const InputDecoration(labelText: 'Số điện thoại'),
                     keyboardType: TextInputType.phone,
@@ -167,6 +183,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     items: const [
                       DropdownMenuItem(value: 'Thanh toán khi nhận hàng', child: Text('Thanh toán khi nhận hàng')),
                       DropdownMenuItem(value: 'Chuyển khoản ngân hàng', child: Text('Chuyển khoản ngân hàng')),
+                      DropdownMenuItem(value: 'Thanh toán Momo', child: Text('Thanh toán Momo')),
                     ],
                     onChanged: (value) {
                       if (value != null) setState(() => _paymentMethod = value);
