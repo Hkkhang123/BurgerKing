@@ -1,9 +1,7 @@
 import express from 'express';
 import {
   createMomoPayment,
-  createVNPayUrl,
   momoNotify,
-  vnpayReturn
 } from '../controllers/payment.controller.js';
 
 const router = express.Router();
