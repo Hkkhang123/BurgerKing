@@ -81,31 +81,35 @@ class _ProductCardState extends State<ProductCard> {
 
   // Function to handle favorite toggle
   Future<void> _handleFavoriteToggle() async {
+    if (!mounted) return;
+    
     if (_isProcessing) {
       return;
     }
     if (widget.userToken == null) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Bạn chưa đăng nhập'),
-          content: const Text('Vui lòng đăng nhập để sử dụng tính năng yêu thích.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                // Điều hướng sang màn hình đăng nhập
-                Navigator.of(context).pushNamed('/signin');
-              },
-              child: const Text('Đăng nhập'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Hủy'),
-            ),
-          ],
-        ),
-      );
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Bạn chưa đăng nhập'),
+            content: const Text('Vui lòng đăng nhập để sử dụng tính năng yêu thích.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // Điều hướng sang màn hình đăng nhập
+                  Navigator.of(context).pushNamed('/signin');
+                },
+                child: const Text('Đăng nhập'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Hủy'),
+              ),
+            ],
+          ),
+        );
+      }
       return;
     }
     // Optimistic UI: cập nhật trạng thái ngay
@@ -120,14 +124,19 @@ class _ProductCardState extends State<ProductCard> {
     // Gọi API ở background
     final productController = Get.find<ProductController>();
     final result = await productController.toggleFavoriteProduct(widget.userToken!, widget.product['_id']);
+    
+    if (!mounted) return;
+    
     if (!result['success']) {
       // Rollback nếu lỗi
       setState(() {
         isFavorite = oldFavorite;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['error'] ?? 'Lỗi cập nhật yêu thích')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['error'] ?? 'Lỗi cập nhật yêu thích')),
+        );
+      }
     }
   }
 

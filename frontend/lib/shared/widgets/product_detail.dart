@@ -33,9 +33,11 @@ class _ProductDetailState extends State<ProductDetail> {
   }
 
   void _reloadReviews() {
-    setState(() {
-      _reviewsFuture = reviewController.fetchProductReviews(widget.product['_id']);
-    });
+    if (mounted) {
+      setState(() {
+        _reviewsFuture = reviewController.fetchProductReviews(widget.product['_id']);
+      });
+    }
   }
 
   Widget _buildReviewForm(BuildContext context) {
@@ -104,6 +106,7 @@ class _ProductDetailState extends State<ProductDetail> {
               onPressed: _isSubmitting
                   ? null
                   : () async {
+                      if (!mounted) return;
                       setState(() => _isSubmitting = true);
                       final res = await reviewController.submitProductReview(
                         widget.product['_id'],
@@ -111,17 +114,19 @@ class _ProductDetailState extends State<ProductDetail> {
                         _commentController.text,
                         token,
                       );
-                      setState(() => _isSubmitting = false);
-                      if (res['success']) {
-                        _commentController.clear();
-                        _reloadReviews();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Đánh giá thành công!')),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(res['error'] ?? 'Lỗi gửi đánh giá')),
-                        );
+                      if (mounted) {
+                        setState(() => _isSubmitting = false);
+                        if (res['success']) {
+                          _commentController.clear();
+                          _reloadReviews();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Đánh giá thành công!')),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(res['error'] ?? 'Lỗi gửi đánh giá')),
+                          );
+                        }
                       }
                     },
               child: _isSubmitting

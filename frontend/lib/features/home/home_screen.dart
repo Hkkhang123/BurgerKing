@@ -73,6 +73,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleFavoriteToggle(String productId, bool isFavorite) async {
+    if (!mounted) return;
+    
     // Optimistic update: cập nhật UI ngay
     setState(() {
       if (isFavorite) {
@@ -87,6 +89,9 @@ class _HomeScreenState extends State<HomeScreen> {
     // Gọi API, nếu lỗi thì revert lại
     final productController = Get.find<ProductController>();
     final result = await productController.toggleFavoriteProduct(userToken!, productId);
+    
+    if (!mounted) return;
+    
     if (!result['success']) {
       setState(() {
         if (isFavorite) {
@@ -97,9 +102,11 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['error'] ?? 'Lỗi cập nhật yêu thích')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['error'] ?? 'Lỗi cập nhật yêu thích')),
+        );
+      }
     } else {
       // Nếu thành công, cập nhật favorites từ response của server
       final serverFavorites = result['data']['favorites'] as List<dynamic>?;
@@ -109,34 +116,45 @@ class _HomeScreenState extends State<HomeScreen> {
         });
         
         // Hiển thị thông báo thành công
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isFavorite ? 'Đã thêm vào yêu thích' : 'Đã xóa khỏi yêu thích'),
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(isFavorite ? 'Đã thêm vào yêu thích' : 'Đã xóa khỏi yêu thích'),
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
       }
     }
   }
 
   Future<void> _refreshUserFavorites() async {
+    if (!mounted) return;
+    
     try {
       final result = await authController.fetchAndUpdateProfile();
-      setState(() {
-        userFavorites = result;
-      });
+      if (mounted) {
+        setState(() {
+          userFavorites = result;
+        });
+      }
     } catch (e) {
       // Handle error silently
     }
   }
 
   Future<List<dynamic>> _fetchBestSellers() async {
+    if (!mounted) return [];
+    
     final productController = Get.find<ProductController>();
     final products = await productController.fetchBestSellerProducts();
-    setState(() {
-      allProducts = products;
-      _applyFilters();
-    });
+    
+    if (mounted) {
+      setState(() {
+        allProducts = products;
+        _applyFilters();
+      });
+    }
     return products;
   }
 

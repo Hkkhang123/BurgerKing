@@ -20,10 +20,21 @@ class CartController extends GetxController {
                 'guest-id': guestId ?? '',
               },
       );
+      
       if (response.statusCode == 200) {
-        return {'success': true, 'data': jsonDecode(response.body)};
+        try {
+          final data = jsonDecode(response.body);
+          return {'success': true, 'data': data};
+        } catch (jsonError) {
+          return {'success': false, 'error': 'Invalid JSON response: $jsonError'};
+        }
       } else {
-        return {'success': false, 'data': jsonDecode(response.body)};
+        try {
+          final errorData = jsonDecode(response.body);
+          return {'success': false, 'data': errorData};
+        } catch (jsonError) {
+          return {'success': false, 'error': 'HTTP ${response.statusCode}: ${response.body}'};
+        }
       }
     } catch (e) {
       return {'success': false, 'error': e.toString()};
@@ -34,7 +45,7 @@ class CartController extends GetxController {
   Future<Map<String, dynamic>> addToCart(String? token, String productId, {int quantity = 1, String? guestId}) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/cart/add'),
+        Uri.parse('$baseUrl/api/cart/'),
         headers: token != null
             ? {
                 'Content-Type': 'application/json',
@@ -46,10 +57,21 @@ class CartController extends GetxController {
               },
         body: jsonEncode({'productId': productId, 'quantity': quantity}),
       );
+      
       if (response.statusCode == 200) {
-        return {'success': true, 'data': jsonDecode(response.body)};
+        try {
+          final data = jsonDecode(response.body);
+          return {'success': true, 'data': data};
+        } catch (jsonError) {
+          return {'success': false, 'error': 'Invalid JSON response: $jsonError'};
+        }
       } else {
-        return {'success': false, 'data': jsonDecode(response.body)};
+        try {
+          final errorData = jsonDecode(response.body);
+          return {'success': false, 'data': errorData};
+        } catch (jsonError) {
+          return {'success': false, 'error': 'HTTP ${response.statusCode}: ${response.body}'};
+        }
       }
     } catch (e) {
       return {'success': false, 'error': e.toString()};
@@ -60,7 +82,7 @@ class CartController extends GetxController {
   Future<Map<String, dynamic>> updateCart(String? token, String productId, int quantity, {String? guestId}) async {
     try {
       final response = await http.put(
-        Uri.parse('$baseUrl/api/cart/update'),
+        Uri.parse('$baseUrl/api/cart/'),
         headers: token != null
             ? {
                 'Content-Type': 'application/json',
@@ -72,10 +94,21 @@ class CartController extends GetxController {
               },
         body: jsonEncode({'productId': productId, 'quantity': quantity}),
       );
+      
       if (response.statusCode == 200) {
-        return {'success': true, 'data': jsonDecode(response.body)};
+        try {
+          final data = jsonDecode(response.body);
+          return {'success': true, 'data': data};
+        } catch (jsonError) {
+          return {'success': false, 'error': 'Invalid JSON response: $jsonError'};
+        }
       } else {
-        return {'success': false, 'data': jsonDecode(response.body)};
+        try {
+          final errorData = jsonDecode(response.body);
+          return {'success': false, 'data': errorData};
+        } catch (jsonError) {
+          return {'success': false, 'error': 'HTTP ${response.statusCode}: ${response.body}'};
+        }
       }
     } catch (e) {
       return {'success': false, 'error': e.toString()};
@@ -86,7 +119,7 @@ class CartController extends GetxController {
   Future<Map<String, dynamic>> deleteFromCart(String? token, String productId, {String? guestId}) async {
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/api/cart/delete/$productId'),
+        Uri.parse('$baseUrl/api/cart/'),
         headers: token != null
             ? {
                 'Content-Type': 'application/json',
@@ -96,11 +129,59 @@ class CartController extends GetxController {
                 'Content-Type': 'application/json',
                 'guest-id': guestId ?? '',
               },
+        body: jsonEncode({
+          'productId': productId,
+          if (guestId != null) 'guestId': guestId,
+        }),
       );
+      
       if (response.statusCode == 200) {
-        return {'success': true, 'data': jsonDecode(response.body)};
+        try {
+          final data = jsonDecode(response.body);
+          return {'success': true, 'data': data};
+        } catch (jsonError) {
+          return {'success': false, 'error': 'Invalid JSON response: $jsonError'};
+        }
       } else {
-        return {'success': false, 'data': jsonDecode(response.body)};
+        try {
+          final errorData = jsonDecode(response.body);
+          return {'success': false, 'data': errorData};
+        } catch (jsonError) {
+          return {'success': false, 'error': 'HTTP ${response.statusCode}: ${response.body}'};
+        }
+      }
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  // Thanh toán (Checkout)
+  Future<Map<String, dynamic>> checkout(String? token, {
+    required List<Map<String, dynamic>> checkoutItem,
+    required Map<String, dynamic> shippingAddress,
+    required String paymentMethod,
+    required double totalPrice,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/checkout'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'checkoutItem': checkoutItem,
+          'shippingAddress': shippingAddress,
+          'paymentMethod': paymentMethod,
+          'totalPrice': totalPrice,
+        }),
+      );
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'data': data};
+      } else {
+        final errorData = jsonDecode(response.body);
+        return {'success': false, 'data': errorData};
       }
     } catch (e) {
       return {'success': false, 'error': e.toString()};

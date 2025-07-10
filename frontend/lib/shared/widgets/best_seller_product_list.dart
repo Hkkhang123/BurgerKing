@@ -31,6 +31,8 @@ class _BestSellerProductListState extends State<BestSellerProductList> {
   }
 
   Future<void> _loadUserData() async {
+    if (!mounted) return;
+    
     setState(() {
       _isLoadingFavorites = true;
     });
@@ -45,28 +47,36 @@ class _BestSellerProductListState extends State<BestSellerProductList> {
     if (userToken != null) {
       try {
         final favorites = await authController.fetchAndUpdateProfile();
-        setState(() {
-          userFavorites = favorites;
-          _isLoadingFavorites = false;
-        });
+        if (mounted) {
+          setState(() {
+            userFavorites = favorites;
+            _isLoadingFavorites = false;
+          });
+        }
       } catch (e) {
         // Fallback to local storage if server fails
         final localFavorites = user?['favorites'] as List<dynamic>?;
+        if (mounted) {
+          setState(() {
+            userFavorites = localFavorites?.map((e) => e.toString()).toList() ?? [];
+            _isLoadingFavorites = false;
+          });
+        }
+      }
+    } else {
+      final localFavorites = user?['favorites'] as List<dynamic>?;
+      if (mounted) {
         setState(() {
           userFavorites = localFavorites?.map((e) => e.toString()).toList() ?? [];
           _isLoadingFavorites = false;
         });
       }
-    } else {
-      final localFavorites = user?['favorites'] as List<dynamic>?;
-      setState(() {
-        userFavorites = localFavorites?.map((e) => e.toString()).toList() ?? [];
-        _isLoadingFavorites = false;
-      });
     }
   }
 
   Future<void> _loadBestSellerProducts() async {
+    if (!mounted) return;
+    
     setState(() {
       _isLoadingProducts = true;
     });
@@ -74,18 +84,24 @@ class _BestSellerProductListState extends State<BestSellerProductList> {
     try {
       final productController = Get.find<ProductController>();
       final products = await productController.fetchBestSellerProducts();
-      setState(() {
-        bestSellerProducts = products;
-        _isLoadingProducts = false;
-      });
+      if (mounted) {
+        setState(() {
+          bestSellerProducts = products;
+          _isLoadingProducts = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoadingProducts = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingProducts = false;
+        });
+      }
     }
   }
 
   Future<void> _handleFavoriteToggle(String productId, bool isFavorite) async {
+    if (!mounted) return;
+    
     // Optimistic update: cập nhật UI ngay
     setState(() {
       if (isFavorite) {
@@ -100,6 +116,9 @@ class _BestSellerProductListState extends State<BestSellerProductList> {
     // Gọi API, nếu lỗi thì revert lại
     final productController = Get.find<ProductController>();
     final result = await productController.toggleFavoriteProduct(userToken!, productId);
+    
+    if (!mounted) return;
+    
     if (!result['success']) {
       setState(() {
         if (isFavorite) {
@@ -110,9 +129,11 @@ class _BestSellerProductListState extends State<BestSellerProductList> {
           }
         }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['error'] ?? 'Lỗi cập nhật yêu thích')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['error'] ?? 'Lỗi cập nhật yêu thích')),
+        );
+      }
     } else {
       // Nếu thành công, cập nhật favorites từ response của server
       final serverFavorites = result['data']['favorites'] as List<dynamic>?;
@@ -122,18 +143,22 @@ class _BestSellerProductListState extends State<BestSellerProductList> {
         });
         
         // Hiển thị thông báo thành công
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isFavorite ? 'Đã thêm vào yêu thích' : 'Đã xóa khỏi yêu thích'),
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(isFavorite ? 'Đã thêm vào yêu thích' : 'Đã xóa khỏi yêu thích'),
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
       }
     }
   }
 
   // Method để refresh favorites từ server
   Future<void> refreshFavorites() async {
+    if (!mounted) return;
+    
     if (userToken != null) {
       setState(() {
         _isLoadingFavorites = true;
@@ -141,14 +166,18 @@ class _BestSellerProductListState extends State<BestSellerProductList> {
       
       try {
         final favorites = await authController.fetchAndUpdateProfile();
-        setState(() {
-          userFavorites = favorites;
-          _isLoadingFavorites = false;
-        });
+        if (mounted) {
+          setState(() {
+            userFavorites = favorites;
+            _isLoadingFavorites = false;
+          });
+        }
       } catch (e) {
-        setState(() {
-          _isLoadingFavorites = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isLoadingFavorites = false;
+          });
+        }
       }
     }
   }

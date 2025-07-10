@@ -34,12 +34,16 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
   }
 
   Future<void> fetchFavorites() async {
+    if (!mounted) return;
+    
     final authController = Get.find<AuthController>();
     await authController.fetchAndUpdateProfile();
     final user = authController.getCurrentUser();
     final List<String> favoriteIds = (user?['favorites'] ?? [])
         .whereType<String>()
         .toList();
+
+    if (!mounted) return;
 
     if (favoriteIds.isEmpty) {
       setState(() {
@@ -52,10 +56,13 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
     // Gọi API lấy chi tiết sản phẩm
     final productController = Get.find<ProductController>();
     final products = await productController.getProductsByIds(favoriteIds);
-    setState(() {
-      favoriteProducts = products;
-      isLoading = false;
-    });
+    
+    if (mounted) {
+      setState(() {
+        favoriteProducts = products;
+        isLoading = false;
+      });
+    }
   }
 
   @override

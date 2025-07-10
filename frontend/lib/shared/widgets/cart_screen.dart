@@ -6,6 +6,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:client/core/services/cart_controller.dart';
+import 'package:client/features/cart/checkout_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -20,6 +21,30 @@ class _CartScreenState extends State<CartScreen> {
   bool isLoading = true;
   String? error;
 
+  // Helper function để lấy productId an toàn
+  String? _getProductId(dynamic product) {
+    if (product == null) return null;
+    
+    // Thử nhiều cách để lấy productId
+    dynamic rawProductId = product['productId'];
+    if (rawProductId != null) {
+      return rawProductId.toString();
+    }
+    
+    // Thử các trường khác
+    rawProductId = product['_id'];
+    if (rawProductId != null) {
+      return rawProductId.toString();
+    }
+    
+    rawProductId = product['id'];
+    if (rawProductId != null) {
+      return rawProductId.toString();
+    }
+    
+    return null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -27,6 +52,8 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Future<void> _loadCart() async {
+    if (!mounted) return;
+    
     setState(() {
       isLoading = true;
       error = null;
@@ -44,10 +71,12 @@ class _CartScreenState extends State<CartScreen> {
     }
     if (token == null && guestId == null) {
       print('Không có token và guestId, không thể load giỏ hàng');
-      setState(() {
-        error = 'Bạn cần đăng nhập để xem giỏ hàng';
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          error = 'Bạn cần đăng nhập để xem giỏ hàng';
+          isLoading = false;
+        });
+      }
       return;
     }
     final cartController = Get.find<CartController>();
@@ -56,11 +85,15 @@ class _CartScreenState extends State<CartScreen> {
       guestId: token == null ? guestId : null,
     );
 
+    if (!mounted) return;
+
     if (result['success']) {
       final data = result['data'];
       setState(() {
         cartProducts = (data['products'] ?? []) as List<dynamic>;
-        totalPrice = (data['totalPrice'] ?? 0).toDouble();
+        totalPrice = data['totalPrice'] is num
+            ? data['totalPrice'].toDouble()
+            : double.tryParse(data['totalPrice'].toString()) ?? 0.0;
         isLoading = false;
         error = null;
       });
@@ -351,6 +384,18 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Future<void> _deleteProductFromCart(dynamic product) async {
+    if (!mounted) return;
+    
+    final productId = _getProductId(product);
+    
+    if (productId == null || productId.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không tìm thấy ID sản phẩm để xóa!')),
+        );
+      }
+      return;
+    }
     setState(() {
       isLoading = true;
     });
@@ -364,42 +409,48 @@ class _CartScreenState extends State<CartScreen> {
     final cartController = Get.find<CartController>();
     final result = await cartController.deleteFromCart(
       token,
-      product['_id'],
+      productId!,
       guestId: token == null ? guestId : null,
     );
-    print('Delete from cart result: $result');
+    
+    if (!mounted) return;
+    
     if (result['success'] == true || result['statusCode'] == 200) {
       await _loadCart();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã xóa sản phẩm khỏi giỏ hàng!')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã xóa sản phẩm khỏi giỏ hàng!')),
+        );
+      }
     } else {
       setState(() {
         isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['error'] ?? 'Lỗi khi xóa sản phẩm')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['error'] ?? 'Lỗi khi xóa sản phẩm')),
+        );
+      }
     }
   }
 
   Future<void> _changeProductQuantity(dynamic product, int delta) async {
+    if (!mounted) return;
+    
     int oldQuantity = product['quantity'] ?? 1;
     int newQuantity = oldQuantity + delta;
     if (newQuantity < 1) return;
     setState(() {
       product['quantity'] = newQuantity;
       // Cập nhật lại tổng tiền tạm thời trên UI
-      totalPrice = cartProducts.fold(0, (sum, p) {
-        final price =
-            p['price'] is num
-                ? p['price']
-                : num.tryParse(p['price'].toString()) ?? 0;
-        final quantity =
-            p['quantity'] is num
-                ? p['quantity']
-                : num.tryParse(p['quantity'].toString()) ?? 0;
-        return sum + price * quantity;
+      totalPrice = cartProducts.fold(0.0, (sum, p) {
+        final price = p['price'] is num
+            ? p['price'].toDouble()
+            : double.tryParse(p['price'].toString()) ?? 0.0;
+        final quantity = p['quantity'] is num
+            ? p['quantity'].toInt()
+            : int.tryParse(p['quantity'].toString()) ?? 0;
+        return sum + (price * quantity);
       });
     });
     final authController = Get.find<AuthController>();
@@ -409,35 +460,40 @@ class _CartScreenState extends State<CartScreen> {
       final storage = GetStorage();
       guestId = storage.read('guestId');
     }
+    // Lấy productId an toàn
+    final productId = _getProductId(product) ?? '';
+    
     final cartController = Get.find<CartController>();
     final result = await cartController.updateCart(
       token,
-      product['_id'],
+      productId,
       newQuantity,
       guestId: token == null ? guestId : null,
     );
-    print('Update cart result: $result');
+    
+    if (!mounted) return;
+    
     if (result['success'] == true || result['statusCode'] == 200) {
       // Không cần reload lại toàn bộ cart, đã cập nhật UI rồi
     } else {
       // Rollback số lượng nếu lỗi
       setState(() {
         product['quantity'] = oldQuantity;
-        totalPrice = cartProducts.fold(0, (sum, p) {
-          final price =
-              p['price'] is num
-                  ? p['price']
-                  : num.tryParse(p['price'].toString()) ?? 0;
-          final quantity =
-              p['quantity'] is num
-                  ? p['quantity']
-                  : num.tryParse(p['quantity'].toString()) ?? 0;
-          return sum + price * quantity;
+        totalPrice = cartProducts.fold(0.0, (sum, p) {
+          final price = p['price'] is num
+              ? p['price'].toDouble()
+              : double.tryParse(p['price'].toString()) ?? 0.0;
+          final quantity = p['quantity'] is num
+              ? p['quantity'].toInt()
+              : int.tryParse(p['quantity'].toString()) ?? 0;
+          return sum + (price * quantity);
         });
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['error'] ?? 'Lỗi khi cập nhật số lượng')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['error'] ?? 'Lỗi khi cập nhật số lượng')),
+        );
+      }
     }
   }
 
@@ -507,7 +563,7 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  void _handleCheckout(BuildContext context) {
+  void _handleCheckout(BuildContext context) async {
     final authController = Get.find<AuthController>();
     final token = authController.getToken();
     if (token == null) {
@@ -533,10 +589,22 @@ class _CartScreenState extends State<CartScreen> {
             ),
       );
     } else {
-      // TODO: Thực hiện logic thanh toán khi đã đăng nhập
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chức năng thanh toán đang phát triển!')),
+      // Log dữ liệu giỏ hàng và tổng tiền trước khi chuyển sang màn hình Checkout
+      print('Checkout pressed! cartProducts: ' + cartProducts.toString());
+      print('Checkout pressed! totalPrice: ' + totalPrice.toString());
+      // Chuyển sang màn hình Checkout
+      final result = await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CheckoutScreen(
+            cartProducts: cartProducts,
+            totalPrice: totalPrice,
+          ),
+        ),
       );
+      // Nếu đặt hàng thành công, reload lại giỏ hàng
+      if (result == true) {
+        _loadCart();
+      }
     }
   }
 }

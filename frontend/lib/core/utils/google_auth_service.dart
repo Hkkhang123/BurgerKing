@@ -30,6 +30,12 @@ class GoogleAuthService {
       if (idToken == null) {
         return {'success': false, 'message': 'Không lấy được idToken từ Firebase'};
       }
+      
+      // DEBUG: In ra ID token để copy test (xóa sau khi test xong)
+      print('=== COPY THIS TOKEN FOR POSTMAN TEST ===');
+      print('ID Token: $idToken');
+      print('=== END TOKEN ===');
+      
       // Gửi idToken lên backend
       final response = await http.post(
         Uri.parse('https://burgerking-j92p.onrender.com/api/auth/google'),

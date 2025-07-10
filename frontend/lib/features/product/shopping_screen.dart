@@ -32,6 +32,8 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
   }
 
   Future<void> _loadUserData() async {
+    if (!mounted) return;
+    
     setState(() {
       _isLoadingFavorites = true;
     });
@@ -46,28 +48,36 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
     if (userToken != null) {
       try {
         final favorites = await authController.fetchAndUpdateProfile();
-        setState(() {
-          userFavorites = favorites;
-          _isLoadingFavorites = false;
-        });
+        if (mounted) {
+          setState(() {
+            userFavorites = favorites;
+            _isLoadingFavorites = false;
+          });
+        }
       } catch (e) {
         // Fallback to local storage if server fails
         final localFavorites = user?['favorites'] as List<dynamic>?;
+        if (mounted) {
+          setState(() {
+            userFavorites = localFavorites?.map((e) => e.toString()).toList() ?? [];
+            _isLoadingFavorites = false;
+          });
+        }
+      }
+    } else {
+      final localFavorites = user?['favorites'] as List<dynamic>?;
+      if (mounted) {
         setState(() {
           userFavorites = localFavorites?.map((e) => e.toString()).toList() ?? [];
           _isLoadingFavorites = false;
         });
       }
-    } else {
-      final localFavorites = user?['favorites'] as List<dynamic>?;
-      setState(() {
-        userFavorites = localFavorites?.map((e) => e.toString()).toList() ?? [];
-        _isLoadingFavorites = false;
-      });
     }
   }
 
   Future<void> _handleFavoriteToggle(String productId, bool isFavorite) async {
+    if (!mounted) return;
+    
     // Optimistic update: cập nhật UI ngay
     setState(() {
       if (isFavorite) {
@@ -82,6 +92,9 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
     // Gọi API, nếu lỗi thì revert lại
     final productController = Get.find<ProductController>();
     final result = await productController.toggleFavoriteProduct(userToken!, productId);
+    
+    if (!mounted) return;
+    
     if (!result['success']) {
       setState(() {
         if (isFavorite) {
@@ -92,9 +105,11 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
           }
         }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['error'] ?? 'Lỗi cập nhật yêu thích')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['error'] ?? 'Lỗi cập nhật yêu thích')),
+        );
+      }
     } else {
       // Nếu thành công, cập nhật favorites từ response của server
       final serverFavorites = result['data']['favorites'] as List<dynamic>?;
@@ -104,12 +119,14 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
         });
         
         // Hiển thị thông báo thành công
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isFavorite ? 'Đã thêm vào yêu thích' : 'Đã xóa khỏi yêu thích'),
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(isFavorite ? 'Đã thêm vào yêu thích' : 'Đã xóa khỏi yêu thích'),
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
       }
     }
   }

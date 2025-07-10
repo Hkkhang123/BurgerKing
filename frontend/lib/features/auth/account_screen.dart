@@ -1,4 +1,5 @@
 import 'package:client/core/services/auth_controller.dart';
+import 'package:client/features/order/my_order_screen.dart';
 import 'package:client/shared/themes/app_textstyle.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -208,6 +209,7 @@ class AccountScreen extends StatelessWidget {
                     if (item['title'] == 'Đăng xuất') {
                       _showLogOutDialog(context);
                     } else if (item['title'] == 'Đơn hàng') {
+                      Get.to(() => MyOrderScreen());
                     } else if (item['title'] == 'Địa chỉ giao hàng') {
                     } else if (item['title'] == 'Trung tâm trợ giúp') {}
                   },

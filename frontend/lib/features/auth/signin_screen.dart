@@ -269,15 +269,23 @@ class SigninScreen extends StatelessWidget {
   Future<void> _handleGoogleSignIn(BuildContext context) async {
     final result = await GoogleAuthService.signInWithGoogleAndSave();
     if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Đăng nhập Google thành công!')),
+      Get.snackbar(
+        'Thành công',
+        'Đăng nhập Google thành công!',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
       );
       
       await Future.delayed(const Duration(milliseconds: 500));
       Get.offAll(() => const MainScreen());
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'] ?? 'Đăng nhập Google thất bại')),
+      Get.snackbar(
+        'Lỗi',
+        result['message'] ?? 'Đăng nhập Google thất bại',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
       );
     }
   }
