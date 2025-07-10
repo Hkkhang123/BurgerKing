@@ -9,8 +9,8 @@ import {
 const router = express.Router();
 
 router.post('/momo', createMomoPayment);
-router.post('/vnpay', createVNPayUrl);
+//router.post('/vnpay', createVNPayUrl);
 router.post('/momo/notify', momoNotify);
-router.get('/vnpay/return', vnpayReturn);
+//router.get('/vnpay/return', vnpayReturn);
 
 export default router;
