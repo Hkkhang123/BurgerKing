@@ -161,38 +161,77 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       onPressed: () async {
                         if (_paymentMethod == 'Thanh toán MoMo') {
                           setState(() { _isLoading = true; });
-                          try {
-                            final response = await http.post(
-                              Uri.parse('https://burgerking-j92p.onrender.com/api/payment/momo/test'),
-                              headers: {'Content-Type': 'application/json'},
-                            );
-                            setState(() { _isLoading = false; });
-                            if (response.statusCode == 200) {
-                              final data = json.decode(response.body);
-                              final payUrl = data['payUrl'] ?? data['deeplink'] ?? data['deeplinkWeb'] ?? '';
-                              if (payUrl.isNotEmpty) {
-                                Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (_) => Scaffold(
-                                    appBar: AppBar(title: const Text('Thanh toán MoMo')),
-                                    body: WebViewWidget(controller: WebViewController()
-                                      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                                      ..loadRequest(Uri.parse(payUrl))),
-                                  ),
-                                ));
+                          final authController = Get.find<AuthController>();
+                          final token = authController.getToken();
+                          final cartController = Get.find<CartController>();
+                          final List<Map<String, dynamic>> checkoutItems = widget.cartProducts.map((e) => {
+                            'productId': e['productId'] ?? e['_id'] ?? e['id'],
+                            'quantity': e['quantity'] ?? 1,
+                            'price': e['price'] ?? 0,
+                            'name': e['name'] ?? '',
+                            'image': e['image'] ?? '',
+                          }).toList();
+                          final shippingAddress = {
+                            'address': _addressController.text,
+                            'city': _cityController.text,
+                            'district': _districtController.text,
+                            'postalCode': _postalCodeController.text,
+                            'phone': _phoneController.text,
+                            'receiver': _receiverController.text,
+                          };
+                          // 1. Gọi API tạo đơn hàng
+                          final result = await cartController.checkout(
+                            token,
+                            checkoutItem: checkoutItems,
+                            shippingAddress: shippingAddress,
+                            paymentMethod: _paymentMethod,
+                            totalPrice: widget.totalPrice,
+                          );
+                          setState(() { _isLoading = false; });
+                          if (!mounted) return;
+                          if (result['success'] == true) {
+                            final checkoutId = result['data']['_id'];
+                            final amount = result['data']['totalPrice'];
+                            setState(() { _isLoading = true; });
+                            try {
+                              final response = await http.post(
+                                Uri.parse('https://burgerking-j92p.onrender.com/api/payment/momo/test'),
+                                headers: {'Content-Type': 'application/json'},
+                                body: json.encode({'checkoutId': checkoutId, 'amount': amount.toString()}),
+                              );
+                              setState(() { _isLoading = false; });
+                              if (response.statusCode == 200) {
+                                final data = json.decode(response.body);
+                                final payUrl = data['payUrl'] ?? data['deeplink'] ?? data['deeplinkWeb'] ?? '';
+                                if (payUrl.isNotEmpty) {
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (_) => Scaffold(
+                                      appBar: AppBar(title: const Text('Thanh toán MoMo')),
+                                      body: WebViewWidget(controller: WebViewController()
+                                        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                                        ..loadRequest(Uri.parse(payUrl))),
+                                    ),
+                                  ));
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Không lấy được link thanh toán MoMo!')),
+                                  );
+                                }
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Không lấy được link thanh toán MoMo!')),
+                                  SnackBar(content: Text('Lỗi: ${response.body}')),
                                 );
                               }
-                            } else {
+                            } catch (e) {
+                              setState(() { _isLoading = false; });
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Lỗi: ${response.body}')),
+                                SnackBar(content: Text('Lỗi kết nối MoMo: $e')),
                               );
                             }
-                          } catch (e) {
-                            setState(() { _isLoading = false; });
+                          } else {
+                            String errorMsg = result['data']?['message'] ?? result['error'] ?? 'Lỗi khi tạo đơn hàng';
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Lỗi kết nối MoMo: $e')),
+                              SnackBar(content: Text(errorMsg)),
                             );
                           }
                         } else {
