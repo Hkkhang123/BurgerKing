@@ -84,6 +84,8 @@ export const momoTest = (req, res) => {
 export const momoIpn = async (req, res) => {
   const secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
   const body = req.body;
+  // Log toàn bộ body IPN nhận được
+  console.log("[MoMo IPN] Body:", JSON.stringify(body));
   // Tạo rawSignature từ body (theo tài liệu MoMo)
   const rawSignature =
     `accessKey=${body.accessKey}` +
@@ -100,14 +102,19 @@ export const momoIpn = async (req, res) => {
     `&resultCode=${body.resultCode}` +
     `&transId=${body.transId}`;
   const signature = crypto.createHmac("sha256", secretKey).update(rawSignature).digest("hex");
+  // Log kết quả xác thực signature
   if (signature !== body.signature) {
+    console.log("[MoMo IPN] Invalid signature!", { rawSignature, signature, momoSignature: body.signature });
     return res.status(400).json({ message: "Invalid signature" });
+  } else {
+    console.log("[MoMo IPN] Signature valid.");
   }
   // Xác thực thành công, cập nhật trạng thái đơn hàng
   try {
     const checkoutId = body.orderId;
     const checkout = await Checkout.findById(checkoutId);
     if (!checkout) {
+      console.log(`[MoMo IPN] Checkout not found: ${checkoutId}`);
       return res.status(404).json({ message: "Checkout not found" });
     }
     if (body.resultCode === 0) {
@@ -117,14 +124,17 @@ export const momoIpn = async (req, res) => {
       checkout.paymentDetail = body;
       checkout.paidAt = Date.now();
       await checkout.save();
+      console.log(`[MoMo IPN] Thanh toán thành công cho checkoutId: ${checkoutId}`);
     } else {
       // Thanh toán thất bại
       checkout.paymentStatus = "Thanh toán thất bại";
       checkout.paymentDetail = body;
       await checkout.save();
+      console.log(`[MoMo IPN] Thanh toán thất bại cho checkoutId: ${checkoutId}`);
     }
     res.status(200).json({ message: "IPN received and processed" });
   } catch (e) {
+    console.log("[MoMo IPN] Server error:", e);
     res.status(500).json({ message: "Server error", error: e.message });
   }
 };
