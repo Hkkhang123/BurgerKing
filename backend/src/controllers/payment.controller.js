@@ -2,6 +2,7 @@
 //parameters
 import crypto from "crypto";
 import https from "https";
+import Checkout from "../models/Checkout.js";
 
 export const momoTest = (req, res) => {
   const { checkoutId, amount } = req.body;
@@ -10,10 +11,10 @@ export const momoTest = (req, res) => {
   const orderInfo = "pay with MoMo";
   const partnerCode = "MOMO";
   const redirectUrl = "https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b";
-  const ipnUrl = "https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b";
+  const ipnUrl = "https://burgerking-j92p.onrender.com/api/payment/momo/ipn"; // Đổi thành endpoint thật của bạn
   const requestType = "payWithMethod";
-  const orderId = checkoutId; // Dùng checkoutId làm orderId
-  const requestId = checkoutId; // Dùng checkoutId làm requestId
+  const orderId = checkoutId;
+  const requestId = checkoutId;
   const extraData = "";
   const orderGroupId = "";
   const autoCapture = true;
@@ -79,4 +80,53 @@ export const momoTest = (req, res) => {
   momoReq.end();
 };
 
-export default { momoTest };
+// Endpoint IPN nhận notify từ MoMo
+export const momoIpn = async (req, res) => {
+  const secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
+  const body = req.body;
+  // Tạo rawSignature từ body (theo tài liệu MoMo)
+  const rawSignature =
+    `accessKey=${body.accessKey}` +
+    `&amount=${body.amount}` +
+    `&extraData=${body.extraData}` +
+    `&message=${body.message}` +
+    `&orderId=${body.orderId}` +
+    `&orderInfo=${body.orderInfo}` +
+    `&orderType=${body.orderType}` +
+    `&partnerCode=${body.partnerCode}` +
+    `&payType=${body.payType}` +
+    `&requestId=${body.requestId}` +
+    `&responseTime=${body.responseTime}` +
+    `&resultCode=${body.resultCode}` +
+    `&transId=${body.transId}`;
+  const signature = crypto.createHmac("sha256", secretKey).update(rawSignature).digest("hex");
+  if (signature !== body.signature) {
+    return res.status(400).json({ message: "Invalid signature" });
+  }
+  // Xác thực thành công, cập nhật trạng thái đơn hàng
+  try {
+    const checkoutId = body.orderId;
+    const checkout = await Checkout.findById(checkoutId);
+    if (!checkout) {
+      return res.status(404).json({ message: "Checkout not found" });
+    }
+    if (body.resultCode === 0) {
+      // Thanh toán thành công
+      checkout.paymentStatus = "Đã thanh toán";
+      checkout.isPaid = true;
+      checkout.paymentDetail = body;
+      checkout.paidAt = Date.now();
+      await checkout.save();
+    } else {
+      // Thanh toán thất bại
+      checkout.paymentStatus = "Thanh toán thất bại";
+      checkout.paymentDetail = body;
+      await checkout.save();
+    }
+    res.status(200).json({ message: "IPN received and processed" });
+  } catch (e) {
+    res.status(500).json({ message: "Server error", error: e.message });
+  }
+};
+
+export default { momoTest, momoIpn };
