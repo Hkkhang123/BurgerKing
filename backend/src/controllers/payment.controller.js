@@ -38,6 +38,7 @@ function verifyMomoSignature(secretKey, body) {
 
 // Tạo thanh toán Momo
 export async function createMomoPayment(req, res) {
+  console.log("API /api/payment/momo được gọi", req.body);
   const { checkoutId, redirectUrl, ipnUrl } = req.body;
   // Lấy checkout từ DB
   const checkout = await Checkout.findById(checkoutId);
@@ -50,7 +51,7 @@ export async function createMomoPayment(req, res) {
   const accessKey = "F8BBA842ECF85";
   const secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
   const requestId = partnerCode + Date.now();
-  const orderId = checkoutId; // Dùng _id của checkout làm orderId
+  const orderId = checkoutId + "_" + Date.now(); // Đảm bảo mỗi lần là duy nhất
   const orderInfo = "Thanh toán đơn hàng " + checkoutId;
   const amount = checkout.totalPrice.toString();
   const requestType = "captureWallet";
@@ -88,8 +89,12 @@ export async function createMomoPayment(req, res) {
         headers: { "Content-Type": "application/json" },
       }
     );
-    // Trả về payUrl cho frontend
-    return res.json({ payUrl: response.data.payUrl });
+    // Chỉ trả về payUrl khi MoMo trả về thành công
+    if (response.data.resultCode === 0) {
+      return res.json({ payUrl: response.data.payUrl });
+    } else {
+      return res.status(400).json({ error: response.data.message || "Tạo giao dịch MoMo thất bại" });
+    }
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

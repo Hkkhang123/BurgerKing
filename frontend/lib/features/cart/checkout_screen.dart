@@ -5,6 +5,7 @@ import 'package:client/core/services/auth_controller.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final List<dynamic> cartProducts;
@@ -76,22 +77,52 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       final checkoutId = result['data']['_id'];
       if (_paymentMethod == 'Thanh toán Momo') {
         // Gọi API backend để lấy payUrl của Momo
+        print('Bắt đầu gọi API thanh toán MoMo với checkoutId: ' + checkoutId);
         final response = await http.post(
-          Uri.parse('https://burgerking-j92p.onrender.com/api/payment/momo'), // Đổi lại domain khi deploy
+          Uri.parse('https://burgerking-j92p.onrender.com/api/payment/momo'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             'checkoutId': checkoutId,
             'redirectUrl': 'https://momo.vn/return',
-            'ipnUrl': 'https://webhook.site/your-test-url', // Đổi lại khi deploy
+            'ipnUrl': 'https://webhook.site/your-test-url',
           }),
         );
+        print('Request gửi đi: ' + jsonEncode({
+          'checkoutId': checkoutId,
+          'redirectUrl': 'https://momo.vn/return',
+          'ipnUrl': 'https://webhook.site/your-test-url',
+        }));
+        print('Status code trả về từ backend: ' + response.statusCode.toString());
         if (response.statusCode == 200) {
           print('Momo response: ' + response.body);
           final payUrl = jsonDecode(response.body)['payUrl'];
           if (payUrl != null) {
+            print('payUrl nhận được: ' + payUrl);
             await Navigator.of(context).push(MaterialPageRoute(
               builder: (_) {
                 final controller = WebViewController()
+                  ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                  ..setNavigationDelegate(NavigationDelegate(
+                    onNavigationRequest: (request) async {
+                      final uri = Uri.parse(request.url);
+                      if (uri.scheme == 'momo') {
+                        print('Phát hiện URL momo://, mở bằng url_launcher');
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri);
+                        } else {
+                          print('Không mở được app MoMo!');
+                        }
+                        return NavigationDecision.prevent;
+                      }
+                      return NavigationDecision.navigate;
+                    },
+                    onPageStarted: (url) {
+                      print('WebView bắt đầu load: ' + url);
+                    },
+                    onPageFinished: (url) {
+                      print('WebView load xong: ' + url);
+                    },
+                  ))
                   ..loadRequest(Uri.parse(payUrl));
                 return Scaffold(
                   appBar: AppBar(title: const Text('Thanh toán Momo')),
@@ -104,6 +135,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             );
             Navigator.of(context).pop(true);
             return;
+          } else {
+            print('Không nhận được payUrl từ response MoMo!');
           }
         } else {
           print('Momo error: ' + response.body);
