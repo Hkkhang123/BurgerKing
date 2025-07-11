@@ -98,43 +98,30 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           final payUrl = jsonDecode(response.body)['payUrl'];
           if (payUrl != null) {
             print('payUrl nhận được: ' + payUrl);
-            await Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) {
-                final controller = WebViewController()
-                  ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                  ..setNavigationDelegate(NavigationDelegate(
-                    onNavigationRequest: (request) async {
-                      final uri = Uri.parse(request.url);
-                      if (uri.scheme == 'momo') {
-                        print('Phát hiện URL momo://, mở bằng url_launcher');
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri);
-                        } else {
-                          print('Không mở được app MoMo!');
-                        }
-                        return NavigationDecision.prevent;
-                      }
-                      return NavigationDecision.navigate;
-                    },
-                    onPageStarted: (url) {
-                      print('WebView bắt đầu load: ' + url);
-                    },
-                    onPageFinished: (url) {
-                      print('WebView load xong: ' + url);
-                    },
-                  ))
-                  ..loadRequest(Uri.parse(payUrl));
-                return Scaffold(
-                  appBar: AppBar(title: const Text('Thanh toán Momo')),
-                  body: WebViewWidget(controller: controller),
-                );
-              },
-            ));
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Vui lòng kiểm tra trạng thái đơn hàng sau khi thanh toán!')),
-            );
-            Navigator.of(context).pop(true);
-            return;
+            final uri = Uri.parse(payUrl);
+            bool launched = false;
+            if (await canLaunchUrl(uri)) {
+              // Thử mở bằng externalApplication trước
+              launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+              print('launchUrl externalApplication: $launched');
+              if (!launched) {
+                // Nếu không được, thử platformDefault
+                launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+                print('launchUrl platformDefault: $launched');
+              }
+            }
+            if (launched) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Vui lòng kiểm tra trạng thái đơn hàng sau khi thanh toán!')),
+              );
+              Navigator.of(context).pop(true);
+              return;
+            } else {
+              print('Không mở được link thanh toán MoMo!');
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Không mở được link thanh toán MoMo!')),
+              );
+            }
           } else {
             print('Không nhận được payUrl từ response MoMo!');
           }
@@ -144,6 +131,57 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Không lấy được link thanh toán Momo!')),
         );
+        return;
+      }
+      if (_paymentMethod == 'Thanh toán PayPal') {
+        // Gọi API backend để lấy payUrl của PayPal
+        print('Bắt đầu gọi API thanh toán PayPal với tổng tiền: ' + widget.totalPrice.toString());
+        final response = await http.post(
+          Uri.parse('https://burgerking-j92p.onrender.com/api/payment/paypal'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'amount': widget.totalPrice.toStringAsFixed(2),
+            'currency': 'USD',
+            'returnUrl': 'https://your-app.com/paypal/return',
+            'cancelUrl': 'https://your-app.com/paypal/cancel',
+          }),
+        );
+        print('Status code trả về từ backend PayPal: ' + response.statusCode.toString());
+        if (response.statusCode == 200) {
+          final payUrl = jsonDecode(response.body)['payUrl'];
+          if (payUrl != null) {
+            print('payUrl PayPal nhận được: ' + payUrl);
+            final uri = Uri.parse(payUrl);
+            bool launched = false;
+            if (await canLaunchUrl(uri)) {
+              launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+              print('launchUrl externalApplication: $launched');
+              if (!launched) {
+                launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+                print('launchUrl platformDefault: $launched');
+              }
+            }
+            if (launched) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Vui lòng kiểm tra trạng thái đơn hàng sau khi thanh toán PayPal!')),
+              );
+              Navigator.of(context).pop(true);
+              return;
+            } else {
+              print('Không mở được link thanh toán PayPal!');
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Không mở được link thanh toán PayPal!')),
+              );
+            }
+          } else {
+            print('Không nhận được payUrl từ response PayPal!');
+          }
+        } else {
+          print('PayPal error: ' + response.body);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Không lấy được link thanh toán PayPal!')),
+          );
+        }
         return;
       }
       // Thanh toán thường
@@ -217,6 +255,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       DropdownMenuItem(value: 'Thanh toán khi nhận hàng', child: Text('Thanh toán khi nhận hàng')),
                       DropdownMenuItem(value: 'Chuyển khoản ngân hàng', child: Text('Chuyển khoản ngân hàng')),
                       DropdownMenuItem(value: 'Thanh toán Momo', child: Text('Thanh toán Momo')),
+                      DropdownMenuItem(value: 'Thanh toán PayPal', child: Text('Thanh toán PayPal')),
                     ],
                     onChanged: (value) {
                       if (value != null) setState(() => _paymentMethod = value);
