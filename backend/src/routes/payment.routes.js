@@ -3,9 +3,10 @@ import {
   createMomoPayment,
   momoNotify,
 } from '../controllers/payment.controller.js';
+import axios from 'axios';
 
 const router = express.Router();
-const axios = require('axios');
+
 
 // PayPal credentials
 const paypalClientId = 'AaCon4otj5OlvQ3oM1jMCtwD_ASY3KUOkSy0XqkZSuXZr-d85CllgKALdNK5nbo2p5VDPhcAck8PnIWC';
