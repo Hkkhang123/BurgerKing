@@ -548,11 +548,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     decoration: const InputDecoration(labelText: 'Quận/Huyện'),
                   ),
                   TextField(
-                    controller: _postalCodeController,
-                    decoration: const InputDecoration(labelText: 'Mã bưu điện'),
-                    keyboardType: TextInputType.number,
-                  ),
-                  TextField(
                     controller: _phoneController,
                     decoration: const InputDecoration(labelText: 'Số điện thoại'),
                     keyboardType: TextInputType.phone,
@@ -567,9 +562,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     value: _paymentMethod,
                     items: const [
                       DropdownMenuItem(value: 'Thanh toán khi nhận hàng', child: Text('Thanh toán khi nhận hàng')),
-                      DropdownMenuItem(value: 'Chuyển khoản ngân hàng', child: Text('Chuyển khoản ngân hàng')),
                       DropdownMenuItem(value: 'Thanh toán MoMo', child: Text('Thanh toán MoMo')),
-                      DropdownMenuItem(value: 'Thanh toán QR Code', child: Text('Thanh toán QR Code')),
                     ],
                     onChanged: (value) {
                       if (value != null) setState(() => _paymentMethod = value);
