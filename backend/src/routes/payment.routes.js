@@ -6,9 +6,10 @@ dotenv.config();
 
 const router = express.Router();
 
-// Route test MoMo
-router.post('/momo/test', momoController.momoTest);
 // Route nhận IPN MoMo
 router.post('/momo/ipn', momoController.momoIpn);
+// Route test MoMo
+router.post('/momo/test', momoController.momoTest);
+
 
 export default router;
