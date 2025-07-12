@@ -74,6 +74,19 @@ const checkoutSchema = new mongoose.Schema({
         unique: true,
         required: true,
     },
+    // Thêm trạng thái giao hàng
+    deliveryStatus: {
+        type: String,
+        enum: ["Chờ xử lý", "Đang chuẩn bị", "Đã gửi đi", "Đã giao hàng", "Đã hủy"],
+        default: "Chờ xử lý"
+    },
+    isDelivered: {
+        type: Boolean,
+        default: false
+    },
+    deliveredAt: {
+        type: Date,
+    },
 }, {timestamps: true});
 
 export default mongoose.model("Checkout", checkoutSchema);

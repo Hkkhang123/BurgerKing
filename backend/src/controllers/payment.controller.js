@@ -8,57 +8,7 @@ import Product from "../models/Product.js";
 import Cart from "../models/Cart.js";
 import { finalizeCheckout } from "../controllers/checkout.controller.js";
 
-// Hàm finalize checkout trực tiếp (không cần request/response)
-const finalizeCheckoutDirectly = async (checkoutId, userId) => {
-  try {
-    const checkout = await Checkout.findById(checkoutId);
-    if (!checkout) {
-      console.log(`[Finalize] Checkout not found: ${checkoutId}`);
-      return false;
-    }
 
-    if (checkout.isPaid && !checkout.isFinalized) {
-      const finalOrder = await Order.create({
-        user: userId,
-        orderItems: checkout.checkoutItem,
-        shippingAddress: checkout.shippingAddress,
-        paymentMethod: checkout.paymentMethod,
-        totalPrice: checkout.totalPrice,
-        paymentStatus: "Đã thanh toán",
-        isPaid: true,
-        paidAt: checkout.paidAt,
-        isDelivered: false,
-        paymentDetail: checkout.paymentDetail,
-      });
-
-      checkout.isFinalized = true;
-      checkout.finalizedAt = Date.now();
-      await checkout.save();
-
-      // Cập nhật purchaseCount cho từng sản phẩm
-      for (const item of checkout.checkoutItem) {
-        await Product.findByIdAndUpdate(
-          item.productId,
-          { $inc: { purchaseCount: item.quantity } },
-          { new: true }
-        );
-      }
-
-      await Cart.findOneAndDelete({ user: userId });
-      console.log(`[Finalize] Thành công, tạo Order: ${finalOrder._id}`);
-      return true;
-    } else if (checkout.isFinalized) {
-      console.log(`[Finalize] Checkout đã được finalize trước đó`);
-      return true;
-    } else {
-      console.log(`[Finalize] Checkout chưa thanh toán, không thể finalize`);
-      return false;
-    }
-  } catch (error) {
-    console.log(`[Finalize] Lỗi:`, error);
-    return false;
-  }
-};
 
 export const momoTest = (req, res) => {
   const { checkoutId, amount } = req.body;
@@ -70,14 +20,14 @@ export const momoTest = (req, res) => {
   //const ipnUrl = "https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b"; // Tạm thời dùng webhook.site để test
   const ipnUrl = "https://burgerking-j92p.onrender.com/api/payment/momo/ipn";
   const requestType = "payWithMethod";
-  const orderId = checkoutId;
+  const momoOrderId = checkoutId;
   const requestId = checkoutId;
   const extraData = "";
   const orderGroupId = "";
   const autoCapture = true;
   const lang = "vi";
 
-  const rawSignature = `accessKey=${accessKey}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=${requestType}`;
+  const rawSignature = `accessKey=${accessKey}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${momoOrderId}&orderInfo=${orderInfo}&partnerCode=${partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=${requestType}`;
   const signature = crypto
     .createHmac("sha256", secretKey)
     .update(rawSignature)
@@ -89,7 +39,7 @@ export const momoTest = (req, res) => {
     storeId: "MomoTestStore",
     requestId,
     amount,
-    orderId,
+    orderId: momoOrderId,
     orderInfo,
     redirectUrl,
     ipnUrl,
@@ -200,7 +150,6 @@ export const momoIpn = async (req, res) => {
         }
       } catch (finalizeError) {
         console.log(`[MoMo IPN] Lỗi khi finalize checkout:`, finalizeError);
-        // Không return error vì IPN đã thành công, chỉ log lỗi finalize
       }
     } else {
       // Thanh toán thất bại
@@ -246,9 +195,8 @@ export const momoStatus = async (req, res) => {
     const secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
     const partnerCode = "MOMO";
     const requestId = checkoutId;
-    const orderId = checkoutId;
     
-    const rawSignature = `accessKey=${accessKey}&orderId=${orderId}&partnerCode=${partnerCode}&requestId=${requestId}`;
+          const rawSignature = `accessKey=${accessKey}&orderId=${checkoutId}&partnerCode=${partnerCode}&requestId=${requestId}`;
     const signature = crypto
       .createHmac("sha256", secretKey)
       .update(rawSignature)
@@ -256,7 +204,7 @@ export const momoStatus = async (req, res) => {
     
     const requestBody = JSON.stringify({
       partnerCode,
-      orderId,
+      orderId: checkoutId,
       requestId,
       signature,
     });
@@ -291,15 +239,6 @@ export const momoStatus = async (req, res) => {
             await checkout.save();
             
             console.log(`[MoMo Status] Updated checkout ${checkoutId} to paid status`);
-            
-            // Tự động finalize checkout nếu chưa được finalize
-            try {
-              if (checkout.isPaid && !checkout.isFinalized) {
-                await finalizeCheckoutDirectly(checkoutId, checkout.user);
-              }
-            } catch (finalizeError) {
-              console.log(`[MoMo Status] Lỗi khi finalize checkout:`, finalizeError);
-            }
             
             res.json({
               success: true,

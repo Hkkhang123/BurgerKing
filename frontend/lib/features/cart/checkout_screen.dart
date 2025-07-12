@@ -78,11 +78,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() { _isLoading = false; });
     if (!mounted) return;
     if (result['success'] == true) {
-      final checkoutId = result['data']['_id'];
+      final orderId = result['data']['_id'];
       
       if (_paymentMethod == 'Thanh toán khi nhận hàng') {
         // Hiển thị dialog xác nhận thanh toán
-        final orderCode = result['data']['orderCode'] ?? checkoutId.substring(checkoutId.length - 6).toUpperCase();
+        final orderCode = result['data']['orderCode'] ?? orderId.substring(orderId.length - 6).toUpperCase();
         _showPaymentConfirmationDialog(orderCode);
       } else {
         // Thanh toán thường

@@ -78,8 +78,13 @@ const orderSchema = mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["Đang xử lý", "Đã gửi đi", "Đã giao hàng", "Đã hủy"],
-        default: "Đang xử lý"
+        enum: ["Chờ xử lý", "Đang chuẩn bị", "Đã gửi đi", "Đã giao hàng", "Đã hủy"],
+        default: "Chờ xử lý"
+    },
+    orderCode: {
+        type: String,
+        unique: true,
+        required: true,
     }
 }, {timestamps: true});
 

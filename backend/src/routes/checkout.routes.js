@@ -1,9 +1,9 @@
 import express from "express";
 import { protectRoutes } from "../middleware/auth.middleware.js";
 import { 
-  createCheckout, 
-  finalizeCheckout, 
-  updateCheckout, 
+  createCheckout,
+  updateCheckout,
+  finalizeCheckout,
   getCheckoutById
 } from "../controllers/checkout.controller.js";
 

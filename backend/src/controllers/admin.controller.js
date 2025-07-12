@@ -73,24 +73,7 @@ export const getOrders = async (req, res) => {
   }
 };
 
-export const updateOrder = async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id).populate("user", "name");
-    if (order) {
-      order.status = req.body.status || order.status;
-      order.isDelivered =
-        req.body.status === "Đã giao hàng" ? true : order.isDelivered;
-      order.deliveredAt =
-        req.body.status === "Đã giao hàng" ? Date.now() : order.deliveredAt;
-      const updatedOrder = await order.save();
-      res.json(updatedOrder);
-    } else {
-      res.status(404).json({ message: "Order not found" });
-    }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+
 
 export const deleteOrder = async (req, res) => {
     try {
@@ -105,6 +88,159 @@ export const deleteOrder = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+
+// Admin quản lý orders
+export const getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({})
+      .populate("user", "name email")
+      .sort({ createdAt: -1 }); // Sắp xếp theo thời gian tạo mới nhất
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate("user", "name email");
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const { paymentStatus, isPaid, status, isDelivered, note } = req.body;
+    
+    // Cập nhật trạng thái thanh toán
+    if (paymentStatus) {
+      order.paymentStatus = paymentStatus;
+    }
+    
+    if (isPaid !== undefined) {
+      order.isPaid = isPaid;
+      if (isPaid && !order.paidAt) {
+        order.paidAt = Date.now();
+        // Cập nhật purchaseCount cho từng sản phẩm
+        for (const item of order.orderItems) {
+          await Product.findByIdAndUpdate(
+            item.productId,
+            { $inc: { purchaseCount: item.quantity } },
+            { new: true }
+          );
+        }
+      }
+    }
+    
+    // Cập nhật trạng thái giao hàng
+    if (status) {
+      order.status = status;
+    }
+    
+    if (isDelivered !== undefined) {
+      order.isDelivered = isDelivered;
+      if (isDelivered && !order.deliveredAt) {
+        order.deliveredAt = Date.now();
+      }
+    }
+
+    const updatedOrder = await order.save();
+    
+    console.log(`Admin ${req.user._id} updated order ${order._id} to payment: ${paymentStatus}, delivery: ${status}`);
+    
+    res.json({
+      success: true,
+      message: "Order updated successfully",
+      order: updatedOrder
+    });
+  } catch (error) {
+    console.log("Error updating order:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+
+export const confirmCashPayment = async (req, res) => {
+  try {
+    const { orderCode } = req.params;
+    const { note } = req.body;
+    
+    // Tìm trong Order trước (thanh toán khi nhận hàng)
+    let order = await Order.findOne({ orderCode });
+    if (order) {
+      if (order.paymentMethod !== "Thanh toán khi nhận hàng") {
+        return res.status(400).json({ message: "This order is not for cash payment" });
+      }
+      
+      if (order.isPaid) {
+        return res.status(400).json({ message: "Order already paid" });
+      }
+      
+      // Cập nhật trạng thái thanh toán
+      order.paymentStatus = "Đã thanh toán";
+      order.isPaid = true;
+      order.paidAt = Date.now();
+      
+      // Cập nhật purchaseCount cho từng sản phẩm
+      for (const item of order.orderItems) {
+        await Product.findByIdAndUpdate(
+          item.productId,
+          { $inc: { purchaseCount: item.quantity } },
+          { new: true }
+        );
+      }
+      
+      await order.save();
+      
+      console.log(`Admin ${req.user._id} confirmed cash payment for order ${orderCode}`);
+      
+      res.json({
+        success: true,
+        message: "Cash payment confirmed successfully",
+        order: order
+      });
+      return;
+    }
+    
+    // Nếu không tìm thấy trong Order, tìm trong Checkout
+    const checkout = await Checkout.findOne({ orderCode });
+    if (!checkout) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    
+    if (checkout.paymentMethod !== "Thanh toán khi nhận hàng") {
+      return res.status(400).json({ message: "This order is not for cash payment" });
+    }
+    
+    if (checkout.isPaid) {
+      return res.status(400).json({ message: "Order already paid" });
+    }
+    
+    // Cập nhật trạng thái thanh toán
+    checkout.paymentStatus = "Đã thanh toán";
+    checkout.isPaid = true;
+    checkout.paymentDetail = {
+      method: "Cash on Delivery",
+      amount: checkout.totalPrice,
+      confirmedAt: new Date(),
+      confirmedBy: req.user._id,
+      note: note || "Admin confirmed cash payment"
+    };
+    checkout.paidAt = Date.now();
+    await checkout.save();
+    
+    console.log(`Admin ${req.user._id} confirmed cash payment for checkout ${orderCode}`);
+    
+    res.json({
+      success: true,
+      message: "Cash payment confirmed successfully",
+      checkout: checkout
+    });
+    
+  } catch (error) {
+    console.log("Error confirming cash payment:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // Admin quản lý checkout
 export const getCheckouts = async (req, res) => {
@@ -157,51 +293,6 @@ export const updateCheckout = async (req, res) => {
     });
   } catch (error) {
     console.log("Error updating checkout:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-export const confirmCashPayment = async (req, res) => {
-  try {
-    const { orderCode } = req.params;
-    const { note } = req.body;
-    
-    const checkout = await Checkout.findOne({ orderCode });
-    if (!checkout) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-    
-    if (checkout.paymentMethod !== "Thanh toán khi nhận hàng") {
-      return res.status(400).json({ message: "This order is not for cash payment" });
-    }
-    
-    if (checkout.isPaid) {
-      return res.status(400).json({ message: "Order already paid" });
-    }
-    
-    // Cập nhật trạng thái thanh toán
-    checkout.paymentStatus = "Đã thanh toán";
-    checkout.isPaid = true;
-    checkout.paymentDetail = {
-      method: "Cash on Delivery",
-      amount: checkout.totalPrice,
-      confirmedAt: new Date(),
-      confirmedBy: req.user._id,
-      note: note || "Admin confirmed cash payment"
-    };
-    checkout.paidAt = Date.now();
-    await checkout.save();
-    
-    console.log(`Admin ${req.user._id} confirmed cash payment for order ${orderCode}`);
-    
-    res.json({
-      success: true,
-      message: "Cash payment confirmed successfully",
-      checkout: checkout
-    });
-    
-  } catch (error) {
-    console.log("Error confirming cash payment:", error);
     res.status(500).json({ message: error.message });
   }
 };

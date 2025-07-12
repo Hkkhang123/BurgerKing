@@ -1,7 +1,7 @@
-import Checkout from "../models/Checkout.js";
 import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
+import Checkout from "../models/Checkout.js";
 
 export const createCheckout = async (req, res) => {
   const { checkoutItem, shippingAddress, paymentMethod, totalPrice } = req.body;
@@ -9,47 +9,60 @@ export const createCheckout = async (req, res) => {
     return res.status(400).json({ message: "No item in checkout" });
   }
   try {
-    // Xử lý trạng thái thanh toán dựa trên phương thức thanh toán
-    let paymentStatus = "Đang xử lý";
-    let isPaid = false;
-    
     if (paymentMethod === "Thanh toán khi nhận hàng") {
-      paymentStatus = "Chờ thanh toán";
-      isPaid = false;
-    } else if (paymentMethod === "Thanh toán MoMo") {
-      paymentStatus = "Đang xử lý";
-      isPaid = false;
-    } else if (paymentMethod === "Chuyển khoản ngân hàng") {
-      paymentStatus = "Chờ xác nhận";
-      isPaid = false;
+      // Tạo Order ngay lập tức cho thanh toán khi nhận hàng
+      const orderCode = generateOrderCode();
+      
+      const newOrder = await Order.create({
+        user: req.user._id,
+        orderItems: checkoutItem,
+        shippingAddress,
+        paymentMethod,
+        totalPrice,
+        paymentStatus: "Chờ thanh toán",
+        isPaid: false,
+        status: "Chờ xử lý",
+        orderCode: orderCode,
+      });
+      
+      // Xóa giỏ hàng sau khi tạo order thành công
+      await Cart.findOneAndDelete({ user: req.user._id });
+      
+      console.log(`Order created for user ${req.user._id} with cash on delivery. Cart cleared.`);
+      res.status(201).json(newOrder);
+    } else {
+      // Các phương thức thanh toán khác: tạo Checkout như cũ
+      let paymentStatus = "Đang xử lý";
+      let isPaid = false;
+      
+      if (paymentMethod === "Thanh toán MoMo") {
+        paymentStatus = "Đang xử lý";
+        isPaid = false;
+      } else if (paymentMethod === "Chuyển khoản ngân hàng") {
+        paymentStatus = "Chờ xác nhận";
+        isPaid = false;
+      }
+      
+      const newCheckout = await Checkout.create({
+        user: req.user._id,
+        checkoutItem: checkoutItem,
+        shippingAddress,
+        paymentMethod,
+        totalPrice,
+        paymentStatus,
+        isPaid,
+        orderCode: generateOrderCode(),
+      });
+      
+      // Xóa giỏ hàng sau khi tạo checkout thành công
+      await Cart.findOneAndDelete({ user: req.user._id });
+      
+      console.log(`Checkout created for user ${req.user._id} with payment method: ${paymentMethod}. Cart cleared.`);
+      res.status(201).json(newCheckout);
     }
-    
-    const newCheckout = await Checkout.create({
-      user: req.user._id,
-      checkoutItem: checkoutItem,
-      shippingAddress,
-      paymentMethod,
-      totalPrice,
-      paymentStatus,
-      isPaid,
-      orderCode: generateOrderCode(), // Tạo mã đơn hàng dễ nhớ
-    });
-    
-    console.log(`Checkout created for user ${req.user._id} with payment method: ${paymentMethod}`);
-    res.status(201).json(newCheckout);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
-
-// Hàm tạo mã đơn hàng dễ nhớ
-const generateOrderCode = () => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < 6; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
 };
 
 export const updateCheckout = async (req, res) => {
@@ -68,7 +81,7 @@ export const updateCheckout = async (req, res) => {
       await checkout.save();
       res.status(200).json(checkout);
     } else {
-      res.status(400).json({ message: "Ivalid Payment Status" });
+      res.status(400).json({ message: "Invalid Payment Status" });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -91,9 +104,9 @@ export const finalizeCheckout = async (req, res) => {
         totalPrice: checkout.totalPrice,
         paymentStatus: "Đã thanh toán",
         isPaid: true,
+        status: "Chờ xử lý",
+        orderCode: checkout.orderCode,
         paidAt: checkout.paidAt,
-        isDelivered: false,
-        paymentDetail: checkout.paymentDetail,
       });
 
       checkout.isFinalized = true;
@@ -109,7 +122,6 @@ export const finalizeCheckout = async (req, res) => {
         );
       }
 
-      await Cart.findOneAndDelete({ user: checkout.user });
       res.status(200).json(finalOrder);
     } else if (checkout.isFinalized) {
       res.status(400).json({ message: "Checkout already finalized" });
@@ -121,7 +133,6 @@ export const finalizeCheckout = async (req, res) => {
   }
 };
 
-// Thêm hàm lấy checkout theo ID
 export const getCheckoutById = async (req, res) => {
   try {
     const checkout = await Checkout.findById(req.params.id);
@@ -133,5 +144,17 @@ export const getCheckoutById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Hàm tạo mã đơn hàng dễ nhớ
+const generateOrderCode = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
+
+
 
 

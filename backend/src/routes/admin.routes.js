@@ -9,9 +9,10 @@ import {
   newUser, 
   updateOrder, 
   updateUser,
+  getAllOrders,
+  confirmCashPayment,
   getCheckouts,
   updateCheckout,
-  confirmCashPayment,
   getCheckoutById
 } from "../controllers/admin.controller.js";
 
@@ -27,14 +28,14 @@ router.delete("/:id", protectRoutes, isAdmin, deleteUser)
 router.get("/product", protectRoutes, isAdmin, getProducts)
 
 //order
-router.get("/order", protectRoutes, isAdmin, getOrders)
+router.get("/order", protectRoutes, isAdmin, getAllOrders)
 router.put("/order/:id", protectRoutes, isAdmin, updateOrder)
 router.delete("/order/:id", protectRoutes, isAdmin, deleteOrder)
+router.post("/order/confirm-cash/:orderCode", protectRoutes, isAdmin, confirmCashPayment)
 
 //checkout
 router.get("/checkout", protectRoutes, isAdmin, getCheckouts)
 router.get("/checkout/:id", protectRoutes, isAdmin, getCheckoutById)
 router.put("/checkout/:id", protectRoutes, isAdmin, updateCheckout)
-router.post("/checkout/confirm-cash/:orderCode", protectRoutes, isAdmin, confirmCashPayment)
 
 export default router;
