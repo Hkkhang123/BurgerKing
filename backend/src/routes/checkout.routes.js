@@ -1,6 +1,11 @@
 import express from "express";
 import { protectRoutes } from "../middleware/auth.middleware.js";
-import { createCheckout, finalizeCheckout, updateCheckout, getCheckoutById } from "../controllers/checkout.controller.js";
+import { 
+  createCheckout, 
+  finalizeCheckout, 
+  updateCheckout, 
+  getCheckoutById
+} from "../controllers/checkout.controller.js";
 
 const router = express.Router();
 

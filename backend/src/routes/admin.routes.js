@@ -1,6 +1,19 @@
 import express from "express";
 import { protectRoutes, isAdmin } from "../middleware/auth.middleware.js";
-import { deleteOrder, deleteUser, getAllUsers, getOrders, getProducts, newUser, updateOrder, updateUser } from "../controllers/admin.controller.js";
+import { 
+  deleteOrder, 
+  deleteUser, 
+  getAllUsers, 
+  getOrders, 
+  getProducts, 
+  newUser, 
+  updateOrder, 
+  updateUser,
+  getCheckouts,
+  updateCheckout,
+  confirmCashPayment,
+  getCheckoutById
+} from "../controllers/admin.controller.js";
 
 const router = express.Router();
 
@@ -17,5 +30,11 @@ router.get("/product", protectRoutes, isAdmin, getProducts)
 router.get("/order", protectRoutes, isAdmin, getOrders)
 router.put("/order/:id", protectRoutes, isAdmin, updateOrder)
 router.delete("/order/:id", protectRoutes, isAdmin, deleteOrder)
+
+//checkout
+router.get("/checkout", protectRoutes, isAdmin, getCheckouts)
+router.get("/checkout/:id", protectRoutes, isAdmin, getCheckoutById)
+router.put("/checkout/:id", protectRoutes, isAdmin, updateCheckout)
+router.post("/checkout/confirm-cash/:orderCode", protectRoutes, isAdmin, confirmCashPayment)
 
 export default router;

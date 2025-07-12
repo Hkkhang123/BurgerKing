@@ -69,6 +69,11 @@ const checkoutSchema = new mongoose.Schema({
     finalizedAt: {
         type: Date,
     },
+    orderCode: {
+        type: String,
+        unique: true,
+        required: true,
+    },
 }, {timestamps: true});
 
 export default mongoose.model("Checkout", checkoutSchema);

@@ -79,17 +79,244 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (!mounted) return;
     if (result['success'] == true) {
       final checkoutId = result['data']['_id'];
-      // Thanh toán thường
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đặt hàng thành công!')),
-      );
-      Navigator.of(context).pop(true); // Trả về true để CartScreen reload lại
+      
+      if (_paymentMethod == 'Thanh toán khi nhận hàng') {
+        // Hiển thị dialog xác nhận thanh toán
+        final orderCode = result['data']['orderCode'] ?? checkoutId.substring(checkoutId.length - 6).toUpperCase();
+        _showPaymentConfirmationDialog(orderCode);
+      } else {
+        // Thanh toán thường
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đặt hàng thành công!')),
+        );
+        Navigator.of(context).pop(true);
+      }
     } else {
       String errorMsg = result['data']?['message'] ?? result['error'] ?? 'Lỗi khi thanh toán';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMsg)),
       );
     }
+  }
+
+  // Dialog xác nhận thanh toán khi nhận hàng
+  void _showPaymentConfirmationDialog(String orderCode) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Đặt hàng thành công!'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 64,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Đơn hàng của bạn đã được tạo thành công!\n\n'
+              'Thông tin đơn hàng:',
+              style: TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '🏷️ Mã đơn hàng:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    orderCode,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '💰 Số tiền: ${widget.totalPrice.toStringAsFixed(0)} đ',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.shade200),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'ℹ️ Lưu ý:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 4),
+                  Text('• Thanh toán khi nhận hàng'),
+                  Text('• Admin sẽ xác nhận thanh toán sau'),
+                  Text('• Bạn có thể theo dõi trạng thái trong "Đơn hàng của tôi"'),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop(true);
+            },
+            child: const Text('Đóng'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _showOrderDetails(orderCode);
+            },
+            child: const Text('Xem chi tiết'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Hiển thị chi tiết đơn hàng
+  void _showOrderDetails(String orderCode) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Chi tiết đơn hàng'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '📦 Thông tin giao hàng',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                                         Text('🏷️ Mã đơn hàng: $orderCode'),
+                    const SizedBox(height: 4),
+                    Text('💰 Tổng tiền: ${widget.totalPrice.toStringAsFixed(0)} đ'),
+                    const SizedBox(height: 4),
+                    Text('📍 Địa chỉ: ${_addressController.text}'),
+                    const SizedBox(height: 4),
+                    Text('📞 SĐT: ${_phoneController.text}'),
+                    const SizedBox(height: 4),
+                    Text('👤 Người nhận: ${_receiverController.text}'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('📋 Sản phẩm:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 8),
+              ...widget.cartProducts.map((e) => Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  children: [
+                    if (e['image'] != null && e['image'] != '')
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: Image.network(
+                          e['image'],
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            e['name'] ?? '',
+                            style: const TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                          Text(
+                            'Số lượng: ${e['quantity'] ?? 1}',
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '${e['price'] ?? 0} đ',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              )),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ℹ️ Lưu ý khi nhận hàng:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 4),
+                    Text('• Kiểm tra sản phẩm trước khi thanh toán'),
+                    Text('• Chuẩn bị đủ tiền mặt hoặc thẻ'),
+                    Text('• Giữ mã xác nhận để đối chiếu'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop(true);
+            },
+            child: const Text('Hoàn tất'),
+          ),
+        ],
+      ),
+    );
   }
 
   // Hàm kiểm tra trạng thái thanh toán
@@ -342,6 +569,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       DropdownMenuItem(value: 'Thanh toán khi nhận hàng', child: Text('Thanh toán khi nhận hàng')),
                       DropdownMenuItem(value: 'Chuyển khoản ngân hàng', child: Text('Chuyển khoản ngân hàng')),
                       DropdownMenuItem(value: 'Thanh toán MoMo', child: Text('Thanh toán MoMo')),
+                      DropdownMenuItem(value: 'Thanh toán QR Code', child: Text('Thanh toán QR Code')),
                     ],
                     onChanged: (value) {
                       if (value != null) setState(() => _paymentMethod = value);

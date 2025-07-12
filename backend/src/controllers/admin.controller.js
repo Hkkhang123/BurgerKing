@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
+import Checkout from "../models/Checkout.js";
 export const getAllUsers = async (req, res) => {
   try {
     const user = await User.find({});
@@ -104,3 +105,116 @@ export const deleteOrder = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }
+
+// Admin quản lý checkout
+export const getCheckouts = async (req, res) => {
+  try {
+    const checkouts = await Checkout.find({})
+      .populate("user", "name email")
+      .sort({ createdAt: -1 }); // Sắp xếp theo thời gian tạo mới nhất
+    res.json(checkouts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateCheckout = async (req, res) => {
+  try {
+    const checkout = await Checkout.findById(req.params.id).populate("user", "name email");
+    if (!checkout) {
+      return res.status(404).json({ message: "Checkout not found" });
+    }
+
+    const { paymentStatus, isPaid, note } = req.body;
+    
+    // Cập nhật trạng thái thanh toán
+    if (paymentStatus) {
+      checkout.paymentStatus = paymentStatus;
+    }
+    
+    if (isPaid !== undefined) {
+      checkout.isPaid = isPaid;
+      if (isPaid && !checkout.paidAt) {
+        checkout.paidAt = Date.now();
+        checkout.paymentDetail = {
+          method: "Admin Update",
+          amount: checkout.totalPrice,
+          confirmedAt: new Date(),
+          confirmedBy: req.user._id,
+          note: note || "Admin confirmed payment"
+        };
+      }
+    }
+
+    const updatedCheckout = await checkout.save();
+    
+    console.log(`Admin ${req.user._id} updated checkout ${checkout._id} to ${paymentStatus}, isPaid: ${isPaid}`);
+    
+    res.json({
+      success: true,
+      message: "Checkout updated successfully",
+      checkout: updatedCheckout
+    });
+  } catch (error) {
+    console.log("Error updating checkout:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const confirmCashPayment = async (req, res) => {
+  try {
+    const { orderCode } = req.params;
+    const { note } = req.body;
+    
+    const checkout = await Checkout.findOne({ orderCode });
+    if (!checkout) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    
+    if (checkout.paymentMethod !== "Thanh toán khi nhận hàng") {
+      return res.status(400).json({ message: "This order is not for cash payment" });
+    }
+    
+    if (checkout.isPaid) {
+      return res.status(400).json({ message: "Order already paid" });
+    }
+    
+    // Cập nhật trạng thái thanh toán
+    checkout.paymentStatus = "Đã thanh toán";
+    checkout.isPaid = true;
+    checkout.paymentDetail = {
+      method: "Cash on Delivery",
+      amount: checkout.totalPrice,
+      confirmedAt: new Date(),
+      confirmedBy: req.user._id,
+      note: note || "Admin confirmed cash payment"
+    };
+    checkout.paidAt = Date.now();
+    await checkout.save();
+    
+    console.log(`Admin ${req.user._id} confirmed cash payment for order ${orderCode}`);
+    
+    res.json({
+      success: true,
+      message: "Cash payment confirmed successfully",
+      checkout: checkout
+    });
+    
+  } catch (error) {
+    console.log("Error confirming cash payment:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getCheckoutById = async (req, res) => {
+  try {
+    const checkout = await Checkout.findById(req.params.id)
+      .populate("user", "name email");
+    if (!checkout) {
+      return res.status(404).json({ message: "Checkout not found" });
+    }
+    res.json(checkout);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

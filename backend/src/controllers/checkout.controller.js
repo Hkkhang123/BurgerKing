@@ -9,20 +9,47 @@ export const createCheckout = async (req, res) => {
     return res.status(400).json({ message: "No item in checkout" });
   }
   try {
+    // Xử lý trạng thái thanh toán dựa trên phương thức thanh toán
+    let paymentStatus = "Đang xử lý";
+    let isPaid = false;
+    
+    if (paymentMethod === "Thanh toán khi nhận hàng") {
+      paymentStatus = "Chờ thanh toán";
+      isPaid = false;
+    } else if (paymentMethod === "Thanh toán MoMo") {
+      paymentStatus = "Đang xử lý";
+      isPaid = false;
+    } else if (paymentMethod === "Chuyển khoản ngân hàng") {
+      paymentStatus = "Chờ xác nhận";
+      isPaid = false;
+    }
+    
     const newCheckout = await Checkout.create({
       user: req.user._id,
       checkoutItem: checkoutItem,
       shippingAddress,
       paymentMethod,
       totalPrice,
-      paymentStatus: "Đang xử lý",
-      isPaid: false,
+      paymentStatus,
+      isPaid,
+      orderCode: generateOrderCode(), // Tạo mã đơn hàng dễ nhớ
     });
-    console.log(`Checkout created:  ${req.user._id}`);
+    
+    console.log(`Checkout created for user ${req.user._id} with payment method: ${paymentMethod}`);
     res.status(201).json(newCheckout);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+};
+
+// Hàm tạo mã đơn hàng dễ nhớ
+const generateOrderCode = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
 };
 
 export const updateCheckout = async (req, res) => {
@@ -106,3 +133,5 @@ export const getCheckoutById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+

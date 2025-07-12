@@ -8,6 +8,58 @@ import Product from "../models/Product.js";
 import Cart from "../models/Cart.js";
 import { finalizeCheckout } from "../controllers/checkout.controller.js";
 
+// Hàm finalize checkout trực tiếp (không cần request/response)
+const finalizeCheckoutDirectly = async (checkoutId, userId) => {
+  try {
+    const checkout = await Checkout.findById(checkoutId);
+    if (!checkout) {
+      console.log(`[Finalize] Checkout not found: ${checkoutId}`);
+      return false;
+    }
+
+    if (checkout.isPaid && !checkout.isFinalized) {
+      const finalOrder = await Order.create({
+        user: userId,
+        orderItems: checkout.checkoutItem,
+        shippingAddress: checkout.shippingAddress,
+        paymentMethod: checkout.paymentMethod,
+        totalPrice: checkout.totalPrice,
+        paymentStatus: "Đã thanh toán",
+        isPaid: true,
+        paidAt: checkout.paidAt,
+        isDelivered: false,
+        paymentDetail: checkout.paymentDetail,
+      });
+
+      checkout.isFinalized = true;
+      checkout.finalizedAt = Date.now();
+      await checkout.save();
+
+      // Cập nhật purchaseCount cho từng sản phẩm
+      for (const item of checkout.checkoutItem) {
+        await Product.findByIdAndUpdate(
+          item.productId,
+          { $inc: { purchaseCount: item.quantity } },
+          { new: true }
+        );
+      }
+
+      await Cart.findOneAndDelete({ user: userId });
+      console.log(`[Finalize] Thành công, tạo Order: ${finalOrder._id}`);
+      return true;
+    } else if (checkout.isFinalized) {
+      console.log(`[Finalize] Checkout đã được finalize trước đó`);
+      return true;
+    } else {
+      console.log(`[Finalize] Checkout chưa thanh toán, không thể finalize`);
+      return false;
+    }
+  } catch (error) {
+    console.log(`[Finalize] Lỗi:`, error);
+    return false;
+  }
+};
+
 export const momoTest = (req, res) => {
   const { checkoutId, amount } = req.body;
   const accessKey = "F8BBA842ECF85";
@@ -137,27 +189,10 @@ export const momoIpn = async (req, res) => {
       await checkout.save();
       console.log(`[MoMo IPN] Thanh toán thành công cho checkoutId: ${checkoutId}`);
       
-      // Tự động finalize checkout bằng hàm có sẵn
+      // Tự động finalize checkout
       try {
         if (checkout.isPaid && !checkout.isFinalized) {
-          // Tạo mock request và response để gọi finalizeCheckout
-          const mockReq = {
-            params: { id: checkoutId },
-            user: { _id: checkout.user }
-          };
-          const mockRes = {
-            status: (code) => ({
-              json: (data) => {
-                if (code === 200) {
-                  console.log(`[MoMo IPN] Finalize thành công, tạo Order: ${data._id}`);
-                } else {
-                  console.log(`[MoMo IPN] Lỗi finalize:`, data);
-                }
-              }
-            })
-          };
-          
-          await finalizeCheckout(mockReq, mockRes);
+          await finalizeCheckoutDirectly(checkoutId, checkout.user);
         } else if (checkout.isFinalized) {
           console.log(`[MoMo IPN] Checkout đã được finalize trước đó`);
         } else {
@@ -260,23 +295,7 @@ export const momoStatus = async (req, res) => {
             // Tự động finalize checkout nếu chưa được finalize
             try {
               if (checkout.isPaid && !checkout.isFinalized) {
-                const mockReq = {
-                  params: { id: checkoutId },
-                  user: { _id: checkout.user }
-                };
-                const mockRes = {
-                  status: (code) => ({
-                    json: (data) => {
-                      if (code === 200) {
-                        console.log(`[MoMo Status] Finalize thành công, tạo Order: ${data._id}`);
-                      } else {
-                        console.log(`[MoMo Status] Lỗi finalize:`, data);
-                      }
-                    }
-                  })
-                };
-                
-                await finalizeCheckout(mockReq, mockRes);
+                await finalizeCheckoutDirectly(checkoutId, checkout.user);
               }
             } catch (finalizeError) {
               console.log(`[MoMo Status] Lỗi khi finalize checkout:`, finalizeError);
