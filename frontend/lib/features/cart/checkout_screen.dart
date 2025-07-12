@@ -95,65 +95,75 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   // Hàm kiểm tra trạng thái thanh toán
   Future<void> _checkPaymentStatus(String checkoutId) async {
     setState(() { _isLoading = true; });
-    try {
-      final authController = Get.find<AuthController>();
-      final token = authController.getToken();
-      
-      // Gọi API để lấy thông tin checkout
-      final response = await http.get(
-        Uri.parse('https://burgerking-j92p.onrender.com/api/checkout/$checkoutId'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-      
-      setState(() { _isLoading = false; });
-      
-      if (response.statusCode == 200) {
-        final checkoutData = json.decode(response.body);
-        final paymentStatus = checkoutData['paymentStatus'];
+    
+    // Polling: kiểm tra trạng thái mỗi 3 giây, tối đa 30 giây
+    int attempts = 0;
+    const maxAttempts = 10; // 30 giây / 3 giây = 10 lần
+    
+    while (attempts < maxAttempts) {
+      try {
+        final authController = Get.find<AuthController>();
+        final token = authController.getToken();
         
-        if (paymentStatus == 'Đã thanh toán') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Thanh toán MoMo thành công! Đơn hàng đã được xử lý.'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.of(context).pop(true); // Trả về true để CartScreen reload lại
-        } else if (paymentStatus == 'Thanh toán thất bại') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Thanh toán MoMo thất bại. Vui lòng thử lại.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đang xử lý thanh toán. Vui lòng chờ trong giây lát.'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không thể kiểm tra trạng thái thanh toán.'),
-            backgroundColor: Colors.red,
-          ),
+        // Gọi API để lấy thông tin checkout
+        final response = await http.get(
+          Uri.parse('https://burgerking-j92p.onrender.com/api/checkout/$checkoutId'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
         );
+        
+        if (response.statusCode == 200) {
+          final checkoutData = json.decode(response.body);
+          final paymentStatus = checkoutData['paymentStatus'];
+          
+          if (paymentStatus == 'Đã thanh toán') {
+            setState(() { _isLoading = false; });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Thanh toán MoMo thành công! Đơn hàng đã được xử lý.'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            Navigator.of(context).pop(true); // Trả về true để CartScreen reload lại
+            return; // Thoát khỏi polling
+          } else if (paymentStatus == 'Thanh toán thất bại') {
+            setState(() { _isLoading = false; });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Thanh toán MoMo thất bại. Vui lòng thử lại.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return; // Thoát khỏi polling
+          } else {
+            // Vẫn đang xử lý, tiếp tục polling
+            print('Payment status: $paymentStatus, attempt: ${attempts + 1}');
+          }
+        } else {
+          print('API error: ${response.statusCode} - ${response.body}');
+        }
+      } catch (e) {
+        print('Network error: $e');
       }
-    } catch (e) {
-      setState(() { _isLoading = false; });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Lỗi kết nối: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      
+      attempts++;
+      if (attempts < maxAttempts) {
+        // Chờ 3 giây trước khi kiểm tra lại
+        await Future.delayed(const Duration(seconds: 3));
+      }
     }
+    
+    // Hết thời gian polling
+    setState(() { _isLoading = false; });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Không thể xác nhận trạng thái thanh toán. Vui lòng kiểm tra lại sau.'),
+        backgroundColor: Colors.orange,
+        duration: Duration(seconds: 5),
+      ),
+    );
   }
 
   @override
