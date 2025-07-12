@@ -181,4 +181,125 @@ export const momoIpn = async (req, res) => {
   }
 };
 
-export default { momoTest, momoIpn };
+// Hàm kiểm tra trạng thái thanh toán từ MoMo
+export const momoStatus = async (req, res) => {
+  const { checkoutId } = req.body;
+  
+  if (!checkoutId) {
+    return res.status(400).json({ message: "checkoutId is required" });
+  }
+  
+  try {
+    // Lấy thông tin checkout
+    const checkout = await Checkout.findById(checkoutId);
+    if (!checkout) {
+      return res.status(404).json({ message: "Checkout not found" });
+    }
+    
+    // Kiểm tra xem có paymentDetail không (từ IPN)
+    if (checkout.paymentDetail && checkout.paymentDetail.resultCode === 0) {
+      return res.json({
+        success: true,
+        isPaid: true,
+        paymentStatus: checkout.paymentStatus,
+        message: "Payment confirmed via IPN"
+      });
+    }
+    
+    // Nếu chưa có IPN, thử kiểm tra trực tiếp từ MoMo API
+    const accessKey = "F8BBA842ECF85";
+    const secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
+    const partnerCode = "MOMO";
+    const requestId = checkoutId;
+    const orderId = checkoutId;
+    
+    const rawSignature = `accessKey=${accessKey}&orderId=${orderId}&partnerCode=${partnerCode}&requestId=${requestId}`;
+    const signature = crypto
+      .createHmac("sha256", secretKey)
+      .update(rawSignature)
+      .digest("hex");
+    
+    const requestBody = JSON.stringify({
+      partnerCode,
+      orderId,
+      requestId,
+      signature,
+    });
+    
+    const options = {
+      hostname: "test-payment.momo.vn",
+      port: 443,
+      path: "/v2/gateway/api/query",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(requestBody),
+      },
+    };
+    
+    const momoReq = https.request(options, (momoRes) => {
+      let data = "";
+      momoRes.on("data", (chunk) => {
+        data += chunk;
+      });
+      momoRes.on("end", () => {
+        try {
+          const result = JSON.parse(data);
+          console.log("[MoMo Status] Response:", result);
+          
+          if (result.resultCode === 0) {
+            // Thanh toán thành công
+            checkout.paymentStatus = "Đã thanh toán";
+            checkout.isPaid = true;
+            checkout.paymentDetail = result;
+            checkout.paidAt = Date.now();
+            checkout.save();
+            
+            res.json({
+              success: true,
+              isPaid: true,
+              paymentStatus: "Đã thanh toán",
+              message: "Payment confirmed via MoMo API"
+            });
+          } else {
+            res.json({
+              success: false,
+              isPaid: false,
+              paymentStatus: checkout.paymentStatus,
+              message: "Payment not completed"
+            });
+          }
+        } catch (e) {
+          console.log("[MoMo Status] Parse error:", e);
+          res.status(500).json({ 
+            success: false, 
+            message: "Error parsing MoMo response",
+            error: e.message 
+          });
+        }
+      });
+    });
+    
+    momoReq.on("error", (e) => {
+      console.log("[MoMo Status] Request error:", e);
+      res.status(500).json({ 
+        success: false, 
+        message: "Error connecting to MoMo",
+        error: e.message 
+      });
+    });
+    
+    momoReq.write(requestBody);
+    momoReq.end();
+    
+  } catch (error) {
+    console.log("[MoMo Status] Server error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error",
+      error: error.message 
+    });
+  }
+};
+
+export default { momoTest, momoIpn, momoStatus };
