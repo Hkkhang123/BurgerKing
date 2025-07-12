@@ -3,6 +3,10 @@
 import crypto from "crypto";
 import https from "https";
 import Checkout from "../models/Checkout.js";
+import Order from "../models/Order.js";
+import Product from "../models/Product.js";
+import Cart from "../models/Cart.js";
+import { finalizeCheckout } from "../controllers/checkout.controller.js";
 
 export const momoTest = (req, res) => {
   const { checkoutId, amount } = req.body;
@@ -117,6 +121,12 @@ export const momoIpn = async (req, res) => {
       console.log(`[MoMo IPN] Checkout not found: ${checkoutId}`);
       return res.status(404).json({ message: "Checkout not found" });
     }
+    // Kiểm tra amount có khớp với totalPrice của đơn hàng không
+    if (parseInt(body.amount) !== checkout.totalPrice) {
+      console.log(`[MoMo IPN] Amount mismatch! MoMo: ${body.amount}, Checkout: ${checkout.totalPrice}`);
+      return res.status(400).json({ message: "Amount mismatch" });
+    }
+    console.log(`[MoMo IPN] Amount verified: ${body.amount}`);
     if (body.resultCode === 0) {
       // Thanh toán thành công
       checkout.paymentStatus = "Đã thanh toán";
@@ -125,6 +135,37 @@ export const momoIpn = async (req, res) => {
       checkout.paidAt = Date.now();
       await checkout.save();
       console.log(`[MoMo IPN] Thanh toán thành công cho checkoutId: ${checkoutId}`);
+      
+      // Tự động finalize checkout bằng hàm có sẵn
+      try {
+        if (checkout.isPaid && !checkout.isFinalized) {
+          // Tạo mock request và response để gọi finalizeCheckout
+          const mockReq = {
+            params: { id: checkoutId },
+            user: { _id: checkout.user }
+          };
+          const mockRes = {
+            status: (code) => ({
+              json: (data) => {
+                if (code === 200) {
+                  console.log(`[MoMo IPN] Finalize thành công, tạo Order: ${data._id}`);
+                } else {
+                  console.log(`[MoMo IPN] Lỗi finalize:`, data);
+                }
+              }
+            })
+          };
+          
+          await finalizeCheckout(mockReq, mockRes);
+        } else if (checkout.isFinalized) {
+          console.log(`[MoMo IPN] Checkout đã được finalize trước đó`);
+        } else {
+          console.log(`[MoMo IPN] Checkout chưa thanh toán, không thể finalize`);
+        }
+      } catch (finalizeError) {
+        console.log(`[MoMo IPN] Lỗi khi finalize checkout:`, finalizeError);
+        // Không return error vì IPN đã thành công, chỉ log lỗi finalize
+      }
     } else {
       // Thanh toán thất bại
       checkout.paymentStatus = "Thanh toán thất bại";
