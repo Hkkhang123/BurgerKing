@@ -242,7 +242,7 @@ export const momoStatus = async (req, res) => {
       momoRes.on("data", (chunk) => {
         data += chunk;
       });
-      momoRes.on("end", () => {
+      momoRes.on("end", async () => {
         try {
           const result = JSON.parse(data);
           console.log("[MoMo Status] Response:", result);
@@ -253,7 +253,34 @@ export const momoStatus = async (req, res) => {
             checkout.isPaid = true;
             checkout.paymentDetail = result;
             checkout.paidAt = Date.now();
-            checkout.save();
+            await checkout.save();
+            
+            console.log(`[MoMo Status] Updated checkout ${checkoutId} to paid status`);
+            
+            // Tự động finalize checkout nếu chưa được finalize
+            try {
+              if (checkout.isPaid && !checkout.isFinalized) {
+                const mockReq = {
+                  params: { id: checkoutId },
+                  user: { _id: checkout.user }
+                };
+                const mockRes = {
+                  status: (code) => ({
+                    json: (data) => {
+                      if (code === 200) {
+                        console.log(`[MoMo Status] Finalize thành công, tạo Order: ${data._id}`);
+                      } else {
+                        console.log(`[MoMo Status] Lỗi finalize:`, data);
+                      }
+                    }
+                  })
+                };
+                
+                await finalizeCheckout(mockReq, mockRes);
+              }
+            } catch (finalizeError) {
+              console.log(`[MoMo Status] Lỗi khi finalize checkout:`, finalizeError);
+            }
             
             res.json({
               success: true,

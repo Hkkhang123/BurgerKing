@@ -105,9 +105,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
     );
     
-    // Polling: kiểm tra trạng thái mỗi 5 giây, tối đa 60 giây
+    // Polling: kiểm tra trạng thái mỗi 5 giây, tối đa 30 giây
     int attempts = 0;
-    const maxAttempts = 12; // 60 giây / 5 giây = 12 lần
+    const maxAttempts = 6; // 30 giây / 5 giây = 6 lần
     
     while (attempts < maxAttempts) {
       try {
@@ -210,7 +210,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
     
     // Hết thời gian polling, thử kiểm tra trạng thái từ MoMo API
-    print('Polling timeout, trying to check MoMo payment status directly...');
+    print('Polling timeout after 30 seconds, trying to check MoMo payment status directly...');
     try {
       final authController = Get.find<AuthController>();
       final token = authController.getToken();
@@ -232,9 +232,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         if (momoStatusData['success'] == true && momoStatusData['isPaid'] == true) {
           setState(() { _isLoading = false; });
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Thanh toán MoMo thành công! Đơn hàng đã được xử lý.'),
+            SnackBar(
+              content: Text('Thanh toán MoMo thành công! ${momoStatusData['message']}'),
               backgroundColor: Colors.green,
+              duration: const Duration(seconds: 4),
             ),
           );
           Navigator.of(context).pop(true);
@@ -254,7 +255,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Thông báo'),
         content: const Text(
-          'Không thể xác nhận trạng thái thanh toán sau 60 giây.\n\n'
+          'Không thể xác nhận trạng thái thanh toán sau 30 giây.\n\n'
           'Có thể:\n'
           '• Thanh toán đang được xử lý\n'
           '• Có vấn đề với kết nối mạng\n'
