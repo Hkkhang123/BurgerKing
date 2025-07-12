@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final List<dynamic> cartProducts;
@@ -87,6 +88,70 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       String errorMsg = result['data']?['message'] ?? result['error'] ?? 'Lỗi khi thanh toán';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMsg)),
+      );
+    }
+  }
+
+  // Hàm kiểm tra trạng thái thanh toán
+  Future<void> _checkPaymentStatus(String checkoutId) async {
+    setState(() { _isLoading = true; });
+    try {
+      final authController = Get.find<AuthController>();
+      final token = authController.getToken();
+      
+      // Gọi API để lấy thông tin checkout
+      final response = await http.get(
+        Uri.parse('https://burgerking-j92p.onrender.com/api/checkout/$checkoutId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+      
+      setState(() { _isLoading = false; });
+      
+      if (response.statusCode == 200) {
+        final checkoutData = json.decode(response.body);
+        final paymentStatus = checkoutData['paymentStatus'];
+        
+        if (paymentStatus == 'Đã thanh toán') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Thanh toán MoMo thành công! Đơn hàng đã được xử lý.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.of(context).pop(true); // Trả về true để CartScreen reload lại
+        } else if (paymentStatus == 'Thanh toán thất bại') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Thanh toán MoMo thất bại. Vui lòng thử lại.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đang xử lý thanh toán. Vui lòng chờ trong giây lát.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể kiểm tra trạng thái thanh toán.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() { _isLoading = false; });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi kết nối: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -206,10 +271,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 if (payUrl.isNotEmpty) {
                                   Navigator.of(context).push(MaterialPageRoute(
                                     builder: (_) => Scaffold(
-                                      appBar: AppBar(title: const Text('Thanh toán MoMo')),
-                                      body: WebViewWidget(controller: WebViewController()
-                                        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                                        ..loadRequest(Uri.parse(payUrl))),
+                                      appBar: AppBar(
+                                        title: const Text('Thanh toán MoMo'),
+                                        leading: IconButton(
+                                          icon: const Icon(Icons.close),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                            // Kiểm tra trạng thái đơn hàng khi user đóng WebView
+                                            _checkPaymentStatus(checkoutId);
+                                          },
+                                        ),
+                                      ),
+                                      body: WebViewWidget(
+                                        controller: WebViewController()
+                                          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                                          ..loadRequest(Uri.parse(payUrl))
+                                          ..setNavigationDelegate(NavigationDelegate(
+                                            onNavigationRequest: (request) {
+                                              // Nếu URL chứa redirectUrl hoặc kết quả thanh toán
+                                              if (request.url.contains('webhook.site') || 
+                                                  request.url.contains('success') ||
+                                                  request.url.contains('cancel')) {
+                                                Navigator.of(context).pop();
+                                                // Kiểm tra trạng thái đơn hàng
+                                                _checkPaymentStatus(checkoutId);
+                                                return NavigationDecision.prevent;
+                                              }
+                                              return NavigationDecision.navigate;
+                                            },
+                                          )),
+                                      ),
                                     ),
                                   ));
                                 } else {
