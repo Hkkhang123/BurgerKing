@@ -78,7 +78,7 @@ const orderSchema = mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["Chờ xử lý", "Đang chuẩn bị", "Đã gửi đi", "Đã giao hàng", "Đã hủy"],
+        enum: ["Chờ xử lý", "Đã hoàn thành", "Đã hủy"],
         default: "Chờ xử lý"
     },
     orderCode: {

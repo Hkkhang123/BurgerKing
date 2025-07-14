@@ -10,6 +10,7 @@ import 'dart:io';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'order_confirmation_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final List<dynamic> cartProducts;
@@ -78,12 +79,32 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() { _isLoading = false; });
     if (!mounted) return;
     if (result['success'] == true) {
-      final orderId = result['data']['_id'];
+      final id = result['data']['_id'];
+      final orderCode = result['data']['orderCode'] ?? id.substring(id.length - 6).toUpperCase();
       
       if (_paymentMethod == 'Thanh toán khi nhận hàng') {
-        // Hiển thị dialog xác nhận thanh toán
-        final orderCode = result['data']['orderCode'] ?? orderId.substring(orderId.length - 6).toUpperCase();
-        _showPaymentConfirmationDialog(orderCode);
+        // Với thanh toán khi nhận hàng, API tạo Order ngay lập tức
+        // nên _id là orderId
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => OrderConfirmationScreen(
+              orderId: id, // Đây là orderId thực
+              orderCode: orderCode,
+              totalAmount: widget.totalPrice,
+              paymentMethod: _paymentMethod,
+              shippingAddress: {
+                'address': _addressController.text,
+                'city': _cityController.text,
+                'district': _districtController.text,
+                'postalCode': _postalCodeController.text,
+                'phone': _phoneController.text,
+                'receiver': _receiverController.text,
+              },
+              orderItems: widget.cartProducts,
+              isPaymentSuccess: false, // Chưa thanh toán
+            ),
+          ),
+        );
       } else {
         // Thanh toán thường
         ScaffoldMessenger.of(context).showSnackBar(
@@ -366,13 +387,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           // Kiểm tra nếu đã finalize thì cũng coi như thành công
           if (paymentStatus == 'Đã thanh toán' || isPaid == true || isFinalized == true) {
             setState(() { _isLoading = false; });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Thanh toán MoMo thành công! Đơn hàng đã được xử lý.'),
-                backgroundColor: Colors.green,
+            
+            // Chuyển đến trang xác nhận đơn hàng với checkoutId
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => OrderConfirmationScreen(
+                  checkoutId: checkoutId,
+                  orderCode: checkoutData['orderCode'] ?? checkoutId.substring(checkoutId.length - 6).toUpperCase(),
+                  totalAmount: widget.totalPrice,
+                  paymentMethod: _paymentMethod,
+                  shippingAddress: {
+                    'address': _addressController.text,
+                    'city': _cityController.text,
+                    'district': _districtController.text,
+                    'postalCode': _postalCodeController.text,
+                    'phone': _phoneController.text,
+                    'receiver': _receiverController.text,
+                  },
+                  orderItems: widget.cartProducts,
+                  isPaymentSuccess: true,
+                ),
               ),
             );
-            Navigator.of(context).pop(true); // Trả về true để CartScreen reload lại
             return; // Thoát khỏi polling
           } else if (paymentStatus == 'Thanh toán thất bại') {
             setState(() { _isLoading = false; });
@@ -409,13 +445,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 print('Latest order: $latestOrder');
                 
                 setState(() { _isLoading = false; });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Thanh toán MoMo thành công! Đơn hàng đã được xử lý.'),
-                    backgroundColor: Colors.green,
+                
+                // Chuyển đến trang xác nhận đơn hàng với orderId thực
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => OrderConfirmationScreen(
+                      orderId: latestOrder['_id'],
+                      orderCode: latestOrder['orderCode'] ?? latestOrder['_id'].substring(latestOrder['_id'].length - 6).toUpperCase(),
+                      totalAmount: latestOrder['totalPrice']?.toDouble() ?? widget.totalPrice,
+                      paymentMethod: latestOrder['paymentMethod'] ?? _paymentMethod,
+                      shippingAddress: latestOrder['shippingAddress'] ?? {
+                        'address': _addressController.text,
+                        'city': _cityController.text,
+                        'district': _districtController.text,
+                        'postalCode': _postalCodeController.text,
+                        'phone': _phoneController.text,
+                        'receiver': _receiverController.text,
+                      },
+                      orderItems: latestOrder['orderItems'] ?? widget.cartProducts,
+                      isPaymentSuccess: latestOrder['isPaid'] ?? true,
+                    ),
                   ),
                 );
-                Navigator.of(context).pop(true);
                 return;
               }
             }
@@ -458,14 +509,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         
         if (momoStatusData['success'] == true && momoStatusData['isPaid'] == true) {
           setState(() { _isLoading = false; });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Thanh toán MoMo thành công! ${momoStatusData['message']}'),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 4),
+          
+          // Chuyển đến trang xác nhận đơn hàng với checkoutId
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => OrderConfirmationScreen(
+                checkoutId: checkoutId,
+                orderCode: checkoutId.substring(checkoutId.length - 6).toUpperCase(),
+                totalAmount: widget.totalPrice,
+                paymentMethod: _paymentMethod,
+                shippingAddress: {
+                  'address': _addressController.text,
+                  'city': _cityController.text,
+                  'district': _districtController.text,
+                  'postalCode': _postalCodeController.text,
+                  'phone': _phoneController.text,
+                  'receiver': _receiverController.text,
+                },
+                orderItems: widget.cartProducts,
+                isPaymentSuccess: true,
+              ),
             ),
           );
-          Navigator.of(context).pop(true);
           return;
         }
       }

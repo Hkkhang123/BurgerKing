@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:client/features/home/main_screen.dart';
 
+
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
 

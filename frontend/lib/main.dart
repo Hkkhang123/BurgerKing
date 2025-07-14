@@ -2,6 +2,7 @@ import 'package:client/core/services/auth_controller.dart';
 import 'package:client/core/services/theme_controller.dart';
 import 'package:client/core/services/product_controller.dart';
 import 'package:client/core/services/cart_controller.dart';
+import 'package:client/core/services/review_controller.dart';
 import 'package:client/shared/themes/app_themes.dart';
 import 'package:client/features/home/splash_screen.dart';
 import 'package:client/features/auth/signin_screen.dart';
@@ -18,6 +19,7 @@ void main() async {
   Get.put(AuthController());
   Get.put(ProductController());
   Get.put(CartController());
+  Get.put(ReviewController());
   runApp(const MyApp());
 }
 
