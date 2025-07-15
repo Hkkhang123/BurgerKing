@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:client/core/services/notification_controller.dart';
 import 'dart:io';
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 
 class AuthController extends GetxController{
   static const String baseUrl = 'https://burgerking-j92p.onrender.com';
@@ -409,19 +411,19 @@ class AuthController extends GetxController{
   }
 
   // Upload avatar method
-  Future<Map<String, dynamic>> _uploadAvatar(String token, List<int> imageBytes, String fileName) async {
+  Future<Map<String, dynamic>> _uploadAvatar(String token, String filePath) async {
     try {
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('$baseUrl/api/auth/avatar'),
       );
-      
       request.headers.addAll(getAuthHeaders(token));
+      final mimeType = lookupMimeType(filePath) ?? 'image/jpeg';
       request.files.add(
-        http.MultipartFile.fromBytes(
+        await http.MultipartFile.fromPath(
           'image',
-          imageBytes,
-          filename: fileName,
+          filePath,
+          contentType: MediaType.parse(mimeType),
         ),
       );
 
@@ -501,12 +503,11 @@ class AuthController extends GetxController{
     return [];
   }
 
-  // Upload avatar
-  Future<bool> uploadAvatar(List<int> imageBytes, String fileName) async {
+  // Upload avatar public method
+  Future<bool> uploadAvatar(String filePath) async {
     final token = getToken();
     if (token == null) return false;
-    
-    final result = await _uploadAvatar(token, imageBytes, fileName);
+    final result = await _uploadAvatar(token, filePath);
     if (result['success']) {
       // Cập nhật user data với avatar mới
       final currentUser = getCurrentUser();

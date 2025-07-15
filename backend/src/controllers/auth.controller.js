@@ -13,7 +13,9 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     console.log('File nhận được:', file);
-    if (file.mimetype.startsWith('image/')) {
+    const isImageMime = file.mimetype.startsWith('image/');
+    const isImageExt = /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(file.originalname);
+    if (isImageMime || (file.mimetype === 'application/octet-stream' && isImageExt)) {
       cb(null, true);
     } else {
       cb(new Error('Chỉ cho phép upload file hình ảnh!'), false);
