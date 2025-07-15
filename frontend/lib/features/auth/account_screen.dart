@@ -1,4 +1,5 @@
 import 'package:client/core/services/auth_controller.dart';
+import 'package:client/features/auth/edit_profile_screen.dart';
 import 'package:client/features/order/my_order_screen.dart';
 import 'package:client/shared/themes/app_textstyle.dart';
 import 'package:flutter/material.dart';
@@ -113,11 +114,9 @@ class AccountScreen extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 50,
-            backgroundImage:
-                avatarUrl != null
-                    ? NetworkImage(avatarUrl)
-                    : const AssetImage('assets/images/avatar.jpg')
-                        as ImageProvider,
+            backgroundImage: (avatarUrl != null && avatarUrl.startsWith('http'))
+                ? NetworkImage(avatarUrl)
+                : const AssetImage('assets/images/person.png') as ImageProvider,
           ),
           const SizedBox(height: 16),
           Text(
@@ -139,7 +138,7 @@ class AccountScreen extends StatelessWidget {
 
           const SizedBox(height: 16),
           OutlinedButton(
-            onPressed: () {},
+            onPressed: () => Get.to(() => EditProfileScreen()),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               side: BorderSide(color: isDark ? Colors.white70 : Colors.black12),

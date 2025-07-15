@@ -554,7 +554,6 @@ class AuthController extends GetxController{
     required String? token,
     required String name,
     required String email,
-    required String phone,
     File? avatarFile,
   }) async {
     try {
@@ -565,7 +564,6 @@ class AuthController extends GetxController{
       request.headers['Authorization'] = 'Bearer $token';
       request.fields['name'] = name;
       request.fields['email'] = email;
-      request.fields['phone'] = phone;
       if (avatarFile != null) {
         request.files.add(
           await http.MultipartFile.fromPath('avatar', avatarFile.path),

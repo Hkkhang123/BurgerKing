@@ -1,7 +1,8 @@
 // Đảm bảo đã thêm vào pubspec.yaml:
-// dependencies:
-//   image_picker: ^1.0.4
-// và chạy: flutter pub get
+// flutter:
+//   assets:
+//     - assets/images/person.png
+// và copy file person.png vào frontend/assets/images/
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -16,7 +17,6 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
   File? _avatarFile;
   String? _avatarUrl;
   bool _isLoading = false;
@@ -27,7 +27,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final user = Get.find<AuthController>().getCurrentUser();
     _nameController.text = user?['name'] ?? '';
     _emailController.text = user?['email'] ?? '';
-    _phoneController.text = user?['phone'] ?? '';
     _avatarUrl = user?['image'];
   }
 
@@ -35,7 +34,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     super.dispose();
   }
 
@@ -57,7 +55,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       token: token,
       name: _nameController.text,
       email: _emailController.text,
-      phone: _phoneController.text,
       avatarFile: _avatarFile,
     );
     setState(() => _isLoading = false);
@@ -89,7 +86,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             ? FileImage(_avatarFile!)
                             : (_avatarUrl != null && _avatarUrl!.startsWith('http')
                                 ? NetworkImage(_avatarUrl!)
-                                : AssetImage('assets/images/avatar.jpg')) as ImageProvider,
+                                : AssetImage('assets/images/person.png')) as ImageProvider,
                       ),
                       Positioned(
                         bottom: 0,
@@ -125,16 +122,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       prefixIcon: Icon(Icons.email),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                  ),
-                  SizedBox(height: 16),
-                  TextField(
-                    controller: _phoneController,
-                    decoration: InputDecoration(
-                      labelText: 'Phone Number',
-                      prefixIcon: Icon(Icons.phone),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    keyboardType: TextInputType.phone,
                   ),
                   SizedBox(height: 32),
                   SizedBox(

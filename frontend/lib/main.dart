@@ -4,6 +4,7 @@ import 'package:client/core/services/product_controller.dart';
 import 'package:client/core/services/cart_controller.dart';
 import 'package:client/core/services/review_controller.dart';
 import 'package:client/core/services/notification_controller.dart';
+import 'package:client/features/auth/edit_profile_screen.dart';
 import 'package:client/shared/themes/app_themes.dart';
 import 'package:client/features/home/splash_screen.dart';
 import 'package:client/features/auth/signin_screen.dart';
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
       home: SplashScreen(),
       getPages: [
         GetPage(name: '/signin', page: () => SigninScreen()),
+        GetPage(name: '/profile', page: () => EditProfileScreen()),
         // Thêm các route khác nếu cần
       ],
     );

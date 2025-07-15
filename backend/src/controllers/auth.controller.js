@@ -12,6 +12,7 @@ const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
+    console.log('File nhận được:', file);
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
@@ -254,14 +255,13 @@ export const updateProfile = [
   async (req, res) => {
     try {
       const userId = req.user._id || req.user.id;
-      const { name, email, phone } = req.body;
+      const { name, email} = req.body;
       const user = await User.findById(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
       if (name) user.name = name;
       if (email) user.email = email;
-      if (phone) user.phone = phone;
       // Xử lý upload avatar nếu có
       if (req.file) {
         // Dùng lại logic upload lên Cloudinary
