@@ -5,6 +5,7 @@ import streamifier from 'streamifier';
 import cloudinary from '../config/cloudinary.js';
 import { OAuth2Client } from 'google-auth-library';
 import admin from '../config/firebaseAdmin.js';
+import Notification from "../models/Notification.js";
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -83,10 +84,16 @@ export const dangNhap = async (req, res) => {
         {
           expiresIn: "40h",
         },
-        (err, token) => {
+        async (err, token) => {
           if (err) {
             console.log(err);
           } else {
+            // Tạo notification đăng nhập thành công
+            await Notification.create({
+              user: user._id,
+              title: "Đăng nhập thành công",
+              message: "Chào mừng bạn quay trở lại!",
+            });
             res.json({
               user: {
                 _id: user._id,
@@ -207,10 +214,16 @@ export const loginWithGoogle = async (req, res) => {
       jwtPayload,
       process.env.JWT_SECRET,
       { expiresIn: '40h' },
-      (err, token) => {
+      async (err, token) => {
         if (err) {
           return res.status(500).json({ message: 'JWT error' });
         }
+        // Tạo notification đăng nhập Google thành công
+        await Notification.create({
+          user: user._id,
+          title: "Đăng nhập thành công",
+          message: "Chào mừng bạn quay trở lại!",
+        });
         res.json({
           user: {
             _id: user._id,

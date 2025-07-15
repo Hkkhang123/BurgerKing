@@ -13,6 +13,7 @@ import orderRoutes from "./src/routes/order.routes.js";
 import uploadRoutes from "./src/config/uploadRoute.js";
 import adminRoutes from "./src/routes/admin.routes.js";
 import paymentRoutes from "./src/routes/payment.routes.js";
+import notificationRoutes from "./src/routes/notification.routes.js";
 
 dotenv.config();
 const app = express();
@@ -36,6 +37,7 @@ app.use("/api/order", orderRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "/client/build")));

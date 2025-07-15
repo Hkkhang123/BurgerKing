@@ -138,7 +138,14 @@ export const momoIpn = async (req, res) => {
       checkout.paidAt = Date.now();
       await checkout.save();
       console.log(`[MoMo IPN] Thanh toán thành công cho checkoutId: ${checkoutId}`);
-      
+
+      // Tạo notification thanh toán thành công
+      await import("../models/Notification.js").then(({ default: Notification }) => Notification.create({
+        user: checkout.user,
+        title: "Thanh toán thành công",
+        message: `Đơn hàng #${checkout._id} đã được thanh toán.`,
+      }));
+
       // Tự động finalize checkout
       try {
         if (checkout.isPaid && !checkout.isFinalized) {
