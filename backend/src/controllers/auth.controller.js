@@ -22,6 +22,13 @@ const upload = multer({
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+function sanitizeUserImage(user) {
+  if (!user.image || user.image === 'person.png' || !/^https?:\/\//.test(user.image)) {
+    return '';
+  }
+  return user.image;
+}
+
 export const dangky = async (req, res) => {
   try {
     const { email, password, name } = req.body;
@@ -54,7 +61,7 @@ export const dangky = async (req, res) => {
               name: user.name,
               email: user.email,
               role: user.role,
-              image: user.image || null,
+              image: sanitizeUserImage(user),
             },
             token,
           });
@@ -100,7 +107,7 @@ export const dangNhap = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                image: user.image || null,
+                image: sanitizeUserImage(user),
               },
               token,
               message: "Success",
@@ -230,7 +237,7 @@ export const loginWithGoogle = async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
-            image: user.image || null,
+            image: sanitizeUserImage(user),
           },
           token,
           message: 'Login with Google (Firebase) success',
@@ -280,7 +287,7 @@ export const updateProfile = [
         user.image = result.secure_url;
       }
       await user.save();
-      res.json({ user });
+      res.json({ user: { ...user.toObject(), image: sanitizeUserImage(user) } });
     } catch (e) {
       res.status(500).json({ message: "Server error", error: e.message });
     }

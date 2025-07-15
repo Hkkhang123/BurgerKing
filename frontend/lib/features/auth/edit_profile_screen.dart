@@ -87,7 +87,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         backgroundColor: Colors.grey.shade200,
                         backgroundImage: _avatarFile != null
                             ? FileImage(_avatarFile!)
-                            : (_avatarUrl != null && _avatarUrl!.isNotEmpty
+                            : (_avatarUrl != null && _avatarUrl!.startsWith('http')
                                 ? NetworkImage(_avatarUrl!)
                                 : AssetImage('assets/images/avatar.jpg')) as ImageProvider,
                       ),
