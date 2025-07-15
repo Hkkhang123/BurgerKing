@@ -5,6 +5,7 @@ import 'package:client/core/utils/success_dialog.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:client/core/services/notification_controller.dart';
+import 'dart:io';
 
 class AuthController extends GetxController{
   static const String baseUrl = 'https://burgerking-j92p.onrender.com';
@@ -546,6 +547,41 @@ class AuthController extends GetxController{
       // Set a default avatar URL or use local asset
       currentUser['image'] = null; // Let UI handle default avatar
       _storage.write('user', currentUser);
+    }
+  }
+
+  Future<Map<String, dynamic>> updateProfile({
+    required String? token,
+    required String name,
+    required String email,
+    required String phone,
+    File? avatarFile,
+  }) async {
+    try {
+      var request = http.MultipartRequest(
+        'PUT',
+        Uri.parse('$baseUrl/api/auth/profile'),
+      );
+      request.headers['Authorization'] = 'Bearer $token';
+      request.fields['name'] = name;
+      request.fields['email'] = email;
+      request.fields['phone'] = phone;
+      if (avatarFile != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('avatar', avatarFile.path),
+        );
+      }
+      final response = await request.send();
+      final respStr = await response.stream.bytesToString();
+      final data = jsonDecode(respStr);
+      if (response.statusCode == 200) {
+        _storage.write('user', data['user']);
+        return {'success': true, 'user': data['user']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Cập nhật thất bại'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Lỗi: $e'};
     }
   }
 }

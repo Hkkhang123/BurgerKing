@@ -241,3 +241,48 @@ export const loginWithGoogle = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const updateProfile = [
+  upload.single('avatar'),
+  async (req, res) => {
+    try {
+      const userId = req.user._id || req.user.id;
+      const { name, email, phone } = req.body;
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      if (name) user.name = name;
+      if (email) user.email = email;
+      if (phone) user.phone = phone;
+      // Xử lý upload avatar nếu có
+      if (req.file) {
+        // Dùng lại logic upload lên Cloudinary
+        const streamUpload = (fileBuffer) => {
+          return new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              {
+                folder: 'avatar',
+                resource_type: 'auto',
+              },
+              (error, result) => {
+                if (result) {
+                  resolve(result);
+                } else {
+                  reject(error);
+                }
+              }
+            );
+            streamifier.createReadStream(fileBuffer).pipe(stream);
+          });
+        };
+        const result = await streamUpload(req.file.buffer);
+        user.image = result.secure_url;
+      }
+      await user.save();
+      res.json({ user });
+    } catch (e) {
+      res.status(500).json({ message: "Server error", error: e.message });
+    }
+  }
+];

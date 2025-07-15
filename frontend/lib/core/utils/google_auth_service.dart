@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:get_storage/get_storage.dart';
 import 'package:get/get.dart';
 import 'package:client/core/services/auth_controller.dart';
+import 'package:client/core/services/notification_controller.dart';
 
 class GoogleAuthService {
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -68,6 +69,10 @@ class GoogleAuthService {
       authController.login();
       // Lấy lại profile mới nhất từ backend
       await authController.fetchAndUpdateProfile();
+      // Cập nhật notification sau khi đăng nhập Google thành công
+      final notificationController = Get.find<NotificationController>();
+      notificationController.setToken(token);
+      await notificationController.fetchNotifications();
     }
     return result;
   }
