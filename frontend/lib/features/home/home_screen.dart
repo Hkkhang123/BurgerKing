@@ -4,6 +4,7 @@ import 'package:client/shared/widgets/category_chip.dart';
 import 'package:client/shared/widgets/all_product.dart';
 import 'package:client/shared/widgets/cart_screen.dart';
 import 'package:client/shared/widgets/custom_searchbar.dart';
+import 'package:client/shared/widgets/notification_screen.dart';
 import 'package:client/shared/widgets/product_grid.dart';
 import 'package:client/shared/widgets/sale_banner.dart';
 import 'package:flutter/material.dart';
@@ -250,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   Spacer(),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () => Get.to(() => NotificationScreen()),
                     icon: const Icon(Icons.notifications_outlined),
                   ),
                   IconButton(

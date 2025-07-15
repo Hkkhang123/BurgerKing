@@ -4,6 +4,7 @@ import 'package:client/core/utils/debug_connection.dart';
 import 'package:client/core/utils/success_dialog.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:client/core/services/notification_controller.dart';
 
 class AuthController extends GetxController{
   static const String baseUrl = 'https://burgerking-j92p.onrender.com';
@@ -65,6 +66,11 @@ class AuthController extends GetxController{
         _isLoggedIn.value = true;
         _isLoading.value = false;
         
+        // Cập nhật token và fetch notifications
+        final notificationController = Get.find<NotificationController>();
+        notificationController.setToken(data['token']);
+        await notificationController.fetchNotifications();
+
         // Hiển thị thông báo thành công
         showSuccessMessage('Đăng nhập thành công! Chào mừng bạn quay trở lại.');
         

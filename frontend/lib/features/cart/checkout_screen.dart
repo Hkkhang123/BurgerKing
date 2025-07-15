@@ -11,6 +11,7 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'order_confirmation_screen.dart';
+import 'package:client/core/services/notification_controller.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final List<dynamic> cartProducts;
@@ -105,6 +106,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
         );
+        // Cập nhật notification sau khi đặt hàng thành công
+        final notificationController = Get.find<NotificationController>();
+        await notificationController.fetchNotifications();
       } else {
         // Thanh toán thường
         ScaffoldMessenger.of(context).showSnackBar(
@@ -409,6 +413,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
             );
+            // Cập nhật notification sau khi thanh toán thành công
+            final notificationController = Get.find<NotificationController>();
+            await notificationController.fetchNotifications();
             return; // Thoát khỏi polling
           } else if (paymentStatus == 'Thanh toán thất bại') {
             setState(() { _isLoading = false; });
@@ -531,6 +538,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ),
           );
+          // Cập nhật notification sau khi thanh toán thành công
+          final notificationController = Get.find<NotificationController>();
+          await notificationController.fetchNotifications();
           return;
         }
       }
