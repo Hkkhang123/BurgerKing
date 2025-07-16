@@ -82,6 +82,7 @@ export const createCheckout = async (req, res) => {
         orderGroupId,
         signature,
       });
+      console.log('[MoMo] Request body:', requestBody);
       const options = {
         hostname: "test-payment.momo.vn",
         port: 443,
@@ -99,17 +100,22 @@ export const createCheckout = async (req, res) => {
         });
         momoRes.on("end", () => {
           try {
+            console.log('[MoMo] Raw response:', data);
             const result = JSON.parse(data);
+            console.log('[MoMo] Parsed response:', result);
+            console.log('[MoMo] payUrl:', result.payUrl);
             res.status(201).json({
               ...newCheckout.toObject(),
               payUrl: result.payUrl,
             });
           } catch (e) {
+            console.log('[MoMo] Parse error:', e);
             res.status(500).json({ message: "Lỗi parse response MoMo", detail: e.message });
           }
         });
       });
       momoReq.on("error", (e) => {
+        console.log('[MoMo] Request error:', e);
         res.status(500).json({ message: "Lỗi kết nối MoMo", detail: e.message });
       });
       momoReq.write(requestBody);
