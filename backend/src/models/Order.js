@@ -41,10 +41,6 @@ const orderSchema = mongoose.Schema({
             type: String,
             required: true,
         },
-        postalCode: {
-            type: String,
-            required: true,
-        },
         district: {
             type: String,
             required: true,
