@@ -6,9 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:client/core/services/cart_controller.dart';
 import 'package:client/features/cart/checkout_screen.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -18,40 +15,32 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  final currencyFormat = NumberFormat("#,##0", "vi_VN");
   List<dynamic> cartProducts = [];
   double totalPrice = 0;
   bool isLoading = true;
   String? error;
-  bool promoCodeMode = false;
-  final promoController = TextEditingController();
-  String? promoCodeUsed;
-  double? discountPercent;
-  String baseUrl = 'http://10.0.2.2:5000';
-  String? discountType;
-  int? discountFixed;
 
   // Helper function để lấy productId an toàn
   String? _getProductId(dynamic product) {
     if (product == null) return null;
-
+    
     // Thử nhiều cách để lấy productId
     dynamic rawProductId = product['productId'];
     if (rawProductId != null) {
       return rawProductId.toString();
     }
-
+    
     // Thử các trường khác
     rawProductId = product['_id'];
     if (rawProductId != null) {
       return rawProductId.toString();
     }
-
+    
     rawProductId = product['id'];
     if (rawProductId != null) {
       return rawProductId.toString();
     }
-
+    
     return null;
   }
 
@@ -63,7 +52,7 @@ class _CartScreenState extends State<CartScreen> {
 
   Future<void> _loadCart() async {
     if (!mounted) return;
-
+    
     setState(() {
       isLoading = true;
       error = null;
@@ -101,10 +90,9 @@ class _CartScreenState extends State<CartScreen> {
       final data = result['data'];
       setState(() {
         cartProducts = (data['products'] ?? []) as List<dynamic>;
-        totalPrice =
-            data['totalPrice'] is num
-                ? data['totalPrice'].toDouble()
-                : double.tryParse(data['totalPrice'].toString()) ?? 0.0;
+        totalPrice = data['totalPrice'] is num
+            ? data['totalPrice'].toDouble()
+            : double.tryParse(data['totalPrice'].toString()) ?? 0.0;
         isLoading = false;
         error = null;
       });
@@ -396,9 +384,9 @@ class _CartScreenState extends State<CartScreen> {
 
   Future<void> _deleteProductFromCart(dynamic product) async {
     if (!mounted) return;
-
+    
     final productId = _getProductId(product);
-
+    
     if (productId == null || productId.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -423,9 +411,9 @@ class _CartScreenState extends State<CartScreen> {
       productId!,
       guestId: token == null ? guestId : null,
     );
-
+    
     if (!mounted) return;
-
+    
     if (result['success'] == true || result['statusCode'] == 200) {
       await _loadCart();
       if (mounted) {
@@ -447,7 +435,7 @@ class _CartScreenState extends State<CartScreen> {
 
   Future<void> _changeProductQuantity(dynamic product, int delta) async {
     if (!mounted) return;
-
+    
     int oldQuantity = product['quantity'] ?? 1;
     int newQuantity = oldQuantity + delta;
     if (newQuantity < 1) return;
@@ -455,14 +443,12 @@ class _CartScreenState extends State<CartScreen> {
       product['quantity'] = newQuantity;
       // Cập nhật lại tổng tiền tạm thời trên UI
       totalPrice = cartProducts.fold(0.0, (sum, p) {
-        final price =
-            p['price'] is num
-                ? p['price'].toDouble()
-                : double.tryParse(p['price'].toString()) ?? 0.0;
-        final quantity =
-            p['quantity'] is num
-                ? p['quantity'].toInt()
-                : int.tryParse(p['quantity'].toString()) ?? 0;
+        final price = p['price'] is num
+            ? p['price'].toDouble()
+            : double.tryParse(p['price'].toString()) ?? 0.0;
+        final quantity = p['quantity'] is num
+            ? p['quantity'].toInt()
+            : int.tryParse(p['quantity'].toString()) ?? 0;
         return sum + (price * quantity);
       });
     });
@@ -475,7 +461,7 @@ class _CartScreenState extends State<CartScreen> {
     }
     // Lấy productId an toàn
     final productId = _getProductId(product) ?? '';
-
+    
     final cartController = Get.find<CartController>();
     final result = await cartController.updateCart(
       token,
@@ -483,9 +469,9 @@ class _CartScreenState extends State<CartScreen> {
       newQuantity,
       guestId: token == null ? guestId : null,
     );
-
+    
     if (!mounted) return;
-
+    
     if (result['success'] == true || result['statusCode'] == 200) {
       // Không cần reload lại toàn bộ cart, đã cập nhật UI rồi
     } else {
@@ -493,131 +479,80 @@ class _CartScreenState extends State<CartScreen> {
       setState(() {
         product['quantity'] = oldQuantity;
         totalPrice = cartProducts.fold(0.0, (sum, p) {
-          final price =
-              p['price'] is num
-                  ? p['price'].toDouble()
-                  : double.tryParse(p['price'].toString()) ?? 0.0;
-          final quantity =
-              p['quantity'] is num
-                  ? p['quantity'].toInt()
-                  : int.tryParse(p['quantity'].toString()) ?? 0;
+          final price = p['price'] is num
+              ? p['price'].toDouble()
+              : double.tryParse(p['price'].toString()) ?? 0.0;
+          final quantity = p['quantity'] is num
+              ? p['quantity'].toInt()
+              : int.tryParse(p['quantity'].toString()) ?? 0;
           return sum + (price * quantity);
         });
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['error'] ?? 'Lỗi khi cập nhật số lượng'),
-          ),
+          SnackBar(content: Text(result['error'] ?? 'Lỗi khi cập nhật số lượng')),
         );
       }
     }
   }
 
   Widget _buildCartSummary(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
     int totalQuantity = 0;
-    double rawTotal = 0;
-
     for (var p in cartProducts) {
-      final quantity = num.tryParse(p['quantity'].toString())?.toInt() ?? 0;
-      final price = num.tryParse(p['price'].toString())?.toInt() ?? 0;
-      totalQuantity += quantity;
-      rawTotal += price * quantity;
+      totalQuantity += (p['quantity'] ?? 0) as int;
     }
-
-    final double discount =
-        (discountType == 'percent' && discountPercent != null)
-            ? (discountPercent! / 100) * rawTotal
-            : (discountFixed ?? 0).toDouble();
-
-    final double totalPrice = rawTotal - discount;
-
     return Container(
-      padding: EdgeInsets.all(screenWidth * 0.06),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(screenWidth * 0.06),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(50),
-            blurRadius: screenWidth * 0.025,
-            offset: Offset(0, -screenHeight * 0.005),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
           ),
         ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildPromoCodeWidget(totalPrice),
-          if (discount > 0)
-            Padding(
-              padding: EdgeInsets.only(
-                top: screenHeight * 0.005,
-                bottom: screenHeight * 0.01,
-              ),
-              child: Text(
-                'Bạn đã tiết kiệm: ${currencyFormat.format(discount)} đ',
-                style: TextStyle(
-                  color: Colors.green,
-                  fontSize: screenWidth * 0.038,
-                ),
-              ),
-            ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 'Tổng số lượng: $totalQuantity',
-                style: AppTextStyle.bodyMedium.copyWith(
-                  fontSize: screenWidth * 0.038,
+                style: AppTextStyle.withColor(
+                  AppTextStyle.bodyMedium,
+                  Theme.of(context).textTheme.bodyLarge!.color!,
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (discount > 0)
-                    Text(
-                      '${currencyFormat.format(rawTotal)} đ',
-                      style: AppTextStyle.bodyMedium.copyWith(
-                        fontSize: screenWidth * 0.035,
-                        decoration: TextDecoration.lineThrough,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  Text(
-                    '${currencyFormat.format(totalPrice)} đ',
-                    style: AppTextStyle.h2.copyWith(
-                      fontSize: screenWidth * 0.05,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ),
-                ],
+              Text(
+                '${totalPrice.toStringAsFixed(0)} đ',
+                style: AppTextStyle.withColor(
+                  AppTextStyle.h2,
+                  Theme.of(context).primaryColor,
+                ),
               ),
             ],
           ),
-          SizedBox(height: screenHeight * 0.02),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () => _handleCheckout(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
-                padding: EdgeInsets.symmetric(vertical: screenHeight * 0.018),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(screenWidth * 0.03),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: Text(
                 'Thanh toán',
-                style: AppTextStyle.buttonMedium.copyWith(
-                  fontSize: screenWidth * 0.045,
-                  color: Colors.white,
+                style: AppTextStyle.withColor(
+                  AppTextStyle.buttonMedium,
+                  Colors.white,
                 ),
               ),
             ),
@@ -659,142 +594,16 @@ class _CartScreenState extends State<CartScreen> {
       // Chuyển sang màn hình Checkout
       final result = await Navigator.of(context).push(
         MaterialPageRoute(
-          builder:
-              (_) => CheckoutScreen(
-                cartProducts: cartProducts,
-                totalPrice: totalPrice,
-                promoCode: promoCodeUsed,
-                discountType: discountType,
-                discountValue: discountPercent ?? discountFixed,
-              ),
+          builder: (_) => CheckoutScreen(
+            cartProducts: cartProducts,
+            totalPrice: totalPrice,
+          ),
         ),
       );
       // Nếu đặt hàng thành công, reload lại giỏ hàng
       if (result == true) {
         _loadCart();
       }
-    }
-  }
-
-  Widget _buildPromoCodeWidget(double totalPrice) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    if (promoCodeMode) {
-      return Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: promoController,
-              decoration: const InputDecoration(
-                hintText: 'Nhập mã giảm giá',
-                border: OutlineInputBorder(),
-              ),
-              style: TextStyle(fontSize: screenWidth * 0.038),
-            ),
-          ),
-          SizedBox(width: screenWidth * 0.02),
-          ElevatedButton(
-            onPressed: () async {
-              final code = promoController.text.trim();
-              if (code.isEmpty) return;
-              try {
-                final total = totalPrice.toInt();
-                final response = await http.get(
-                  Uri.parse('$baseUrl/api/coupons/$code?total=$total'),
-                );
-                final data = jsonDecode(response.body);
-
-                if (!context.mounted) return;
-
-                if (response.statusCode == 200) {
-                  setState(() {
-                    promoCodeUsed = data['code'];
-                    discountType = data['discountType'];
-
-                    if (discountType == 'percent') {
-                      discountPercent = (data['value'] as num).toDouble();
-                      discountFixed = null;
-                    } else if (discountType == 'fixed') {
-                      discountFixed = (data['value'] as num).toInt();
-                      discountPercent = null;
-                    }
-
-                    promoCodeMode = false;
-                  });
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('✅ Mã ${data['code']} đã áp dụng')),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('❌ ${data['message']}')),
-                  );
-                }
-              } catch (_) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('❌ Lỗi kết nối server')),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.04,
-                vertical: screenWidth * 0.02,
-              ),
-            ),
-            child: Text(
-              'Áp dụng',
-              style: TextStyle(fontSize: screenWidth * 0.036),
-            ),
-          ),
-        ],
-      );
-    } else if (promoCodeUsed != null) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Text(
-              'Mã: $promoCodeUsed ${discountPercent != null ? '(-$discountPercent%)' : ''}',
-              style: TextStyle(
-                color: Colors.green,
-                fontSize: screenWidth * 0.038,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                promoCodeMode = true;
-                promoController.text = promoCodeUsed!;
-              });
-            },
-            child: Text(
-              'Thay đổi',
-              style: TextStyle(fontSize: screenWidth * 0.036),
-            ),
-          ),
-        ],
-      );
-    } else {
-      return GestureDetector(
-        onTap: () => setState(() => promoCodeMode = true),
-        child: Row(
-          children: [
-            Icon(
-              Icons.radio_button_off,
-              color: Colors.orange,
-              size: screenWidth * 0.045,
-            ),
-            SizedBox(width: screenWidth * 0.015),
-            Text(
-              'Áp dụng mã giảm giá',
-              style: TextStyle(fontSize: screenWidth * 0.038),
-            ),
-          ],
-        ),
-      );
     }
   }
 }
