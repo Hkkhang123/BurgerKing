@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'order_confirmation_screen.dart';
+import 'package:intl/intl.dart';
 import 'package:client/core/services/order_service.dart';
 
 enum PaymentMethod { cod, momo }
@@ -13,11 +14,17 @@ enum PaymentMethod { cod, momo }
 class CheckoutScreen extends StatefulWidget {
   final List<dynamic> cartProducts;
   final double totalPrice;
+  final String? promoCode;
+  final String? discountType;
+  final num? discountValue;
 
   const CheckoutScreen({
     Key? key,
     required this.cartProducts,
     required this.totalPrice,
+    this.promoCode,
+    this.discountType,
+    this.discountValue,
   }) : super(key: key);
 
   @override
@@ -52,6 +59,153 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.dispose();
   }
 
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final currencyFormat = NumberFormat("#,##0", "vi_VN");
+    double discountAmount = 0;
+    if (widget.discountType == 'percent') {
+      discountAmount = (widget.discountValue ?? 0) / 100 * widget.totalPrice;
+    } else if (widget.discountType == 'fixed') {
+      discountAmount = (widget.discountValue ?? 0).toDouble();
+    }
+    final double finalPrice = widget.totalPrice - discountAmount;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Checkout'), centerTitle: true),
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(screenWidth * 0.04),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 2,
+              color: Colors.white,
+              child: Column(
+                children:
+                    widget.cartProducts
+                        .map<Widget>(
+                          (e) => ListTile(
+                            leading:
+                                e['image'] != null && e['image'] != ''
+                                    ? Image.network(
+                                      e['image'],
+                                      width: screenWidth * 0.1,
+                                      height: screenWidth * 0.1,
+                                      fit: BoxFit.cover,
+                                    )
+                                    : Icon(Icons.image),
+                            title: Text(e['name'] ?? ''),
+                            subtitle: Text('Số lượng: ${e['quantity'] ?? 1}'),
+                            trailing: Text('${e['price'] ?? 0} đ'),
+                          ),
+                        )
+                        .toList(),
+              ),
+            ),
+            SizedBox(height: screenWidth * 0.04),
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 2,
+              color: Colors.white,
+              child: ListTile(
+                leading: Icon(Icons.location_on, color: Colors.red),
+                title: Text(
+                  'Địa chỉ giao hàng',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(
+                  _addressController.text.isNotEmpty
+                      ? _addressController.text
+                      : 'Chưa có địa chỉ',
+                ),
+                trailing: IconButton(
+                  icon: Icon(Icons.edit, color: Colors.orange),
+                  onPressed: () {
+                    final tempController = TextEditingController(
+                      text: _addressController.text,
+                    );
+                    showDialog(
+                      context: context,
+                      builder:
+                          (context) => AlertDialog(
+                            title: Text('Chỉnh sửa địa chỉ'),
+                            content: TextField(
+                              controller: tempController,
+                              decoration: InputDecoration(
+                                labelText: 'Địa chỉ giao hàng',
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: Text('Hủy'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _addressController.text =
+                                        tempController.text;
+                                  });
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text('Lưu'),
+                              ),
+                            ],
+                          ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            SizedBox(height: screenWidth * 0.04),
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 2,
+              color: Colors.white,
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: screenWidth * 0.02),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.04,
+                        vertical: screenWidth * 0.02,
+                      ),
+                      child: Text(
+                        'Phương thức thanh toán',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    RadioListTile<PaymentMethod>(
+                      value: PaymentMethod.cod,
+                      groupValue: _selectedMethod,
+                      onChanged:
+                          (value) => setState(() => _selectedMethod = value!),
+                      title: Text('Thanh toán khi nhận hàng'),
+                      secondary: Icon(Icons.money, color: Colors.green),
+                    ),
+                    RadioListTile<PaymentMethod>(
+                      value: PaymentMethod.momo,
+                      groupValue: _selectedMethod,
+                      onChanged:
+                          (value) => setState(() => _selectedMethod = value!),
+                      title: Text('Thanh toán bằng MoMo'),
+                      secondary: SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: Image.asset('assets/images/momo_logo.png'),
+                      ),
+                      
   Future<void> _handleConfirmCheckout() async {
     setState(() {
       _isLoading = true;
@@ -349,11 +503,71 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         Text('• Chuẩn bị đủ tiền mặt hoặc thẻ'),
                         Text('• Giữ mã xác nhận để đối chiếu'),
                       ],
+
                     ),
                   ),
                 ],
               ),
             ),
+
+            SizedBox(height: screenWidth * 0.04),
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 2,
+              color: Colors.white,
+              child: Padding(
+                padding: EdgeInsets.all(screenWidth * 0.04),
+                child: Column(
+                  children: [
+                    if (widget.promoCode != null)
+                      _summaryRow(
+                        'Mã: ${widget.promoCode} (${widget.discountType == 'percent' ? '-${widget.discountValue}%' : '-${widget.discountValue}đ'})',
+                        '',
+                      ),
+                    if (discountAmount > 0)
+                      _summaryRow(
+                        'Bạn đã tiết kiệm',
+                        '${currencyFormat.format(discountAmount)} đ',
+                      ),
+                    _summaryRow(
+                      'Tổng gốc',
+                      '${currencyFormat.format(widget.totalPrice)} đ',
+                    ),
+                    Divider(),
+                    _summaryRow(
+                      'Tổng thanh toán',
+                      '${currencyFormat.format(finalPrice)} đ',
+                      isTotal: true,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: screenWidth * 0.06),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.fromLTRB(
+          screenWidth * 0.04,
+          0,
+          screenWidth * 0.04,
+          screenWidth * 0.06,
+        ),
+        child: SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () async {
+
             actions: [
               TextButton(
                 onPressed: () {
@@ -446,8 +660,93 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               return;
             } else if (isPaid == true && isFinalized == false) {
               print('Gọi finalizeCheckout cho $checkoutId');
+
               final authController = Get.find<AuthController>();
               final token = authController.getToken();
+
+              final checkoutItems =
+                  widget.cartProducts
+                      .map(
+                        (e) => {
+                          'productId': e['productId'] ?? e['_id'] ?? e['id'],
+                          'quantity': e['quantity'] ?? 1,
+                          'price': e['price'] ?? 0,
+                          'name': e['name'] ?? '',
+                          'image': e['image'] ?? '',
+                        },
+                      )
+                      .toList();
+              final shippingAddress = {
+                'address': _addressController.text,
+                'city': _cityController.text,
+                'district': _districtController.text,
+                'phone': _phoneController.text,
+                'receiver': _receiverController.text,
+              };
+
+              final result = await cartController.checkout(
+                token,
+                checkoutItem: checkoutItems,
+                shippingAddress: shippingAddress,
+                paymentMethod:
+                    _selectedMethod == PaymentMethod.momo ? 'momo' : 'cod',
+                totalPrice: finalPrice,
+              );
+
+              if (_selectedMethod == PaymentMethod.momo) {
+                if (result['success'] == true &&
+                    result['data'] != null &&
+                    result['data']['payUrl'] != null) {
+                  final payUrl = result['data']['payUrl'];
+                  if (await canLaunchUrl(Uri.parse(payUrl))) {
+                    await launchUrl(Uri.parse(payUrl));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Không thể mở trang thanh toán MoMo.'),
+                      ),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        result['data']?['message'] ??
+                            'Lỗi khi tạo thanh toán MoMo',
+                      ),
+                    ),
+                  );
+                }
+              } else {
+                if (result['success'] == true) {
+                  final id = result['data']['_id'];
+                  final orderCode =
+                      result['data']['orderCode'] ??
+                      id.substring(id.length - 6).toUpperCase();
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder:
+                          (_) => OrderConfirmationScreen(
+                            orderId: id,
+                            orderCode: orderCode,
+                            totalAmount: finalPrice,
+                            paymentMethod: 'cod',
+                            shippingAddress: shippingAddress,
+                            orderItems: widget.cartProducts,
+                            isPaymentSuccess: false,
+                          ),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        result['data']?['message'] ?? 'Lỗi khi đặt hàng',
+                      ),
+                    ),
+                  );
+                }
+
               final finalizeResponse = await http.post(
                 Uri.parse('https://burgerking-j92p.onrender.com/api/checkout/$checkoutId/finalize'),
                 headers: {
@@ -584,6 +883,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 );
                 Navigator.of(context).pop(true);
                 return;
+
               }
             }
           } catch (orderError) {
@@ -641,6 +941,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               'Authorization': 'Bearer $token',
               'Content-Type': 'application/json',
             },
+
+            child: Text(
+              'Đặt hàng (${currencyFormat.format(finalPrice)} đ)',
+              style: TextStyle(fontSize: 18, color: Colors.white),
+
           );
           print('Finalize response status (timeout): ${finalizeResponse.statusCode}');
           print('Finalize response body (timeout): ${finalizeResponse.body}');
@@ -1149,6 +1454,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                 ),
               ),
+
             ),
           ),
         ),
@@ -1167,6 +1473,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+              color: isTotal ? Colors.orange : Colors.black,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+              color: isTotal ? Colors.orange : Colors.black,
+            ),
+          ),
+
           SizedBox(
             width: 110,
             child: Text(
@@ -1175,6 +1497,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
           Expanded(child: Text(value, style: const TextStyle(fontSize: 14))),
+
         ],
       ),
     );
