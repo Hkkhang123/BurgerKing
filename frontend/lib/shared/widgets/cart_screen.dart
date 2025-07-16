@@ -27,7 +27,7 @@ class _CartScreenState extends State<CartScreen> {
   final promoController = TextEditingController();
   String? promoCodeUsed;
   double? discountPercent;
-  String baseUrl = 'http://10.0.2.2:5000';
+  String baseUrl = 'https://burgerking-j92p.onrender.com';
   String? discountType;
   int? discountFixed;
 
@@ -663,6 +663,9 @@ class _CartScreenState extends State<CartScreen> {
               (_) => CheckoutScreen(
                 cartProducts: cartProducts,
                 totalPrice: totalPrice,
+                promoCode: promoCodeUsed,
+                discountType: discountType,
+                discountValue: discountPercent ?? discountFixed,
               ),
         ),
       );
