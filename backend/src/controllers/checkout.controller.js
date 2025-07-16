@@ -35,7 +35,7 @@ export const createCheckout = async (req, res) => {
       let paymentStatus = "Đang xử lý";
       let isPaid = false;
       
-      if (paymentMethod === "Thanh toán MoMo") {
+      if (paymentMethod === "momo") {
         paymentStatus = "Đang xử lý";
         isPaid = false;
       }
