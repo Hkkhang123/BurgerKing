@@ -5,9 +5,6 @@ import 'package:client/core/services/auth_controller.dart';
 import 'package:client/core/services/cart_controller.dart';
 import 'order_confirmation_screen.dart';
 import 'package:intl/intl.dart';
-import 'package:android_intent_plus/android_intent.dart';
-import 'package:android_intent_plus/flag.dart';
-import 'dart:io';
 
 enum PaymentMethod { cod, momo }
 
@@ -36,13 +33,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     text: '123 Đường ABC, Quận 1, TP.HCM',
   );
   final _cityController = TextEditingController(text: 'Hồ Chí Minh');
+  final _phoneController = TextEditingController(text: '0123456789');
+  final _receiverController = TextEditingController(text: 'Khách hàng');
   final _districtController = TextEditingController(text: 'Quận 1');
+  final _postalCodeController = TextEditingController(text: '700000');
   PaymentMethod _selectedMethod = PaymentMethod.cod;
 
   @override
   void dispose() {
     _addressController.dispose();
     _cityController.dispose();
+    _phoneController.dispose();
+    _receiverController.dispose();
     super.dispose();
   }
 
@@ -273,14 +275,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 'address': _addressController.text,
                 'city': _cityController.text,
                 'district': _districtController.text,
+                'phone': _phoneController.text,
+                'receiver': _receiverController.text,
               };
-
-              // Thêm log dữ liệu gửi đi
-              print('TOKEN: ' + token.toString());
-              print('CHECKOUT ITEMS: ' + checkoutItems.toString());
-              print('SHIPPING ADDRESS: ' + shippingAddress.toString());
-              print('PAYMENT METHOD: ' + (_selectedMethod == PaymentMethod.momo ? 'momo' : 'cod'));
-              print('TOTAL PRICE: ' + finalPrice.toString());
 
               final result = await cartController.checkout(
                 token,
@@ -291,50 +288,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 totalPrice: finalPrice,
               );
 
-              // Thêm log kết quả trả về
-              print('CHECKOUT RESULT: ' + result.toString());
-
               if (_selectedMethod == PaymentMethod.momo) {
                 if (result['success'] == true &&
                     result['data'] != null &&
                     result['data']['payUrl'] != null) {
                   final payUrl = result['data']['payUrl'];
-                  print('MoMo payUrl: ' + payUrl);
-                  final uri = Uri.parse(payUrl);
-                  final canLaunch = await canLaunchUrl(uri);
-                  print('canLaunchUrl: ' + canLaunch.toString());
-                  if (canLaunch) {
-                    try {
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
-                      print('Đã gọi launchUrl thành công');
-                    } catch (e) {
-                      print('Lỗi mở url: ' + e.toString());
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Không thể mở trang thanh toán MoMo.'),
-                        ),
-                      );
-                    }
-                  } else if (Platform.isAndroid) {
-                    // Thử mở bằng android_intent_plus
-                    try {
-                      final intent = AndroidIntent(
-                        action: 'action_view',
-                        data: payUrl,
-                        flags: <int>[Flag.FLAG_ACTIVITY_NEW_TASK],
-                      );
-                      await intent.launch();
-                      print('Đã gọi AndroidIntent để mở link');
-                    } catch (e) {
-                      print('Lỗi mở url bằng AndroidIntent: ' + e.toString());
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Không thể mở trang thanh toán MoMo (Intent).'),
-                        ),
-                      );
-                    }
+                  if (await canLaunchUrl(Uri.parse(payUrl))) {
+                    await launchUrl(Uri.parse(payUrl));
                   } else {
-                    print('Không thể launch url: ' + payUrl);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Không thể mở trang thanh toán MoMo.'),

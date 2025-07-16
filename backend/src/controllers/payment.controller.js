@@ -7,17 +7,84 @@ import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import Cart from "../models/Cart.js";
 import { finalizeCheckout } from "../controllers/checkout.controller.js";
-import { createMomoPayment } from "../services/momo.service.js";
 
 
-export const momoTest = async (req, res) => {
+
+export const momoTest = (req, res) => {
   const { checkoutId, amount } = req.body;
-  try {
-    const momoRes = await createMomoPayment({ checkoutId, amount });
-    res.status(200).json(momoRes);
-  } catch (e) {
-    res.status(500).json({ error: "Lỗi gọi MoMo", detail: e.message });
-  }
+  const accessKey = "F8BBA842ECF85";
+  const secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
+  const orderInfo = "pay with MoMo";
+  const partnerCode = "MOMO";
+  const redirectUrl = "https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b";
+  //const ipnUrl = "https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b"; // Tạm thời dùng webhook.site để test
+  const ipnUrl = "https://burgerking-j92p.onrender.com/api/payment/momo/ipn";
+  const requestType = "payWithMethod";
+  const momoOrderId = checkoutId;
+  const requestId = checkoutId;
+  const extraData = "";
+  const orderGroupId = "";
+  const autoCapture = true;
+  const lang = "vi";
+
+  const rawSignature = `accessKey=${accessKey}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${momoOrderId}&orderInfo=${orderInfo}&partnerCode=${partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=${requestType}`;
+  const signature = crypto
+    .createHmac("sha256", secretKey)
+    .update(rawSignature)
+    .digest("hex");
+
+  const requestBody = JSON.stringify({
+    partnerCode,
+    partnerName: "Test",
+    storeId: "MomoTestStore",
+    requestId,
+    amount,
+    orderId: momoOrderId,
+    orderInfo,
+    redirectUrl,
+    ipnUrl,
+    lang,
+    requestType,
+    autoCapture,
+    extraData,
+    orderGroupId,
+    signature,
+  });
+
+  const options = {
+    hostname: "test-payment.momo.vn",
+    port: 443,
+    path: "/v2/gateway/api/create",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(requestBody),
+    },
+  };
+
+  const momoReq = https.request(options, (momoRes) => {
+    let data = "";
+    momoRes.on("data", (chunk) => {
+      data += chunk;
+    });
+    momoRes.on("end", () => {
+      try {
+        const result = JSON.parse(data);
+        res.status(200).json(result);
+      } catch (e) {
+        res
+          .status(500)
+          .json({ error: "Lỗi parse response MoMo", detail: e.message });
+      }
+    });
+  });
+
+  momoReq.on("error", (e) => {
+    res.status(500).json({ error: "Lỗi kết nối MoMo", detail: e.message });
+  });
+
+  momoReq.write(requestBody);
+  momoReq.end();
 };
 
 // Endpoint IPN nhận notify từ MoMo

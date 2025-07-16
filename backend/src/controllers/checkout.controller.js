@@ -2,7 +2,6 @@ import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
 import Checkout from "../models/Checkout.js";
-import { createMomoPayment } from "../services/momo.service.js";
 
 export const createCheckout = async (req, res) => {
   const { checkoutItem, shippingAddress, paymentMethod, totalPrice } = req.body;
@@ -31,33 +30,32 @@ export const createCheckout = async (req, res) => {
       
       console.log(`Order created for user ${req.user._id} with cash on delivery. Cart cleared.`);
       res.status(201).json(newOrder);
-    } else if (paymentMethod === "momo") {
-      // Tạo checkout trước
+    } else {
+      // Các phương thức thanh toán khác: tạo Checkout như cũ
+      let paymentStatus = "Đang xử lý";
+      let isPaid = false;
+      
+      if (paymentMethod === "Thanh toán MoMo") {
+        paymentStatus = "Đang xử lý";
+        isPaid = false;
+      }
+      
       const newCheckout = await Checkout.create({
         user: req.user._id,
         checkoutItem: checkoutItem,
         shippingAddress,
         paymentMethod,
         totalPrice,
-        paymentStatus: "Đang xử lý",
-        isPaid: false,
+        paymentStatus,
+        isPaid,
         orderCode: generateOrderCode(),
       });
+      
+      // Xóa giỏ hàng sau khi tạo checkout thành công
       await Cart.findOneAndDelete({ user: req.user._id });
+      
       console.log(`Checkout created for user ${req.user._id} with payment method: ${paymentMethod}. Cart cleared.`);
-      // Gọi MoMo để lấy payUrl
-      try {
-        const momoRes = await createMomoPayment({
-          checkoutId: newCheckout._id.toString(),
-          amount: totalPrice,
-        });
-        res.status(201).json({
-          ...newCheckout.toObject(),
-          payUrl: momoRes.payUrl,
-        });
-      } catch (momoError) {
-        res.status(500).json({ message: "Lỗi tạo thanh toán MoMo", detail: momoError.message });
-      }
+      res.status(201).json(newCheckout);
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -153,7 +151,3 @@ const generateOrderCode = () => {
   }
   return result;
 };
-
-
-
-
