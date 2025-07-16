@@ -33,18 +33,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     text: '123 Đường ABC, Quận 1, TP.HCM',
   );
   final _cityController = TextEditingController(text: 'Hồ Chí Minh');
-  final _phoneController = TextEditingController(text: '0123456789');
-  final _receiverController = TextEditingController(text: 'Khách hàng');
   final _districtController = TextEditingController(text: 'Quận 1');
-  final _postalCodeController = TextEditingController(text: '700000');
   PaymentMethod _selectedMethod = PaymentMethod.cod;
 
   @override
   void dispose() {
     _addressController.dispose();
     _cityController.dispose();
-    _phoneController.dispose();
-    _receiverController.dispose();
     super.dispose();
   }
 
@@ -275,8 +270,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 'address': _addressController.text,
                 'city': _cityController.text,
                 'district': _districtController.text,
-                'phone': _phoneController.text,
-                'receiver': _receiverController.text,
               };
 
               final result = await cartController.checkout(
@@ -303,6 +296,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     );
                   }
                 } else {
+                  print('Lỗi khi tạo thanh toán MoMo, result: ' + (result['data']?.toString() ?? 'null'));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
