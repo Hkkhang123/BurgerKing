@@ -10,37 +10,30 @@ class CartController extends GetxController {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/cart'),
-        headers:
-            token != null
-                ? {
-                  'Content-Type': 'application/json',
-                  'Authorization': 'Bearer $token',
-                }
-                : {
-                  'Content-Type': 'application/json',
-                  'guest-id': guestId ?? '',
-                },
+        headers: token != null
+            ? {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+              }
+            : {
+                'Content-Type': 'application/json',
+                'guest-id': guestId ?? '',
+              },
       );
-
+      
       if (response.statusCode == 200) {
         try {
           final data = jsonDecode(response.body);
           return {'success': true, 'data': data};
         } catch (jsonError) {
-          return {
-            'success': false,
-            'error': 'Invalid JSON response: $jsonError',
-          };
+          return {'success': false, 'error': 'Invalid JSON response: $jsonError'};
         }
       } else {
         try {
           final errorData = jsonDecode(response.body);
           return {'success': false, 'data': errorData};
         } catch (jsonError) {
-          return {
-            'success': false,
-            'error': 'HTTP ${response.statusCode}: ${response.body}',
-          };
+          return {'success': false, 'error': 'HTTP ${response.statusCode}: ${response.body}'};
         }
       }
     } catch (e) {
@@ -49,47 +42,35 @@ class CartController extends GetxController {
   }
 
   // Thêm vào giỏ hàng
-  Future<Map<String, dynamic>> addToCart(
-    String? token,
-    String productId, {
-    int quantity = 1,
-    String? guestId,
-  }) async {
+  Future<Map<String, dynamic>> addToCart(String? token, String productId, {int quantity = 1, String? guestId}) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/cart/'),
-        headers:
-            token != null
-                ? {
-                  'Content-Type': 'application/json',
-                  'Authorization': 'Bearer $token',
-                }
-                : {
-                  'Content-Type': 'application/json',
-                  'guest-id': guestId ?? '',
-                },
+        headers: token != null
+            ? {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+              }
+            : {
+                'Content-Type': 'application/json',
+                'guest-id': guestId ?? '',
+              },
         body: jsonEncode({'productId': productId, 'quantity': quantity}),
       );
-
+      
       if (response.statusCode == 200) {
         try {
           final data = jsonDecode(response.body);
           return {'success': true, 'data': data};
         } catch (jsonError) {
-          return {
-            'success': false,
-            'error': 'Invalid JSON response: $jsonError',
-          };
+          return {'success': false, 'error': 'Invalid JSON response: $jsonError'};
         }
       } else {
         try {
           final errorData = jsonDecode(response.body);
           return {'success': false, 'data': errorData};
         } catch (jsonError) {
-          return {
-            'success': false,
-            'error': 'HTTP ${response.statusCode}: ${response.body}',
-          };
+          return {'success': false, 'error': 'HTTP ${response.statusCode}: ${response.body}'};
         }
       }
     } catch (e) {
@@ -98,47 +79,35 @@ class CartController extends GetxController {
   }
 
   // Cập nhật giỏ hàng
-  Future<Map<String, dynamic>> updateCart(
-    String? token,
-    String productId,
-    int quantity, {
-    String? guestId,
-  }) async {
+  Future<Map<String, dynamic>> updateCart(String? token, String productId, int quantity, {String? guestId}) async {
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/api/cart/'),
-        headers:
-            token != null
-                ? {
-                  'Content-Type': 'application/json',
-                  'Authorization': 'Bearer $token',
-                }
-                : {
-                  'Content-Type': 'application/json',
-                  'guest-id': guestId ?? '',
-                },
+        headers: token != null
+            ? {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+              }
+            : {
+                'Content-Type': 'application/json',
+                'guest-id': guestId ?? '',
+              },
         body: jsonEncode({'productId': productId, 'quantity': quantity}),
       );
-
+      
       if (response.statusCode == 200) {
         try {
           final data = jsonDecode(response.body);
           return {'success': true, 'data': data};
         } catch (jsonError) {
-          return {
-            'success': false,
-            'error': 'Invalid JSON response: $jsonError',
-          };
+          return {'success': false, 'error': 'Invalid JSON response: $jsonError'};
         }
       } else {
         try {
           final errorData = jsonDecode(response.body);
           return {'success': false, 'data': errorData};
         } catch (jsonError) {
-          return {
-            'success': false,
-            'error': 'HTTP ${response.statusCode}: ${response.body}',
-          };
+          return {'success': false, 'error': 'HTTP ${response.statusCode}: ${response.body}'};
         }
       }
     } catch (e) {
@@ -147,49 +116,38 @@ class CartController extends GetxController {
   }
 
   // Xóa khỏi giỏ hàng
-  Future<Map<String, dynamic>> deleteFromCart(
-    String? token,
-    String productId, {
-    String? guestId,
-  }) async {
+  Future<Map<String, dynamic>> deleteFromCart(String? token, String productId, {String? guestId}) async {
     try {
       final response = await http.delete(
         Uri.parse('$baseUrl/api/cart/'),
-        headers:
-            token != null
-                ? {
-                  'Content-Type': 'application/json',
-                  'Authorization': 'Bearer $token',
-                }
-                : {
-                  'Content-Type': 'application/json',
-                  'guest-id': guestId ?? '',
-                },
+        headers: token != null
+            ? {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+              }
+            : {
+                'Content-Type': 'application/json',
+                'guest-id': guestId ?? '',
+              },
         body: jsonEncode({
           'productId': productId,
           if (guestId != null) 'guestId': guestId,
         }),
       );
-
+      
       if (response.statusCode == 200) {
         try {
           final data = jsonDecode(response.body);
           return {'success': true, 'data': data};
         } catch (jsonError) {
-          return {
-            'success': false,
-            'error': 'Invalid JSON response: $jsonError',
-          };
+          return {'success': false, 'error': 'Invalid JSON response: $jsonError'};
         }
       } else {
         try {
           final errorData = jsonDecode(response.body);
           return {'success': false, 'data': errorData};
         } catch (jsonError) {
-          return {
-            'success': false,
-            'error': 'HTTP ${response.statusCode}: ${response.body}',
-          };
+          return {'success': false, 'error': 'HTTP ${response.statusCode}: ${response.body}'};
         }
       }
     } catch (e) {
@@ -198,8 +156,7 @@ class CartController extends GetxController {
   }
 
   // Thanh toán (Checkout)
-  Future<Map<String, dynamic>> checkout(
-    String? token, {
+  Future<Map<String, dynamic>> checkout(String? token, {
     required List<Map<String, dynamic>> checkoutItem,
     required Map<String, dynamic> shippingAddress,
     required String paymentMethod,
@@ -230,4 +187,4 @@ class CartController extends GetxController {
       return {'success': false, 'error': e.toString()};
     }
   }
-}
+} 
