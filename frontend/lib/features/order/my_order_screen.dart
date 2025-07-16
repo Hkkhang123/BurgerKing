@@ -199,7 +199,6 @@ class _MyOrderScreenState extends State<MyOrderScreen> {
   }
 
   Widget _buildOrderCard(Map<String, dynamic> order) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final orderCode = order['orderCode'] ?? 'N/A';
     final totalPrice = order['totalPrice']?.toString() ?? '0';
     final status = order['status'] ?? 'Không xác định';

@@ -59,6 +59,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
     setState(() => _isLoading = false);
     if (result['success']) {
+      // Lấy lại thông tin user mới nhất
+      await authController.fetchAndUpdateProfile();
       Get.snackbar('Thành công', 'Cập nhật thông tin thành công!');
       Navigator.of(context).pop(true);
     } else {
@@ -69,7 +71,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Edit Profile')),
+      appBar: AppBar(title: Text('Chỉnh sửa thông tin')),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -96,7 +98,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           child: Container(
                             padding: EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: Colors.orange,
+                              color: Theme.of(context).primaryColor,
                               shape: BoxShape.circle,
                             ),
                             child: Icon(Icons.camera_alt, color: Colors.white, size: 22),
@@ -109,7 +111,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   TextField(
                     controller: _nameController,
                     decoration: InputDecoration(
-                      labelText: 'Full Name',
+                      labelText: 'Tên tài khoản',
                       prefixIcon: Icon(Icons.person),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
@@ -129,11 +131,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     height: 48,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
+                        backgroundColor: Theme.of(context).primaryColor,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       onPressed: _saveProfile,
-                      child: Text('Save Changes', style: TextStyle(fontSize: 18, color: Colors.white)),
+                      child: Text('Lưu thay đổi', style: TextStyle(fontSize: 18, color: Colors.white)),
                     ),
                   ),
                 ],

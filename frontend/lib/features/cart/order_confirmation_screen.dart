@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:client/features/order/my_order_screen.dart';
 import 'package:client/features/home/main_screen.dart';
 import 'package:client/core/services/navigation_controller.dart';
@@ -20,7 +18,7 @@ class OrderConfirmationScreen extends StatefulWidget {
 
   // Constructor cho dữ liệu có sẵn (từ checkout)
   const OrderConfirmationScreen({
-    Key? key,
+    super.key,
     this.orderId,
     this.checkoutId,
     this.orderCode,
@@ -29,7 +27,7 @@ class OrderConfirmationScreen extends StatefulWidget {
     this.shippingAddress,
     this.orderItems,
     this.isPaymentSuccess = true,
-  }) : super(key: key);
+  });
 
   // Constructor factory để load từ database
   factory OrderConfirmationScreen.fromOrderId(String orderId) {
@@ -127,7 +125,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
           // Thử lấy order trước
           result = await OrderService.getOrderById(token, widget.orderId!);
           
-          if (result?['success'] == true) {
+          if (result['success'] == true) {
             setState(() {
               _orderData = result!['data'];
               _isLoading = false;
@@ -140,7 +138,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
         if (widget.checkoutId != null) {
           result = await OrderService.getCheckoutById(token, widget.checkoutId!);
           
-          if (result?['success'] == true) {
+          if (result['success'] == true) {
             setState(() {
               _orderData = result!['data'];
               _isLoading = false;
@@ -270,7 +268,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                           width: 100,
                           height: 100,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 200),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -297,7 +295,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                             : 'Đơn hàng đã được tạo',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 200),
                         ),
                       ),
                     ],
@@ -352,7 +350,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 13),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -402,7 +400,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 13),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -454,7 +452,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 13),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -488,7 +486,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
             ],
           ),
           const SizedBox(height: 16),
-          ...orderItems.map((item) => _buildOrderItem(item)).toList(),
+          ...orderItems.map((item) => _buildOrderItem(item)),
           const Divider(height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -523,7 +521,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 13),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),

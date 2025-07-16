@@ -8,7 +8,6 @@ import 'package:client/shared/widgets/notification_screen.dart';
 import 'package:client/shared/widgets/product_grid.dart';
 import 'package:client/shared/widgets/sale_banner.dart';
 import 'package:flutter/material.dart';
-import 'package:client/core/utils/api_service.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:client/core/services/product_controller.dart';
@@ -129,21 +128,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _refreshUserFavorites() async {
-    if (!mounted) return;
-    
-    try {
-      final result = await authController.fetchAndUpdateProfile();
-      if (mounted) {
-        setState(() {
-          userFavorites = result;
-        });
-      }
-    } catch (e) {
-      // Handle error silently
-    }
-  }
-
   Future<List<dynamic>> _fetchBestSellers() async {
     if (!mounted) return [];
     
@@ -201,7 +185,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = authController.getCurrentUser();
-    final token = authController.getToken();
     final String userName = user != null && user['name'] != null ? user['name'] : (isLoggedIn() ? 'Khách' : getGuestId());
     final String? avatarUrl = user != null && user['image'] != null ? user['image'] : null;
     

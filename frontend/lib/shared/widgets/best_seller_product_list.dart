@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:client/core/services/auth_controller.dart';
 import 'package:client/shared/themes/app_textstyle.dart';
-import 'package:client/core/utils/api_service.dart';
 import 'package:client/shared/widgets/product_card.dart';
 import 'package:client/shared/widgets/product_detail.dart';
 import 'package:client/core/services/product_controller.dart';
@@ -18,7 +17,6 @@ class _BestSellerProductListState extends State<BestSellerProductList> {
   late AuthController authController;
   List<String> userFavorites = [];
   String? userToken;
-  bool _isLoadingFavorites = false;
   List<dynamic> bestSellerProducts = [];
   bool _isLoadingProducts = false;
 
@@ -34,7 +32,7 @@ class _BestSellerProductListState extends State<BestSellerProductList> {
     if (!mounted) return;
     
     setState(() {
-      _isLoadingFavorites = true;
+      // _isLoadingFavorites = true; // This line was removed as per the edit hint
     });
 
     final user = authController.getCurrentUser();
@@ -50,7 +48,7 @@ class _BestSellerProductListState extends State<BestSellerProductList> {
         if (mounted) {
           setState(() {
             userFavorites = favorites;
-            _isLoadingFavorites = false;
+            // _isLoadingFavorites = false; // This line was removed as per the edit hint
           });
         }
       } catch (e) {
@@ -59,7 +57,7 @@ class _BestSellerProductListState extends State<BestSellerProductList> {
         if (mounted) {
           setState(() {
             userFavorites = localFavorites?.map((e) => e.toString()).toList() ?? [];
-            _isLoadingFavorites = false;
+            // _isLoadingFavorites = false; // This line was removed as per the edit hint
           });
         }
       }
@@ -68,7 +66,7 @@ class _BestSellerProductListState extends State<BestSellerProductList> {
       if (mounted) {
         setState(() {
           userFavorites = localFavorites?.map((e) => e.toString()).toList() ?? [];
-          _isLoadingFavorites = false;
+          // _isLoadingFavorites = false; // This line was removed as per the edit hint
         });
       }
     }
@@ -161,7 +159,7 @@ class _BestSellerProductListState extends State<BestSellerProductList> {
     
     if (userToken != null) {
       setState(() {
-        _isLoadingFavorites = true;
+        // _isLoadingFavorites = true; // This line was removed as per the edit hint
       });
       
       try {
@@ -169,13 +167,13 @@ class _BestSellerProductListState extends State<BestSellerProductList> {
         if (mounted) {
           setState(() {
             userFavorites = favorites;
-            _isLoadingFavorites = false;
+            // _isLoadingFavorites = false; // This line was removed as per the edit hint
           });
         }
       } catch (e) {
         if (mounted) {
           setState(() {
-            _isLoadingFavorites = false;
+            // _isLoadingFavorites = false; // This line was removed as per the edit hint
           });
         }
       }
@@ -184,8 +182,6 @@ class _BestSellerProductListState extends State<BestSellerProductList> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Column(
       children: [
         // Header với tiêu đề "Sản phẩm bán chạy"

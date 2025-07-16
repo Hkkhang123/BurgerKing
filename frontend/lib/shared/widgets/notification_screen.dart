@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../core/services/notification_controller.dart';
 
 class NotificationScreen extends StatelessWidget {
+  NotificationScreen({super.key});
   final NotificationController notificationController = Get.find();
 
   IconData getIcon(String title) {

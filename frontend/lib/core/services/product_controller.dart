@@ -38,10 +38,11 @@ class ProductController extends GetxController {
       );
       
       if (response.statusCode == 200) {
-        bestSellerProducts.value = jsonDecode(response.body);
-        return bestSellerProducts.value;
+        final products = jsonDecode(response.body);
+        bestSellerProducts.assignAll(products);
+        return products;
       } else {
-        bestSellerProducts.value = [];
+        bestSellerProducts.clear();
         errorMessage.value = 'Không thể tải danh sách sản phẩm bán chạy';
         return [];
       }

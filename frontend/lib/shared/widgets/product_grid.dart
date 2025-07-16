@@ -1,7 +1,6 @@
 import 'package:client/shared/widgets/product_card.dart';
 import 'package:client/shared/widgets/product_detail.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class ProductGrid extends StatelessWidget {
   final List<dynamic> products;

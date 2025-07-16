@@ -4,7 +4,7 @@ import 'package:client/shared/widgets/best_seller_product_list.dart';
 import 'package:client/shared/themes/app_textstyle.dart';
 
 class DemoFilterScreen extends StatelessWidget {
-  const DemoFilterScreen({Key? key}) : super(key: key);
+  const DemoFilterScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

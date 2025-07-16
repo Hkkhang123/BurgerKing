@@ -2,8 +2,6 @@ import 'package:client/core/services/auth_controller.dart';
 import 'package:client/shared/themes/app_textstyle.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:client/core/utils/api_service.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:client/core/services/product_controller.dart';
 import 'package:client/core/services/cart_controller.dart';
 

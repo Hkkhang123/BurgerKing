@@ -6,7 +6,6 @@ import 'package:client/shared/widgets/filter_bottom_sheet.dart';
 import 'package:client/shared/widgets/product_card.dart';
 import 'package:client/shared/widgets/product_detail.dart';
 import 'package:client/shared/themes/app_textstyle.dart';
-import 'package:client/core/utils/api_service.dart';
 import 'package:client/core/services/product_controller.dart';
 
 class ShoppingScreen extends StatefulWidget {
@@ -21,7 +20,6 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
   late FilterController filterController;
   List<String> userFavorites = [];
   String? userToken;
-  bool _isLoadingFavorites = false;
 
   @override
   void initState() {
@@ -35,7 +33,6 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
     if (!mounted) return;
     
     setState(() {
-      _isLoadingFavorites = true;
     });
 
     final user = authController.getCurrentUser();
@@ -51,7 +48,6 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
         if (mounted) {
           setState(() {
             userFavorites = favorites;
-            _isLoadingFavorites = false;
           });
         }
       } catch (e) {
@@ -60,7 +56,6 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
         if (mounted) {
           setState(() {
             userFavorites = localFavorites?.map((e) => e.toString()).toList() ?? [];
-            _isLoadingFavorites = false;
           });
         }
       }
@@ -69,7 +64,6 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
       if (mounted) {
         setState(() {
           userFavorites = localFavorites?.map((e) => e.toString()).toList() ?? [];
-          _isLoadingFavorites = false;
         });
       }
     }

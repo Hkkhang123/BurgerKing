@@ -1,5 +1,4 @@
 import 'package:client/core/services/auth_controller.dart';
-import 'package:client/features/auth/edit_profile_screen.dart';
 import 'package:client/features/order/my_order_screen.dart';
 import 'package:client/shared/themes/app_textstyle.dart';
 import 'package:flutter/material.dart';
@@ -7,14 +6,19 @@ import 'package:get/get.dart';
 import 'package:client/features/home/main_screen.dart';
 
 
-class AccountScreen extends StatelessWidget {
+class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
+
+  @override
+  State<AccountScreen> createState() => _AccountScreenState();
+}
+
+class _AccountScreenState extends State<AccountScreen> {
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final authController = Get.find<AuthController>();
-    final user = authController.getCurrentUser();
     final bool isLoggedIn = authController.isLoggedIn;
 
     return Scaffold(
@@ -138,7 +142,12 @@ class AccountScreen extends StatelessWidget {
 
           const SizedBox(height: 16),
           OutlinedButton(
-            onPressed: () => Get.to(() => EditProfileScreen()),
+            onPressed: () async {
+              final result = await Get.toNamed('/profile');
+              if (result == true) {
+                setState(() {});
+              }
+            },
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               side: BorderSide(color: isDark ? Colors.white70 : Colors.black12),

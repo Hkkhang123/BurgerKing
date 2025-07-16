@@ -28,10 +28,11 @@ class ReviewController extends GetxController {
       );
       
       if (response.statusCode == 200) {
-        productReviews.value = jsonDecode(response.body);
-        return productReviews.value;
+        final reviews = jsonDecode(response.body);
+        productReviews.assignAll(reviews);
+        return reviews;
       } else {
-        productReviews.value = [];
+        productReviews.clear();
         errorMessage.value = 'Không thể tải đánh giá sản phẩm';
         return [];
       }
@@ -81,6 +82,6 @@ class ReviewController extends GetxController {
 
   // Clear reviews
   void clearReviews() {
-    productReviews.value = [];
+    productReviews.clear();
   }
 } 

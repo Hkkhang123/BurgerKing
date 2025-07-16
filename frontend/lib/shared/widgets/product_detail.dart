@@ -3,7 +3,6 @@ import 'package:client/shared/themes/app_textstyle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:client/core/utils/api_service.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
