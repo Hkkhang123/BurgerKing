@@ -44,6 +44,7 @@ export const createCheckout = async (req, res) => {
         orderCode: generateOrderCode(),
       });
       await Cart.findOneAndDelete({ user: req.user._id });
+      console.log(`Checkout created for user ${req.user._id} with payment method: ${paymentMethod}. Cart cleared.`);
       // Gọi MoMo để lấy payUrl
       try {
         const momoRes = await createMomoPayment({
@@ -57,32 +58,6 @@ export const createCheckout = async (req, res) => {
       } catch (momoError) {
         res.status(500).json({ message: "Lỗi tạo thanh toán MoMo", detail: momoError.message });
       }
-    } else {
-      // Các phương thức thanh toán khác: tạo Checkout như cũ
-      let paymentStatus = "Đang xử lý";
-      let isPaid = false;
-      
-      if (paymentMethod === "Chuyển khoản ngân hàng") {
-        paymentStatus = "Chờ xác nhận";
-        isPaid = false;
-      } 
-      
-      const newCheckout = await Checkout.create({
-        user: req.user._id,
-        checkoutItem: checkoutItem,
-        shippingAddress,
-        paymentMethod,
-        totalPrice,
-        paymentStatus,
-        isPaid,
-        orderCode: generateOrderCode(),
-      });
-      
-      // Xóa giỏ hàng sau khi tạo checkout thành công
-      await Cart.findOneAndDelete({ user: req.user._id });
-      
-      console.log(`Checkout created for user ${req.user._id} with payment method: ${paymentMethod}. Cart cleared.`);
-      res.status(201).json(newCheckout);
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
