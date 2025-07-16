@@ -33,18 +33,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     text: '123 Đường ABC, Quận 1, TP.HCM',
   );
   final _cityController = TextEditingController(text: 'Hồ Chí Minh');
-  final _phoneController = TextEditingController(text: '0123456789');
-  final _receiverController = TextEditingController(text: 'Khách hàng');
   final _districtController = TextEditingController(text: 'Quận 1');
-  final _postalCodeController = TextEditingController(text: '700000');
   PaymentMethod _selectedMethod = PaymentMethod.cod;
 
   @override
   void dispose() {
     _addressController.dispose();
     _cityController.dispose();
-    _phoneController.dispose();
-    _receiverController.dispose();
     super.dispose();
   }
 
@@ -275,9 +270,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 'address': _addressController.text,
                 'city': _cityController.text,
                 'district': _districtController.text,
-                'phone': _phoneController.text,
-                'receiver': _receiverController.text,
               };
+
+              // Thêm log dữ liệu gửi đi
+              print('TOKEN: ' + token.toString());
+              print('CHECKOUT ITEMS: ' + checkoutItems.toString());
+              print('SHIPPING ADDRESS: ' + shippingAddress.toString());
+              print('PAYMENT METHOD: ' + (_selectedMethod == PaymentMethod.momo ? 'momo' : 'cod'));
+              print('TOTAL PRICE: ' + finalPrice.toString());
 
               final result = await cartController.checkout(
                 token,
@@ -287,6 +287,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     _selectedMethod == PaymentMethod.momo ? 'momo' : 'cod',
                 totalPrice: finalPrice,
               );
+
+              // Thêm log kết quả trả về
+              print('CHECKOUT RESULT: ' + result.toString());
 
               if (_selectedMethod == PaymentMethod.momo) {
                 if (result['success'] == true &&

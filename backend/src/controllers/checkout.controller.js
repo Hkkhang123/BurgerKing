@@ -2,6 +2,7 @@ import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
 import Checkout from "../models/Checkout.js";
+import { createMomoPayment } from "../services/momo.service.js";
 
 export const createCheckout = async (req, res) => {
   const { checkoutItem, shippingAddress, paymentMethod, totalPrice } = req.body;
@@ -30,18 +31,41 @@ export const createCheckout = async (req, res) => {
       
       console.log(`Order created for user ${req.user._id} with cash on delivery. Cart cleared.`);
       res.status(201).json(newOrder);
+    } else if (paymentMethod === "Thanh toán MoMo") {
+      // Tạo checkout trước
+      const newCheckout = await Checkout.create({
+        user: req.user._id,
+        checkoutItem: checkoutItem,
+        shippingAddress,
+        paymentMethod,
+        totalPrice,
+        paymentStatus: "Đang xử lý",
+        isPaid: false,
+        orderCode: generateOrderCode(),
+      });
+      await Cart.findOneAndDelete({ user: req.user._id });
+      // Gọi MoMo để lấy payUrl
+      try {
+        const momoRes = await createMomoPayment({
+          checkoutId: newCheckout._id.toString(),
+          amount: totalPrice,
+        });
+        res.status(201).json({
+          ...newCheckout.toObject(),
+          payUrl: momoRes.payUrl,
+        });
+      } catch (momoError) {
+        res.status(500).json({ message: "Lỗi tạo thanh toán MoMo", detail: momoError.message });
+      }
     } else {
       // Các phương thức thanh toán khác: tạo Checkout như cũ
       let paymentStatus = "Đang xử lý";
       let isPaid = false;
       
-      if (paymentMethod === "Thanh toán MoMo") {
-        paymentStatus = "Đang xử lý";
-        isPaid = false;
-      } else if (paymentMethod === "Chuyển khoản ngân hàng") {
+      if (paymentMethod === "Chuyển khoản ngân hàng") {
         paymentStatus = "Chờ xác nhận";
         isPaid = false;
-      }
+      } 
       
       const newCheckout = await Checkout.create({
         user: req.user._id,
