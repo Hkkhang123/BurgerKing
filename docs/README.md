@@ -1,4 +1,4 @@
-# Pizza App - Flutter + Node.js
+# Burger App - Flutter + Node.js
 
 Ứng dụng đặt pizza được xây dựng với Flutter cho client và Node.js cho server.
 
