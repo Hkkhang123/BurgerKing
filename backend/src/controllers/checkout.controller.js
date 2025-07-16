@@ -31,7 +31,7 @@ export const createCheckout = async (req, res) => {
       
       console.log(`Order created for user ${req.user._id} with cash on delivery. Cart cleared.`);
       res.status(201).json(newOrder);
-    } else if (paymentMethod === "Thanh toán MoMo") {
+    } else if (paymentMethod === "momo") {
       // Tạo checkout trước
       const newCheckout = await Checkout.create({
         user: req.user._id,
