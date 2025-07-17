@@ -5,6 +5,9 @@ import 'package:client/core/services/auth_controller.dart';
 import 'package:client/core/services/cart_controller.dart';
 import 'order_confirmation_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'dart:convert'; // Added for json.decode
+import 'package:http/http.dart' as http; // Added for http
 
 enum PaymentMethod { cod, momo }
 
@@ -35,6 +38,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _cityController = TextEditingController(text: 'Hồ Chí Minh');
   final _districtController = TextEditingController(text: 'Quận 1');
   PaymentMethod _selectedMethod = PaymentMethod.cod;
+  bool _isLoading = false; // Added for loading state
 
   @override
   void dispose() {
@@ -286,15 +290,35 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     result['data'] != null &&
                     result['data']['payUrl'] != null) {
                   final payUrl = result['data']['payUrl'];
-                  if (await canLaunchUrl(Uri.parse(payUrl))) {
-                    await launchUrl(Uri.parse(payUrl));
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Không thể mở trang thanh toán MoMo.'),
+                  final checkoutId = result['data']['_id'];
+                  final webViewController = WebViewController()
+                    ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                    ..setNavigationDelegate(
+                      NavigationDelegate(
+                        onNavigationRequest: (request) {
+                          print('WebView điều hướng tới: ${request.url}');
+                          // Nếu là redirectUrl hoặc có resultCode=0 thì đóng WebView và polling
+                          if (request.url.startsWith('https://google.com') || request.url.contains('resultCode=0')) {
+                            Navigator.of(context).pop();
+                            _checkPaymentStatus(checkoutId);
+                            return NavigationDecision.prevent;
+                          }
+                          return NavigationDecision.navigate;
+                        },
                       ),
-                    );
-                  }
+                    )
+                    ..loadRequest(Uri.parse(payUrl));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => Scaffold(
+                        appBar: AppBar(
+                          title: const Text('Thanh toán MoMo'),
+                          // Không có nút đóng
+                        ),
+                        body: WebViewWidget(controller: webViewController),
+                      ),
+                    ),
+                  );
                 } else {
                   print('Lỗi khi tạo thanh toán MoMo, result: ' + (result['data']?.toString() ?? 'null'));
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -369,6 +393,358 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // Hàm kiểm tra trạng thái thanh toán
+  Future<void> _checkPaymentStatus(String checkoutId) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Hiển thị thông báo đang kiểm tra
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Đang kiểm tra trạng thái thanh toán...'),
+        backgroundColor: Colors.blue,
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    // Polling: kiểm tra trạng thái mỗi 5 giây, tối đa 30 giây
+    int attempts = 0;
+    const maxAttempts = 6; // 30 giây / 5 giây = 6 lần
+
+    while (attempts < maxAttempts) {
+      try {
+        final authController = Get.find<AuthController>();
+        final token = authController.getToken();
+
+        // Gọi API để lấy thông tin checkout
+        final response = await http.get(
+          Uri.parse(
+            'https://burgerking-j92p.onrender.com/api/checkout/$checkoutId',
+          ),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        );
+
+        print('API Response Status: ${response.statusCode}');
+        print('API Response Body: ${response.body}');
+
+        if (response.statusCode == 200) {
+          final checkoutData = json.decode(response.body);
+          print('Parsed checkout data: ${checkoutData}');
+
+          final paymentStatus = checkoutData['paymentStatus'];
+          final isPaid = checkoutData['isPaid'] ?? false;
+          final isFinalized = checkoutData['isFinalized'] ?? false;
+
+          print(
+            'Payment Status: $paymentStatus, isPaid: $isPaid, isFinalized: $isFinalized',
+          );
+
+          // Kiểm tra nếu đã finalize thì cũng coi như thành công
+          if (paymentStatus == 'Đã thanh toán' ||
+              isPaid == true ||
+              isFinalized == true) {
+            setState(() {
+              _isLoading = false;
+            });
+            // Nếu đã finalize thì chuyển luôn, nếu chưa thì gọi finalizeCheckout
+            if (isFinalized == true) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => OrderConfirmationScreen(
+                    checkoutId: checkoutId,
+                    orderCode: checkoutData['orderCode'] ?? checkoutId.substring(checkoutId.length - 6).toUpperCase(),
+                    totalAmount: widget.totalPrice,
+                    paymentMethod: _selectedMethod.name,
+                    shippingAddress: {
+                      'address': _addressController.text,
+                      'city': _cityController.text,
+                      'district': _districtController.text,
+                    },
+                    orderItems: widget.cartProducts,
+                    isPaymentSuccess: true,
+                  ),
+                ),
+              );
+              return;
+            } else if (isPaid == true && isFinalized == false) {
+              print('Gọi finalizeCheckout cho $checkoutId');
+              final authController = Get.find<AuthController>();
+              final token = authController.getToken();
+              final finalizeResponse = await http.post(
+                Uri.parse('https://burgerking-j92p.onrender.com/api/checkout/$checkoutId/finalize'),
+                headers: {
+                  'Authorization': 'Bearer $token',
+                  'Content-Type': 'application/json',
+                },
+              );
+              print('Finalize response status: ${finalizeResponse.statusCode}');
+              print('Finalize response body: ${finalizeResponse.body}');
+              if (finalizeResponse.statusCode == 200) {
+                final orderData = json.decode(finalizeResponse.body);
+                print('Finalize thành công, orderData: ${orderData.toString()}');
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => OrderConfirmationScreen(
+                      orderId: orderData['_id'],
+                      orderCode: orderData['orderCode'] ?? orderData['_id'].substring(orderData['_id'].length - 6).toUpperCase(),
+                      totalAmount: orderData['totalPrice']?.toDouble() ?? widget.totalPrice,
+                      paymentMethod: orderData['paymentMethod'] ?? _selectedMethod.name,
+                      shippingAddress: orderData['shippingAddress'] ?? {
+                        'address': _addressController.text,
+                        'city': _cityController.text,
+                        'district': _districtController.text,
+                      },
+                      orderItems: orderData['orderItems'] ?? widget.cartProducts,
+                      isPaymentSuccess: orderData['isPaid'] ?? true,
+                    ),
+                  ),
+                );
+                return;
+              } else {
+                print('Finalize lỗi: ${finalizeResponse.body}');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Lỗi khi finalize đơn hàng: ${finalizeResponse.body}')),
+                );
+                return;
+              }
+            }
+            // Chuyển đến trang xác nhận đơn hàng với checkoutId
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder:
+                    (_) => OrderConfirmationScreen(
+                      checkoutId: checkoutId,
+                      orderCode:
+                          checkoutData['orderCode'] ??
+                          checkoutId
+                              .substring(checkoutId.length - 6)
+                              .toUpperCase(),
+                      totalAmount: widget.totalPrice,
+                      paymentMethod: _selectedMethod.name,
+                      shippingAddress: {
+                        'address': _addressController.text,
+                        'city': _cityController.text,
+                        'district': _districtController.text,
+                      },
+                      orderItems: widget.cartProducts,
+                      isPaymentSuccess: true,
+                    ),
+              ),
+            );
+            return; // Thoát khỏi polling
+          } else if (paymentStatus == 'Thanh toán thất bại') {
+            setState(() {
+              _isLoading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Thanh toán MoMo thất bại. Vui lòng thử lại.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return; // Thoát khỏi polling
+          } else {
+            // Vẫn đang xử lý, tiếp tục polling
+            print('Payment status: $paymentStatus, attempt: ${attempts + 1}');
+          }
+        } else if (response.statusCode == 404) {
+          // Nếu không tìm thấy checkout, có thể đã được finalize thành order
+          print('Checkout not found, checking if order exists...');
+          try {
+            final orderResponse = await http.get(
+              Uri.parse(
+                'https://burgerking-j92p.onrender.com/api/order/my-order',
+              ),
+              headers: {
+                'Authorization': 'Bearer $token',
+                'Content-Type': 'application/json',
+              },
+            );
+
+            if (orderResponse.statusCode == 200) {
+              final orders = json.decode(orderResponse.body);
+              print('Orders found: $orders');
+
+              // Kiểm tra xem có order nào được tạo gần đây không
+              if (orders is List && orders.isNotEmpty) {
+                final latestOrder = orders.first;
+                print('Latest order: $latestOrder');
+
+                setState(() {
+                  _isLoading = false;
+                });
+
+                // Chuyển đến trang xác nhận đơn hàng với orderId thực
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder:
+                        (_) => OrderConfirmationScreen(
+                          orderId: latestOrder['_id'],
+                          orderCode:
+                              latestOrder['orderCode'] ??
+                              latestOrder['_id']
+                                  .substring(latestOrder['_id'].length - 6)
+                                  .toUpperCase(),
+                          totalAmount:
+                              latestOrder['totalPrice']?.toDouble() ??
+                              widget.totalPrice,
+                          paymentMethod:
+                              latestOrder['paymentMethod'] ??
+                              _selectedMethod.name,
+                          shippingAddress:
+                              latestOrder['shippingAddress'] ??
+                              {
+                                'address': _addressController.text,
+                                'city': _cityController.text,
+                                'district': _districtController.text,
+                              },
+                          orderItems:
+                              latestOrder['orderItems'] ?? widget.cartProducts,
+                          isPaymentSuccess: latestOrder['isPaid'] ?? true,
+                        ),
+                  ),
+                );
+                Navigator.of(context).pop(true);
+                return;
+              }
+            }
+          } catch (orderError) {
+            print('Error checking orders: $orderError');
+          }
+        } else {
+          print('API error: ${response.statusCode} - ${response.body}');
+        }
+      } catch (e) {
+        print('Network error: $e');
+      }
+
+      attempts++;
+      if (attempts < maxAttempts) {
+        // Chờ 5 giây trước khi kiểm tra lại
+        await Future.delayed(const Duration(seconds: 5));
+      }
+    }
+
+    // Hết thời gian polling, thử kiểm tra trạng thái từ MoMo API
+    print(
+      'Polling timeout after 30 seconds, trying to check MoMo payment status directly...',
+    );
+    try {
+      final authController = Get.find<AuthController>();
+      final token = authController.getToken();
+
+      // Gọi API để kiểm tra trạng thái thanh toán từ MoMo
+      final momoStatusResponse = await http.post(
+        Uri.parse(
+          'https://burgerking-j92p.onrender.com/api/payment/momo/status',
+        ),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({'checkoutId': checkoutId}),
+      );
+
+      if (momoStatusResponse.statusCode == 200) {
+        final momoStatusData = json.decode(momoStatusResponse.body);
+        print('MoMo status response: $momoStatusData');
+
+        if (momoStatusData['success'] == true &&
+            momoStatusData['isPaid'] == true) {
+          setState(() {
+            _isLoading = false;
+          });
+          // Gọi finalizeCheckout
+          final authController = Get.find<AuthController>();
+          final token = authController.getToken();
+          final finalizeResponse = await http.post(
+            Uri.parse('https://burgerking-j92p.onrender.com/api/checkout/$checkoutId/finalize'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+          );
+          print('Finalize response status (timeout): ${finalizeResponse.statusCode}');
+          print('Finalize response body (timeout): ${finalizeResponse.body}');
+          if (finalizeResponse.statusCode == 200) {
+            final orderData = json.decode(finalizeResponse.body);
+            print('Finalize thành công (timeout), orderData: ${orderData.toString()}');
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => OrderConfirmationScreen(
+                  orderId: orderData['_id'],
+                  orderCode: orderData['orderCode'] ?? orderData['_id'].substring(orderData['_id'].length - 6).toUpperCase(),
+                  totalAmount: orderData['totalPrice']?.toDouble() ?? widget.totalPrice,
+                  paymentMethod: orderData['paymentMethod'] ?? _selectedMethod.name,
+                  shippingAddress: orderData['shippingAddress'] ?? {
+                    'address': _addressController.text,
+                    'city': _cityController.text,
+                    'district': _districtController.text,
+                  },
+                  orderItems: orderData['orderItems'] ?? widget.cartProducts,
+                  isPaymentSuccess: orderData['isPaid'] ?? true,
+                ),
+              ),
+            );
+            return;
+          } else {
+            print('Finalize lỗi (timeout): ${finalizeResponse.body}');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Lỗi khi finalize đơn hàng: ${finalizeResponse.body}')),
+            );
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      print('Error checking MoMo status: $e');
+    }
+
+    // Hết thời gian polling
+    setState(() {
+      _isLoading = false;
+    });
+
+    // Hiển thị dialog với thông tin chi tiết
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Thông báo'),
+            content: const Text(
+              'Không thể xác nhận trạng thái thanh toán sau 30 giây.\n\n'
+              'Có thể:\n'
+              '• Thanh toán đang được xử lý\n'
+              '• Có vấn đề với kết nối mạng\n'
+              '• MoMo chưa gửi thông báo xác nhận\n\n'
+              'Bạn có thể:\n'
+              '• Kiểm tra lại sau vài phút\n'
+              '• Liên hệ hỗ trợ nếu đã thanh toán thành công',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // Thử kiểm tra lại một lần nữa
+                  _checkPaymentStatus(checkoutId);
+                },
+                child: const Text('Kiểm tra lại'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Đóng'),
+              ),
+            ],
+          ),
     );
   }
 }
