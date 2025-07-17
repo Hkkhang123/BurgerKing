@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "919183956707-krkb330lgvhqe1qable26c1fnrc2ja0k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.burgerking",
+            "certificate_hash": "6d7af308b7717c933eae97dff708d5836a0529a2"
+          }
+        },
+        {
           "client_id": "919183956707-vdfoamfnmbpkbuofb3qfh5ns7gm6p6fm.apps.googleusercontent.com",
           "client_type": 3
         }
