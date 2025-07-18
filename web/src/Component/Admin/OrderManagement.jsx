@@ -1,26 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { fetchAllOrder, updateOrder } from "../../redux/slices/adminSlice";
 
 const OrderManagement = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
-  const { user } = useSelector((state) => state.auth);
   const { orders, loading, error } = useSelector((state) => state.admin);
 
   // State loading cho từng order
   const [orderLoading, setOrderLoading] = useState({});
   const [message, setMessage] = useState("");
 
+  // XÓA useEffect kiểm tra quyền user và điều hướng về '/'
   useEffect(() => {
-    if (!user || user.role !== "admin") {
-      navigate("/");
-    } else {
-      dispatch(fetchAllOrder());
-    }
-  }, [dispatch, navigate, user]);
+    dispatch(fetchAllOrder());
+  }, [dispatch]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     setOrderLoading((prev) => ({ ...prev, [orderId]: true }));

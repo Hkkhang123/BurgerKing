@@ -1,6 +1,5 @@
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import {
   createUser,
   deleteUser,
@@ -10,16 +9,11 @@ import {
 
 const UserManagement = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const { user } = useSelector((state) => state.auth);
   const { users, loading, error } = useSelector((state) => state.admin);
 
-  useEffect(() => {
-    if (user && user.role !== "admin") {
-      navigate("/");
-    }
-  }, [user, navigate]);
+  // XÓA useEffect kiểm tra quyền user và điều hướng về '/'
 
   useEffect(() => {
     if (user && user.role === "admin") {
