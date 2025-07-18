@@ -37,6 +37,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   );
   final _cityController = TextEditingController(text: 'Hồ Chí Minh');
   final _districtController = TextEditingController(text: 'Quận 1');
+  final TextEditingController _phoneController = TextEditingController();
+
   PaymentMethod _selectedMethod = PaymentMethod.cod;
   bool _isLoading = false; // Added for loading state
 
@@ -153,6 +155,66 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ),
             SizedBox(height: screenWidth * 0.04),
+
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 2,
+              color: Colors.white,
+              child: ListTile(
+                leading: Icon(Icons.phone, color: Colors.green),
+                title: Text(
+                  'Số điện thoại',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(
+                  _phoneController.text.isNotEmpty
+                      ? _phoneController.text
+                      : 'Chưa có số điện thoại',
+                ),
+                trailing: IconButton(
+                  icon: Icon(Icons.edit, color: Colors.orange),
+                  onPressed: () {
+                    final tempPhoneController = TextEditingController(
+                      text: _phoneController.text,
+                    );
+                    showDialog(
+                      context: context,
+                      builder:
+                          (context) => AlertDialog(
+                            title: Text('Chỉnh sửa số điện thoại'),
+                            content: TextField(
+                              controller: tempPhoneController,
+                              keyboardType: TextInputType.phone,
+                              decoration: InputDecoration(
+                                labelText: 'Số điện thoại giao hàng',
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: Text('Hủy'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _phoneController.text =
+                                        tempPhoneController.text;
+                                  });
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text('Lưu'),
+                              ),
+                            ],
+                          ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            SizedBox(height: screenWidth * 0.04),
+
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -291,36 +353,44 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     result['data']['payUrl'] != null) {
                   final payUrl = result['data']['payUrl'];
                   final checkoutId = result['data']['_id'];
-                  final webViewController = WebViewController()
-                    ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                    ..setNavigationDelegate(
-                      NavigationDelegate(
-                        onNavigationRequest: (request) {
-                          print('WebView điều hướng tới: ${request.url}');
-                          // Nếu là redirectUrl hoặc có resultCode=0 thì đóng WebView và polling
-                          if (request.url.startsWith('https://google.com') || request.url.contains('resultCode=0')) {
-                            Navigator.of(context).pop();
-                            _checkPaymentStatus(checkoutId);
-                            return NavigationDecision.prevent;
-                          }
-                          return NavigationDecision.navigate;
-                        },
-                      ),
-                    )
-                    ..loadRequest(Uri.parse(payUrl));
+                  final webViewController =
+                      WebViewController()
+                        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                        ..setNavigationDelegate(
+                          NavigationDelegate(
+                            onNavigationRequest: (request) {
+                              print('WebView điều hướng tới: ${request.url}');
+                              // Nếu là redirectUrl hoặc có resultCode=0 thì đóng WebView và polling
+                              if (request.url.startsWith(
+                                    'https://google.com',
+                                  ) ||
+                                  request.url.contains('resultCode=0')) {
+                                Navigator.of(context).pop();
+                                _checkPaymentStatus(checkoutId);
+                                return NavigationDecision.prevent;
+                              }
+                              return NavigationDecision.navigate;
+                            },
+                          ),
+                        )
+                        ..loadRequest(Uri.parse(payUrl));
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => Scaffold(
-                        appBar: AppBar(
-                          title: const Text('Thanh toán MoMo'),
-                          // Không có nút đóng
-                        ),
-                        body: WebViewWidget(controller: webViewController),
-                      ),
+                      builder:
+                          (_) => Scaffold(
+                            appBar: AppBar(
+                              title: const Text('Thanh toán MoMo'),
+                              // Không có nút đóng
+                            ),
+                            body: WebViewWidget(controller: webViewController),
+                          ),
                     ),
                   );
                 } else {
-                  print('Lỗi khi tạo thanh toán MoMo, result: ' + (result['data']?.toString() ?? 'null'));
+                  print(
+                    'Lỗi khi tạo thanh toán MoMo, result: ' +
+                        (result['data']?.toString() ?? 'null'),
+                  );
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
@@ -457,19 +527,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             if (isFinalized == true) {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
-                  builder: (_) => OrderConfirmationScreen(
-                    checkoutId: checkoutId,
-                    orderCode: checkoutData['orderCode'] ?? checkoutId.substring(checkoutId.length - 6).toUpperCase(),
-                    totalAmount: widget.totalPrice,
-                    paymentMethod: _selectedMethod.name,
-                    shippingAddress: {
-                      'address': _addressController.text,
-                      'city': _cityController.text,
-                      'district': _districtController.text,
-                    },
-                    orderItems: widget.cartProducts,
-                    isPaymentSuccess: true,
-                  ),
+                  builder:
+                      (_) => OrderConfirmationScreen(
+                        checkoutId: checkoutId,
+                        orderCode:
+                            checkoutData['orderCode'] ??
+                            checkoutId
+                                .substring(checkoutId.length - 6)
+                                .toUpperCase(),
+                        totalAmount: widget.totalPrice,
+                        paymentMethod: _selectedMethod.name,
+                        shippingAddress: {
+                          'address': _addressController.text,
+                          'city': _cityController.text,
+                          'district': _districtController.text,
+                        },
+                        orderItems: widget.cartProducts,
+                        isPaymentSuccess: true,
+                      ),
                 ),
               );
               return;
@@ -478,7 +553,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               final authController = Get.find<AuthController>();
               final token = authController.getToken();
               final finalizeResponse = await http.post(
-                Uri.parse('https://burgerking-j92p.onrender.com/api/checkout/$checkoutId/finalize'),
+                Uri.parse(
+                  'https://burgerking-j92p.onrender.com/api/checkout/$checkoutId/finalize',
+                ),
                 headers: {
                   'Authorization': 'Bearer $token',
                   'Content-Type': 'application/json',
@@ -488,29 +565,47 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               print('Finalize response body: ${finalizeResponse.body}');
               if (finalizeResponse.statusCode == 200) {
                 final orderData = json.decode(finalizeResponse.body);
-                print('Finalize thành công, orderData: ${orderData.toString()}');
+                print(
+                  'Finalize thành công, orderData: ${orderData.toString()}',
+                );
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
-                    builder: (_) => OrderConfirmationScreen(
-                      orderId: orderData['_id'],
-                      orderCode: orderData['orderCode'] ?? orderData['_id'].substring(orderData['_id'].length - 6).toUpperCase(),
-                      totalAmount: orderData['totalPrice']?.toDouble() ?? widget.totalPrice,
-                      paymentMethod: orderData['paymentMethod'] ?? _selectedMethod.name,
-                      shippingAddress: orderData['shippingAddress'] ?? {
-                        'address': _addressController.text,
-                        'city': _cityController.text,
-                        'district': _districtController.text,
-                      },
-                      orderItems: orderData['orderItems'] ?? widget.cartProducts,
-                      isPaymentSuccess: orderData['isPaid'] ?? true,
-                    ),
+                    builder:
+                        (_) => OrderConfirmationScreen(
+                          orderId: orderData['_id'],
+                          orderCode:
+                              orderData['orderCode'] ??
+                              orderData['_id']
+                                  .substring(orderData['_id'].length - 6)
+                                  .toUpperCase(),
+                          totalAmount:
+                              orderData['totalPrice']?.toDouble() ??
+                              widget.totalPrice,
+                          paymentMethod:
+                              orderData['paymentMethod'] ??
+                              _selectedMethod.name,
+                          shippingAddress:
+                              orderData['shippingAddress'] ??
+                              {
+                                'address': _addressController.text,
+                                'city': _cityController.text,
+                                'district': _districtController.text,
+                              },
+                          orderItems:
+                              orderData['orderItems'] ?? widget.cartProducts,
+                          isPaymentSuccess: orderData['isPaid'] ?? true,
+                        ),
                   ),
                 );
                 return;
               } else {
                 print('Finalize lỗi: ${finalizeResponse.body}');
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Lỗi khi finalize đơn hàng: ${finalizeResponse.body}')),
+                  SnackBar(
+                    content: Text(
+                      'Lỗi khi finalize đơn hàng: ${finalizeResponse.body}',
+                    ),
+                  ),
                 );
                 return;
               }
@@ -665,39 +760,60 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           final authController = Get.find<AuthController>();
           final token = authController.getToken();
           final finalizeResponse = await http.post(
-            Uri.parse('https://burgerking-j92p.onrender.com/api/checkout/$checkoutId/finalize'),
+            Uri.parse(
+              'https://burgerking-j92p.onrender.com/api/checkout/$checkoutId/finalize',
+            ),
             headers: {
               'Authorization': 'Bearer $token',
               'Content-Type': 'application/json',
             },
           );
-          print('Finalize response status (timeout): ${finalizeResponse.statusCode}');
+          print(
+            'Finalize response status (timeout): ${finalizeResponse.statusCode}',
+          );
           print('Finalize response body (timeout): ${finalizeResponse.body}');
           if (finalizeResponse.statusCode == 200) {
             final orderData = json.decode(finalizeResponse.body);
-            print('Finalize thành công (timeout), orderData: ${orderData.toString()}');
+            print(
+              'Finalize thành công (timeout), orderData: ${orderData.toString()}',
+            );
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                builder: (_) => OrderConfirmationScreen(
-                  orderId: orderData['_id'],
-                  orderCode: orderData['orderCode'] ?? orderData['_id'].substring(orderData['_id'].length - 6).toUpperCase(),
-                  totalAmount: orderData['totalPrice']?.toDouble() ?? widget.totalPrice,
-                  paymentMethod: orderData['paymentMethod'] ?? _selectedMethod.name,
-                  shippingAddress: orderData['shippingAddress'] ?? {
-                    'address': _addressController.text,
-                    'city': _cityController.text,
-                    'district': _districtController.text,
-                  },
-                  orderItems: orderData['orderItems'] ?? widget.cartProducts,
-                  isPaymentSuccess: orderData['isPaid'] ?? true,
-                ),
+                builder:
+                    (_) => OrderConfirmationScreen(
+                      orderId: orderData['_id'],
+                      orderCode:
+                          orderData['orderCode'] ??
+                          orderData['_id']
+                              .substring(orderData['_id'].length - 6)
+                              .toUpperCase(),
+                      totalAmount:
+                          orderData['totalPrice']?.toDouble() ??
+                          widget.totalPrice,
+                      paymentMethod:
+                          orderData['paymentMethod'] ?? _selectedMethod.name,
+                      shippingAddress:
+                          orderData['shippingAddress'] ??
+                          {
+                            'address': _addressController.text,
+                            'city': _cityController.text,
+                            'district': _districtController.text,
+                          },
+                      orderItems:
+                          orderData['orderItems'] ?? widget.cartProducts,
+                      isPaymentSuccess: orderData['isPaid'] ?? true,
+                    ),
               ),
             );
             return;
           } else {
             print('Finalize lỗi (timeout): ${finalizeResponse.body}');
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Lỗi khi finalize đơn hàng: ${finalizeResponse.body}')),
+              SnackBar(
+                content: Text(
+                  'Lỗi khi finalize đơn hàng: ${finalizeResponse.body}',
+                ),
+              ),
             );
             return;
           }
