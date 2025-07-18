@@ -68,7 +68,6 @@ const AdminSidebar = () => {
           }
         >
           <FaStore />
-          <span>Cửa hàng</span>
         </NavLink>
       </nav>
       <div className="mb-6">
