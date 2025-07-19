@@ -3,9 +3,6 @@ import {
   getNotifications,
   getAllNotifications,
   createNotification,
-  createTestNotification,
-  testOrderNotification,
-  checkAdminUsers,
   sendCustomNotification,
   markAllAsRead,
   deleteAllNotifications
@@ -20,17 +17,8 @@ router.get("/", protectRoutes, getNotifications);
 // Lấy tất cả thông báo (cho admin)
 router.get("/all", protectRoutes, isAdmin, getAllNotifications);
 
-// Kiểm tra admin users
-router.get("/check-admins", protectRoutes, isAdmin, checkAdminUsers);
-
 // Tạo thông báo mới cho user cụ thể
 router.post("/", protectRoutes, createNotification);
-
-// Tạo thông báo test cho admin
-router.post("/test", protectRoutes, isAdmin, createTestNotification);
-
-// Test tạo thông báo đơn hàng mới
-router.post("/test-order", protectRoutes, isAdmin, testOrderNotification);
 
 // Gửi thông báo tùy chỉnh đến tất cả user (Observer)
 router.post("/send", protectRoutes, sendCustomNotification);

@@ -11,35 +11,38 @@ import EditProduct from "./Component/Admin/EditProduct";
 import NewProduct from "./Component/Admin/NewProduct";
 import OrderManagement from "./Component/Admin/OrderManagement";
 import NotificationManagement from "./Component/Admin/NotificationManagement";
+import { NotificationProvider } from "./shared/contexts/NotificationProvider";
 import store from "./redux/store";
 
 
 function App() {
   return (
     <Provider store={store}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          {/* Route mặc định chuyển về login */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="notification-management" element={<NotificationManagement />} />
-            <Route index element={<AdminHomePage />} />
-            <Route path="user" element={<UserManagement />} />
-            <Route path="product" element={<ProductManagement />} />
-            <Route path="product/:id/edit" element={<EditProduct />} />
-            <Route path="product/new" element={<NewProduct />} />
-            <Route path="order" element={<OrderManagement />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <NotificationProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            {/* Route mặc định chuyển về login */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="notification-management" element={<NotificationManagement />} />
+              <Route index element={<AdminHomePage />} />
+              <Route path="user" element={<UserManagement />} />
+              <Route path="product" element={<ProductManagement />} />
+              <Route path="product/:id/edit" element={<EditProduct />} />
+              <Route path="product/new" element={<NewProduct />} />
+              <Route path="order" element={<OrderManagement />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </NotificationProvider>
     </Provider>
   );
 }

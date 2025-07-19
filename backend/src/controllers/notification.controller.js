@@ -30,128 +30,44 @@ export const getAllNotifications = async (req, res) => {
   }
 };
 
-// Tạo thông báo cho một user cụ thể
+// Tạo thông báo mới cho user cụ thể
 export const createNotification = async (req, res) => {
   try {
     const { user, title, message } = req.body;
-    const notification = await Notification.create({ user, title, message });
+    const notification = await Notification.create({
+      user,
+      title,
+      message,
+    });
     res.status(201).json(notification);
   } catch (e) {
     res.status(500).json({ message: "Server error", error: e.message });
   }
 };
 
-// Test tạo thông báo đơn hàng mới
-export const testOrderNotification = async (req, res) => {
-  try {
-    const { orderCode, totalPrice, userId } = req.body;
-    
-    // Tìm tất cả admin users
-    const adminUsers = await User.find({ role: 'admin' });
-    console.log(`[testOrderNotification] Tìm thấy ${adminUsers.length} admin users`);
-    
-    if (adminUsers.length === 0) {
-      return res.status(404).json({ message: "Không tìm thấy admin nào" });
-    }
-
-    // Tạo thông báo đơn hàng mới cho mỗi admin
-    const notifications = [];
-    for (const admin of adminUsers) {
-      const notification = await Notification.create({
-        user: admin._id,
-        title: "Đơn hàng mới (Test)",
-        message: `Có đơn hàng mới #${orderCode} từ user ${userId} với tổng tiền ${totalPrice.toLocaleString('vi-VN')}đ - Test notification`,
-      });
-      notifications.push(notification);
-      console.log(`[testOrderNotification] Đã tạo thông báo đơn hàng cho admin ${admin.name}`);
-    }
-
-    console.log(`[testOrderNotification] Đã tạo ${notifications.length} thông báo đơn hàng`);
-    res.status(201).json({ 
-      message: `Đã tạo ${notifications.length} thông báo đơn hàng test`,
-      notifications: notifications 
-    });
-  } catch (e) {
-    console.log("[testOrderNotification] Lỗi:", e.message);
-    res.status(500).json({ message: "Server error", error: e.message });
-  }
-};
-
-// Kiểm tra admin users
-export const checkAdminUsers = async (req, res) => {
-  try {
-    const adminUsers = await User.find({ role: 'admin' });
-    const allUsers = await User.find({});
-    
-    console.log(`[checkAdminUsers] Tổng users: ${allUsers.length}`);
-    console.log(`[checkAdminUsers] Admin users: ${adminUsers.length}`);
-    console.log(`[checkAdminUsers] All users:`, allUsers.map(u => ({ id: u._id, name: u.name, email: u.email, role: u.role })));
-    
-    res.json({
-      totalUsers: allUsers.length,
-      adminUsers: adminUsers.length,
-      admins: adminUsers.map(u => ({ id: u._id, name: u.name, email: u.email, role: u.role })),
-      allUsers: allUsers.map(u => ({ id: u._id, name: u.name, email: u.email, role: u.role }))
-    });
-  } catch (e) {
-    console.log("[checkAdminUsers] Lỗi:", e.message);
-    res.status(500).json({ message: "Server error", error: e.message });
-  }
-};
-
-// Tạo thông báo test cho admin
-export const createTestNotification = async (req, res) => {
-  try {
-    // Tìm tất cả admin users
-    const adminUsers = await User.find({ role: 'admin' });
-    console.log(`[createTestNotification] Tìm thấy ${adminUsers.length} admin users`);
-    console.log(`[createTestNotification] Admin users:`, adminUsers.map(u => ({ id: u._id, name: u.name, email: u.email, role: u.role })));
-    
-    if (adminUsers.length === 0) {
-      return res.status(404).json({ message: "Không tìm thấy admin nào" });
-    }
-
-    // Tạo thông báo test cho mỗi admin
-    const testNotifications = [];
-    for (const admin of adminUsers) {
-      const notification = await Notification.create({
-        user: admin._id,
-        title: "Thông báo test",
-        message: `Đây là thông báo test cho admin ${admin.name} - ${new Date().toLocaleString('vi-VN')}`,
-      });
-      testNotifications.push(notification);
-      console.log(`[createTestNotification] Đã tạo thông báo test cho admin ${admin.name}`);
-    }
-
-    console.log(`[createTestNotification] Đã tạo ${testNotifications.length} thông báo test`);
-    res.status(201).json({ 
-      message: `Đã tạo ${testNotifications.length} thông báo test`,
-      notifications: testNotifications 
-    });
-  } catch (e) {
-    console.log("[createTestNotification] Lỗi:", e.message);
-    res.status(500).json({ message: "Server error", error: e.message });
-  }
-};
-
-// Gửi thông báo tùy chỉnh cho tất cả user (dùng Observer)
+// Gửi thông báo tùy chỉnh đến tất cả user (Observer)
 export const sendCustomNotification = async (req, res) => {
   try {
     const { title, message } = req.body;
-    if (!title || !message) {
-      return res.status(400).json({ message: "Thiếu title hoặc message" });
-    }
-
-    const customNotificationSubject = new Subject();
+    
+    // Lấy tất cả users
     const users = await User.find({});
-
-    users.forEach(user => {
-      customNotificationSubject.subscribe(new NotificationObserver(user._id));
+    
+    // Tạo thông báo cho mỗi user
+    const notifications = [];
+    for (const user of users) {
+      const notification = await Notification.create({
+        user: user._id,
+        title,
+        message,
+      });
+      notifications.push(notification);
+    }
+    
+    res.status(201).json({ 
+      message: `Đã gửi thông báo đến ${notifications.length} users`,
+      notifications: notifications 
     });
-
-    await customNotificationSubject.notify({ title, message });
-
-    res.status(200).json({ message: "Đã gửi thông báo tùy chỉnh (Observer)" });
   } catch (e) {
     res.status(500).json({ message: "Server error", error: e.message });
   }

@@ -1,79 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { FaBell, FaCheck, FaTrash, FaEye } from 'react-icons/fa';
 import { getAllNotifications, markAllAsRead, deleteAllNotifications } from '../../redux/slices/notificationSlice';
-import { FaBell, FaCheck, FaTrash, FaEye, FaPlus } from 'react-icons/fa';
-import axiosInstance from '../../utils/axios';
+import { useNotification } from '../../shared/hooks/useNotification';
 
 const NotificationManagement = () => {
   const dispatch = useDispatch();
   const { notifications, loading } = useSelector((state) => state.notification);
   const [selectedNotification, setSelectedNotification] = useState(null);
-  const [testLoading, setTestLoading] = useState(false);
+  const { showNotification } = useNotification();
 
   useEffect(() => {
     dispatch(getAllNotifications());
   }, [dispatch]);
 
-  // Debug logging
-  useEffect(() => {
-    console.log('🔍 [NotificationManagement] Current state:', {
-      notifications: notifications.length,
-      loading,
-      unreadCount: notifications.filter(n => !n.isRead).length
-    });
-    
-    if (notifications.length > 0) {
-      console.log('🔍 [NotificationManagement] Sample notification:', notifications[0]);
-    }
-  }, [notifications, loading]);
-
-  const handleMarkAllAsRead = () => {
-    dispatch(markAllAsRead());
-  };
-
-  const handleDeleteAll = () => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa tất cả thông báo?')) {
-      dispatch(deleteAllNotifications());
-    }
-  };
-
-  const handleCreateTestNotification = async () => {
-    setTestLoading(true);
+  const handleMarkAllAsRead = async () => {
     try {
-      console.log('🔍 [NotificationManagement] Đang tạo thông báo test...');
-      console.log('🔍 [NotificationManagement] URL:', axiosInstance.defaults.baseURL + '/api/notifications/test');
-      const response = await axiosInstance.post('/api/notifications/test');
-      console.log('🔍 [NotificationManagement] Response:', response.data);
-      alert('Đã tạo thông báo test thành công!');
-      dispatch(getAllNotifications()); // Refresh danh sách
+      await dispatch(markAllAsRead()).unwrap();
+      showNotification('Đã đánh dấu tất cả thông báo là đã đọc!', 'success');
     } catch (error) {
-      console.log('🔍 [NotificationManagement] Lỗi:', error);
-      console.log('🔍 [NotificationManagement] Error response:', error.response?.data);
-      alert('Lỗi khi tạo thông báo test: ' + (error.response?.data?.message || error.message));
-    } finally {
-      setTestLoading(false);
+      showNotification('Lỗi khi đánh dấu thông báo: ' + error.message, 'error');
     }
   };
 
-  const handleTestOrderNotification = async () => {
-    setTestLoading(true);
-    try {
-      console.log('🔍 [NotificationManagement] Đang tạo thông báo đơn hàng test...');
-      console.log('🔍 [NotificationManagement] URL:', axiosInstance.defaults.baseURL + '/api/notifications/test-order');
-      const response = await axiosInstance.post('/api/notifications/test-order', {
-        orderCode: 'TEST123',
-        totalPrice: 150000,
-        userId: 'test-user-123'
-      });
-      console.log('🔍 [NotificationManagement] Order notification response:', response.data);
-      alert('Đã tạo thông báo đơn hàng test thành công!');
-      dispatch(getAllNotifications()); // Refresh danh sách
-    } catch (error) {
-      console.log('🔍 [NotificationManagement] Lỗi order notification:', error);
-      console.log('🔍 [NotificationManagement] Error response:', error.response?.data);
-      alert('Lỗi khi tạo thông báo đơn hàng test: ' + (error.response?.data?.message || error.message));
-    } finally {
-      setTestLoading(false);
+  const handleDeleteAll = async () => {
+    if (window.confirm('Bạn có chắc muốn xóa tất cả thông báo?')) {
+      try {
+        await dispatch(deleteAllNotifications()).unwrap();
+        showNotification('Đã xóa tất cả thông báo!', 'success');
+      } catch (error) {
+        showNotification('Lỗi khi xóa thông báo: ' + error.message, 'error');
+      }
     }
   };
 
@@ -132,22 +89,6 @@ const NotificationManagement = () => {
 
       {/* Actions */}
       <div className="flex flex-wrap gap-4 mb-6">
-        <button
-          onClick={handleCreateTestNotification}
-          disabled={testLoading}
-          className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center"
-        >
-          <FaPlus className="mr-2" />
-          {testLoading ? "Đang tạo..." : "Tạo thông báo test"}
-        </button>
-        <button
-          onClick={handleTestOrderNotification}
-          disabled={testLoading}
-          className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center"
-        >
-          <FaBell className="mr-2" />
-          {testLoading ? "Đang tạo..." : "Test thông báo đơn hàng"}
-        </button>
         <button
           onClick={handleMarkAllAsRead}
           disabled={unreadCount === 0}
