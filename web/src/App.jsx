@@ -1,6 +1,6 @@
 import { Provider } from "react-redux";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
-
+import { PersistGate } from 'redux-persist/integration/react'
 import ProtectedRoute from "./Common/ProtectedRoute";
 import AdminLayout from "./Component/Admin/AdminLayout";
 import Login from "./pages/Login";

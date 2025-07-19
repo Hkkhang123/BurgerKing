@@ -68,6 +68,7 @@ const authSlice = createSlice({
   reducers: {
     logout: (state) => {
       state.user = null;
+      state.isAdminAuthenticated = false; // Đảm bảo luôn false khi logout
       state.guestId = `guest_${new Date().getTime()}`;
       localStorage.removeItem("userInfo");
       localStorage.removeItem("userToken");
@@ -118,7 +119,7 @@ const authSlice = createSlice({
     .addCase(loginAdmin.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload.message;
-      state.isAdminAuthenticated = false;
+      state.isAdminAuthenticated = false; // Đảm bảo luôn false khi login fail
     })
   },
 });
