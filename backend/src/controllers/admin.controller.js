@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
 import Checkout from "../models/Checkout.js";
+import Notification from "../models/Notification.js";
 export const getAllUsers = async (req, res) => {
   try {
     const user = await User.find({});
@@ -194,6 +195,13 @@ export const confirmCashPayment = async (req, res) => {
       
       await order.save();
       
+      // Gửi thông báo cho user về việc thanh toán đã được xác nhận
+      await Notification.create({
+        user: order.user,
+        title: "Thanh toán đã được xác nhận",
+        message: `Đơn hàng #${order.orderCode} đã được xác nhận thanh toán bởi admin.`,
+      });
+      
       console.log(`Admin ${req.user._id} confirmed cash payment for order ${orderCode}`);
       
       res.json({
@@ -230,6 +238,13 @@ export const confirmCashPayment = async (req, res) => {
     };
     checkout.paidAt = Date.now();
     await checkout.save();
+    
+    // Gửi thông báo cho user về việc thanh toán đã được xác nhận
+    await Notification.create({
+      user: checkout.user,
+      title: "Thanh toán đã được xác nhận",
+      message: `Đơn hàng #${checkout.orderCode} đã được xác nhận thanh toán bởi admin.`,
+    });
     
     console.log(`Admin ${req.user._id} confirmed cash payment for checkout ${orderCode}`);
     

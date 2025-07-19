@@ -10,8 +10,8 @@ import ProductManagement from "./Component/Admin/ProductManagement";
 import EditProduct from "./Component/Admin/EditProduct";
 import NewProduct from "./Component/Admin/NewProduct";
 import OrderManagement from "./Component/Admin/OrderManagement";
+import NotificationManagement from "./Component/Admin/NotificationManagement";
 import store from "./redux/store";
-import NotiManagement from "./Component/Admin/NotiManagement";
 
 
 function App() {
@@ -30,7 +30,7 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route path="notifications" element={<NotiManagement />} />
+            <Route path="notification-management" element={<NotificationManagement />} />
             <Route index element={<AdminHomePage />} />
             <Route path="user" element={<UserManagement />} />
             <Route path="product" element={<ProductManagement />} />

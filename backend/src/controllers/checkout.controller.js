@@ -2,6 +2,8 @@ import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
 import Checkout from "../models/Checkout.js";
+import User from "../models/User.js";
+import Notification from "../models/Notification.js";
 import crypto from "crypto";
 import https from "https";
 
@@ -29,6 +31,27 @@ export const createCheckout = async (req, res) => {
       
       // Xóa giỏ hàng sau khi tạo order thành công
       await Cart.findOneAndDelete({ user: req.user._id });
+      
+      // Gửi thông báo cho admin về order mới (thanh toán khi nhận hàng)
+      try {
+        const adminUsers = await User.find({ role: 'admin' });
+        console.log(`[createCheckout] Tìm thấy ${adminUsers.length} admin users`);
+        
+        for (const admin of adminUsers) {
+          try {
+            await Notification.create({
+              user: admin._id,
+              title: "Đơn hàng mới (COD)",
+              message: `Có đơn hàng mới #${newOrder.orderCode} từ user ${req.user._id} với tổng tiền ${newOrder.totalPrice.toLocaleString('vi-VN')}đ - Thanh toán khi nhận hàng`,
+            });
+            console.log(`[createCheckout] Đã tạo thông báo cho admin ${admin._id}`);
+          } catch (notifError) {
+            console.log(`[createCheckout] Lỗi tạo thông báo cho admin ${admin._id}:`, notifError.message);
+          }
+        }
+      } catch (adminError) {
+        console.log(`[createCheckout] Lỗi tìm admin users:`, adminError.message);
+      }
       
       console.log(`Order created for user ${req.user._id} with cash on delivery. Cart cleared.`);
       res.status(201).json(newOrder);
@@ -209,6 +232,28 @@ export const finalizeCheckout = async (req, res) => {
         );
       }
 
+      // Gửi thông báo cho admin về order mới
+      try {
+        const adminUsers = await User.find({ role: 'admin' });
+        console.log(`[finalizeCheckout] Tìm thấy ${adminUsers.length} admin users`);
+        
+        for (const admin of adminUsers) {
+          try {
+            await Notification.create({
+              user: admin._id,
+              title: "Đơn hàng mới (Đã thanh toán)",
+              message: `Có đơn hàng mới #${finalOrder.orderCode} từ user ${checkout.user} với tổng tiền ${finalOrder.totalPrice.toLocaleString('vi-VN')}đ - Đã thanh toán ${checkout.paymentMethod}`,
+            });
+            console.log(`[finalizeCheckout] Đã tạo thông báo cho admin ${admin._id}`);
+          } catch (notifError) {
+            console.log(`[finalizeCheckout] Lỗi tạo thông báo cho admin ${admin._id}:`, notifError.message);
+          }
+        }
+      } catch (adminError) {
+        console.log(`[finalizeCheckout] Lỗi tìm admin users:`, adminError.message);
+      }
+
+      console.log(`[finalizeCheckout] Order created: ${finalOrder._id}`);
       res.status(200).json(finalOrder);
     } else if (checkout.isFinalized) {
       res.status(400).json({ message: "Checkout already finalized" });

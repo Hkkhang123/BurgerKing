@@ -6,8 +6,63 @@ import Checkout from "../models/Checkout.js";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import Cart from "../models/Cart.js";
+import User from "../models/User.js";
+import Notification from "../models/Notification.js";
 import { finalizeCheckout } from "../controllers/checkout.controller.js";
 
+// Hàm finalize checkout trực tiếp (được gọi từ IPN)
+const finalizeCheckoutDirectly = async (checkoutId, userId) => {
+  try {
+    const checkout = await Checkout.findById(checkoutId);
+    if (!checkout) {
+      throw new Error("Checkout not found");
+    }
+
+    if (checkout.isPaid && !checkout.isFinalized) {
+      const finalOrder = await Order.create({
+        user: checkout.user,
+        orderItems: checkout.checkoutItem,
+        shippingAddress: checkout.shippingAddress,
+        paymentMethod: checkout.paymentMethod,
+        totalPrice: checkout.totalPrice,
+        paymentStatus: "Đã thanh toán",
+        isPaid: true,
+        status: "Chờ xử lý",
+        orderCode: checkout.orderCode,
+        paidAt: checkout.paidAt,
+      });
+
+      checkout.isFinalized = true;
+      checkout.finalizedAt = Date.now();
+      await checkout.save();
+
+      // Cập nhật purchaseCount cho từng sản phẩm
+      for (const item of checkout.checkoutItem) {
+        await Product.findByIdAndUpdate(
+          item.productId,
+          { $inc: { purchaseCount: item.quantity } },
+          { new: true }
+        );
+      }
+
+      // Gửi thông báo cho admin về order mới
+      const adminUsers = await User.find({ role: 'admin' });
+      for (const admin of adminUsers) {
+        await Notification.create({
+          user: admin._id,
+          title: "Đơn hàng mới",
+          message: `Có đơn hàng mới #${finalOrder.orderCode} từ user ${checkout.user} với tổng tiền ${finalOrder.totalPrice.toLocaleString('vi-VN')}đ`,
+        });
+      }
+
+      console.log(`[finalizeCheckoutDirectly] Order created: ${finalOrder._id}, notifications sent to ${adminUsers.length} admins`);
+      return finalOrder;
+    }
+  } catch (error) {
+    console.log(`[finalizeCheckoutDirectly] Error:`, error);
+    throw error;
+  }
+};
 
 
 export const momoTest = (req, res) => {
