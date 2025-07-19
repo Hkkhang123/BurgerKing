@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:client/core/services/product_controller.dart';
 import 'package:client/core/services/cart_controller.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:intl/intl.dart';
 
 class ProductCard extends StatefulWidget {
   final dynamic product;
@@ -39,7 +40,8 @@ class _ProductCardState extends State<ProductCard> {
     super.didUpdateWidget(oldWidget);
     // Cập nhật isFavorite khi userFavorites thay đổi
     if (oldWidget.userFavorites != widget.userFavorites) {
-      final newFavoriteState = widget.userFavorites?.contains(widget.product['_id']) ?? false;
+      final newFavoriteState =
+          widget.userFavorites?.contains(widget.product['_id']) ?? false;
       setState(() {
         isFavorite = newFavoriteState;
       });
@@ -77,11 +79,10 @@ class _ProductCardState extends State<ProductCard> {
         (!url.startsWith('http://') && !url.startsWith('https://'));
   }
 
-
   // Function to handle favorite toggle
   Future<void> _handleFavoriteToggle() async {
     if (!mounted) return;
-    
+
     if (_isProcessing) {
       return;
     }
@@ -89,24 +90,27 @@ class _ProductCardState extends State<ProductCard> {
       if (mounted) {
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Bạn chưa đăng nhập'),
-            content: const Text('Vui lòng đăng nhập để sử dụng tính năng yêu thích.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  // Điều hướng sang màn hình đăng nhập
-                  Navigator.of(context).pushNamed('/signin');
-                },
-                child: const Text('Đăng nhập'),
+          builder:
+              (context) => AlertDialog(
+                title: const Text('Bạn chưa đăng nhập'),
+                content: const Text(
+                  'Vui lòng đăng nhập để sử dụng tính năng yêu thích.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      // Điều hướng sang màn hình đăng nhập
+                      Navigator.of(context).pushNamed('/signin');
+                    },
+                    child: const Text('Đăng nhập'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Hủy'),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Hủy'),
-              ),
-            ],
-          ),
         );
       }
       return;
@@ -122,10 +126,13 @@ class _ProductCardState extends State<ProductCard> {
     }
     // Gọi API ở background
     final productController = Get.find<ProductController>();
-    final result = await productController.toggleFavoriteProduct(widget.userToken!, widget.product['_id']);
-    
+    final result = await productController.toggleFavoriteProduct(
+      widget.userToken!,
+      widget.product['_id'],
+    );
+
     if (!mounted) return;
-    
+
     if (!result['success']) {
       // Rollback nếu lỗi
       setState(() {
@@ -144,6 +151,9 @@ class _ProductCardState extends State<ProductCard> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final imagePath = _getImagePath();
+    String formatCurrency(num value) {
+      return NumberFormat("#,##0", "vi_VN").format(value) + ' đ';
+    }
 
     return Container(
       constraints: BoxConstraints(maxWidth: screenWidth * 0.9),
@@ -180,26 +190,27 @@ class _ProductCardState extends State<ProductCard> {
                 right: 8,
                 top: 8,
                 child: IconButton(
-                  icon: _isProcessing 
-                    ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Theme.of(context).primaryColor,
+                  icon:
+                      _isProcessing
+                          ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).primaryColor,
+                              ),
+                            ),
+                          )
+                          : Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color:
+                                isFavorite
+                                    ? Theme.of(context).primaryColor
+                                    : isDark
+                                    ? Colors.amber[400]
+                                    : const Color.fromARGB(255, 255, 72, 0),
                           ),
-                        ),
-                      )
-                    : Icon(
-                        isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color:
-                            isFavorite
-                                ? Theme.of(context).primaryColor
-                                : isDark
-                                ? Colors.grey[400]
-                                : Colors.grey,
-                      ),
                   onPressed: _isProcessing ? null : _handleFavoriteToggle,
                 ),
               ),
@@ -237,7 +248,10 @@ class _ProductCardState extends State<ProductCard> {
                     Text(
                       widget.product['name'],
                       style: AppTextStyle.withColor(
-                        AppTextStyle.withWeight(AppTextStyle.h3.copyWith(fontSize: 15), FontWeight.bold),
+                        AppTextStyle.withWeight(
+                          AppTextStyle.h3.copyWith(fontSize: 15),
+                          FontWeight.bold,
+                        ),
                         Theme.of(context).textTheme.bodyLarge!.color!,
                       ),
                       maxLines: 1,
@@ -255,7 +269,7 @@ class _ProductCardState extends State<ProductCard> {
                     Row(
                       children: [
                         Text(
-                          '${widget.product['discountPrice'].toStringAsFixed(0)} đ',
+                          formatCurrency(widget.product['discountPrice']),
                           style: AppTextStyle.withColor(
                             AppTextStyle.withWeight(
                               AppTextStyle.bodyLarge.copyWith(fontSize: 14),
@@ -271,9 +285,7 @@ class _ProductCardState extends State<ProductCard> {
                           style: AppTextStyle.withColor(
                             AppTextStyle.bodySmall.copyWith(fontSize: 11),
                             isDark ? Colors.grey[400]! : Colors.grey[600]!,
-                          ).copyWith(
-                            decoration: TextDecoration.lineThrough
-                          ),
+                          ).copyWith(decoration: TextDecoration.lineThrough),
                         ),
                       ],
                     ),
@@ -286,41 +298,57 @@ class _ProductCardState extends State<ProductCard> {
                           if (token == null) {
                             showDialog(
                               context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Bạn chưa đăng nhập'),
-                                content: const Text('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                      Get.toNamed('/signin');
-                                    },
-                                    child: const Text('Đăng nhập'),
+                              builder:
+                                  (context) => AlertDialog(
+                                    title: const Text('Bạn chưa đăng nhập'),
+                                    content: const Text(
+                                      'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                          Get.toNamed('/signin');
+                                        },
+                                        child: const Text('Đăng nhập'),
+                                      ),
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.of(context).pop(),
+                                        child: const Text('Hủy'),
+                                      ),
+                                    ],
                                   ),
-                                  TextButton(
-                                    onPressed: () => Navigator.of(context).pop(),
-                                    child: const Text('Hủy'),
-                                  ),
-                                ],
-                              ),
                             );
                             return;
                           }
                           final storage = GetStorage();
                           guestId = storage.read('guestId');
                           if (guestId == null) {
-                            guestId = 'guest_${DateTime.now().millisecondsSinceEpoch}';
+                            guestId =
+                                'guest_${DateTime.now().millisecondsSinceEpoch}';
                             storage.write('guestId', guestId);
                           }
                           final cartController = Get.find<CartController>();
-                          final result = await cartController.addToCart(token, widget.product['_id'], guestId: token == null ? guestId : null);
+                          final result = await cartController.addToCart(
+                            token,
+                            widget.product['_id'],
+                            guestId: token == null ? guestId : null,
+                          );
                           if (result['success']) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Đã thêm vào giỏ hàng!')),
+                              const SnackBar(
+                                content: Text('Đã thêm vào giỏ hàng!'),
+                              ),
                             );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(result['error'] ?? 'Lỗi khi thêm vào giỏ hàng')),
+                              SnackBar(
+                                content: Text(
+                                  result['error'] ??
+                                      'Lỗi khi thêm vào giỏ hàng',
+                                ),
+                              ),
                             );
                           }
                         },
@@ -333,7 +361,10 @@ class _ProductCardState extends State<ProductCard> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 4),
-                          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                          textStyle: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -424,7 +455,10 @@ class _ProductCardState extends State<ProductCard> {
   }
 
   int caculateDiscount() {
-    double discount = (widget.product['price'] - widget.product['discountPrice']) / widget.product['price'] * 100;
+    double discount =
+        (widget.product['price'] - widget.product['discountPrice']) /
+        widget.product['price'] *
+        100;
     return discount.toInt();
   }
 }

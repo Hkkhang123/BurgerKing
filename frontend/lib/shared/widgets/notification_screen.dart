@@ -38,10 +38,19 @@ class NotificationScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => notificationController.markAllAsRead(),
-            child: Text('Mark all as read', style: TextStyle(color: Colors.orange)),
+            child: Text(
+              'Mark all as read',
+              style: TextStyle(color: Colors.orange),
+            ),
+          ),
+          IconButton(
+            onPressed: () => notificationController.deleteAllNotifications(),
+            icon: Icon(Icons.delete, color: Colors.orange),
+            tooltip: 'Xóa tất cả',
           ),
         ],
       ),
+
       body: Obx(() {
         if (notificationController.isLoading.value) {
           return Center(child: CircularProgressIndicator());
@@ -98,10 +107,7 @@ class NotificationScreen extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           n.message,
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.black54,
-                          ),
+                          style: TextStyle(fontSize: 15, color: Colors.black54),
                         ),
                       ],
                     ),
@@ -114,4 +120,4 @@ class NotificationScreen extends StatelessWidget {
       }),
     );
   }
-} 
+}

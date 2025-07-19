@@ -58,7 +58,17 @@ const AdminSidebar = () => {
           <FaClipboardList />
           <span>Đơn hàng</span>
         </NavLink>
-
+<NavLink //  <Link to="/admin/notifications">Quản lý thông báo</Link>
+          to="/admin/notifications"
+          className={({ isActive }) =>
+            isActive
+              ? "bg-gray-700 text-white py-3 px-4 rounded flex items-center space-x-2"
+              : "text-gray-300 hover:text-white py-3 px-4 rounded flex items-center space-x-2"
+          }
+        >
+          <FaClipboardList />
+          <span>Quản lý thông báo</span>
+        </NavLink>
         <NavLink
           to="/"
           className={({ isActive }) =>
@@ -69,6 +79,7 @@ const AdminSidebar = () => {
         >
           <FaStore />
         </NavLink>
+        
       </nav>
       <div className="mb-6">
         <button onClick={handleLogout} className="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded flex items-center justify-center space-x-2">
