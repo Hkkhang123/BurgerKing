@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
+import fs from "fs";
 import ngrok from "@ngrok/ngrok";
 
 import { connectDB } from "./src/config/db.js";
@@ -29,7 +30,7 @@ const __dirname = path.resolve();
 
 
 app.get("/", (req, res) => {
-  res.send("HELLO WORLD");
+  res.send("HELLO WORLD - Backend API Server");
 });
 
 app.use("/api/auth", authRoutes);
@@ -43,12 +44,51 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/coupons", couponRoutes);
 
+// Chỉ serve static files nếu thư mục client/build tồn tại
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "/client/build")));
-
-  app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "client", "build", "index.html"));
-  });
+  const clientBuildPath = path.join(__dirname, "/client/build");
+  
+  try {
+    // Kiểm tra xem thư mục client/build có tồn tại không
+    if (fs.existsSync(clientBuildPath)) {
+      app.use(express.static(clientBuildPath));
+      
+      app.get("*", (req, res) => {
+        res.sendFile(path.resolve(__dirname, "client", "build", "index.html"));
+      });
+      console.log("✅ Serving static files from client/build");
+    } else {
+      console.log("⚠️ Client build directory not found, serving API only");
+      // Nếu không có client build, chỉ serve API
+      app.get("*", (req, res) => {
+        res.json({ 
+          message: "Backend API Server", 
+          status: "running",
+          endpoints: [
+            "/api/auth",
+            "/api/products", 
+            "/api/cart",
+            "/api/checkout",
+            "/api/order",
+            "/api/admin",
+            "/api/payment",
+            "/api/notifications",
+            "/api/coupons"
+          ]
+        });
+      });
+    }
+  } catch (error) {
+    console.log("⚠️ Error checking client build directory:", error.message);
+    // Fallback: chỉ serve API
+    app.get("*", (req, res) => {
+      res.json({ 
+        message: "Backend API Server", 
+        status: "running",
+        error: "Static files not available"
+      });
+    });
+  }
 }
 
 app.listen(port, () => {

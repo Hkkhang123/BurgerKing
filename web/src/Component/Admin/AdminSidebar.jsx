@@ -17,6 +17,15 @@ const AdminSidebar = () => {
     dispatch(getAllNotifications());
   }, [dispatch]);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('🔔 [AdminSidebar] Notifications state:', {
+      count: notifications.length,
+      unread: unreadCount,
+      loading
+    });
+  }, [notifications, unreadCount, loading]);
+
   const handleLogout = () => {
     dispatch(logout())
     dispatch(clearCart())

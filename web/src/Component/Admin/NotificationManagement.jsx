@@ -14,6 +14,19 @@ const NotificationManagement = () => {
     dispatch(getAllNotifications());
   }, [dispatch]);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 [NotificationManagement] Current state:', {
+      notifications: notifications.length,
+      loading,
+      unreadCount: notifications.filter(n => !n.isRead).length
+    });
+    
+    if (notifications.length > 0) {
+      console.log('🔍 [NotificationManagement] Sample notification:', notifications[0]);
+    }
+  }, [notifications, loading]);
+
   const handleMarkAllAsRead = () => {
     dispatch(markAllAsRead());
   };
@@ -34,16 +47,6 @@ const NotificationManagement = () => {
       alert('Lỗi khi tạo thông báo test: ' + (error.response?.data?.message || error.message));
     } finally {
       setTestLoading(false);
-    }
-  };
-
-  const handleCheckAdminUsers = async () => {
-    try {
-      const response = await axiosInstance.get('/api/notifications/check-admins');
-      console.log('Admin users check:', response.data);
-      alert(`Tổng users: ${response.data.totalUsers}\nAdmin users: ${response.data.adminUsers}\n\nAdmin details:\n${response.data.admins.map(admin => `- ${admin.name} (${admin.email})`).join('\n')}`);
-    } catch (error) {
-      alert('Lỗi khi kiểm tra admin users: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -109,13 +112,6 @@ const NotificationManagement = () => {
         >
           <FaPlus className="mr-2" />
           {testLoading ? "Đang tạo..." : "Tạo thông báo test"}
-        </button>
-        <button
-          onClick={handleCheckAdminUsers}
-          className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 flex items-center"
-        >
-          <FaEye className="mr-2" />
-          Kiểm tra Admin Users
         </button>
         <button
           onClick={handleMarkAllAsRead}
