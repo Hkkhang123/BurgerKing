@@ -4,6 +4,7 @@ import {
   getAllNotifications,
   createNotification,
   createTestNotification,
+  testOrderNotification,
   checkAdminUsers,
   sendCustomNotification,
   markAllAsRead,
@@ -27,6 +28,9 @@ router.post("/", protectRoutes, createNotification);
 
 // Tạo thông báo test cho admin
 router.post("/test", protectRoutes, isAdmin, createTestNotification);
+
+// Test tạo thông báo đơn hàng mới
+router.post("/test-order", protectRoutes, isAdmin, testOrderNotification);
 
 // Gửi thông báo tùy chỉnh đến tất cả user (Observer)
 router.post("/send", protectRoutes, sendCustomNotification);

@@ -41,6 +41,42 @@ export const createNotification = async (req, res) => {
   }
 };
 
+// Test tạo thông báo đơn hàng mới
+export const testOrderNotification = async (req, res) => {
+  try {
+    const { orderCode, totalPrice, userId } = req.body;
+    
+    // Tìm tất cả admin users
+    const adminUsers = await User.find({ role: 'admin' });
+    console.log(`[testOrderNotification] Tìm thấy ${adminUsers.length} admin users`);
+    
+    if (adminUsers.length === 0) {
+      return res.status(404).json({ message: "Không tìm thấy admin nào" });
+    }
+
+    // Tạo thông báo đơn hàng mới cho mỗi admin
+    const notifications = [];
+    for (const admin of adminUsers) {
+      const notification = await Notification.create({
+        user: admin._id,
+        title: "Đơn hàng mới (Test)",
+        message: `Có đơn hàng mới #${orderCode} từ user ${userId} với tổng tiền ${totalPrice.toLocaleString('vi-VN')}đ - Test notification`,
+      });
+      notifications.push(notification);
+      console.log(`[testOrderNotification] Đã tạo thông báo đơn hàng cho admin ${admin.name}`);
+    }
+
+    console.log(`[testOrderNotification] Đã tạo ${notifications.length} thông báo đơn hàng`);
+    res.status(201).json({ 
+      message: `Đã tạo ${notifications.length} thông báo đơn hàng test`,
+      notifications: notifications 
+    });
+  } catch (e) {
+    console.log("[testOrderNotification] Lỗi:", e.message);
+    res.status(500).json({ message: "Server error", error: e.message });
+  }
+};
+
 // Kiểm tra admin users
 export const checkAdminUsers = async (req, res) => {
   try {

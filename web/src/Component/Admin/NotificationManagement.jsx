@@ -40,11 +40,38 @@ const NotificationManagement = () => {
   const handleCreateTestNotification = async () => {
     setTestLoading(true);
     try {
-      await axiosInstance.post('/api/notifications/test');
+      console.log('🔍 [NotificationManagement] Đang tạo thông báo test...');
+      console.log('🔍 [NotificationManagement] URL:', axiosInstance.defaults.baseURL + '/api/notifications/test');
+      const response = await axiosInstance.post('/api/notifications/test');
+      console.log('🔍 [NotificationManagement] Response:', response.data);
       alert('Đã tạo thông báo test thành công!');
       dispatch(getAllNotifications()); // Refresh danh sách
     } catch (error) {
+      console.log('🔍 [NotificationManagement] Lỗi:', error);
+      console.log('🔍 [NotificationManagement] Error response:', error.response?.data);
       alert('Lỗi khi tạo thông báo test: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setTestLoading(false);
+    }
+  };
+
+  const handleTestOrderNotification = async () => {
+    setTestLoading(true);
+    try {
+      console.log('🔍 [NotificationManagement] Đang tạo thông báo đơn hàng test...');
+      console.log('🔍 [NotificationManagement] URL:', axiosInstance.defaults.baseURL + '/api/notifications/test-order');
+      const response = await axiosInstance.post('/api/notifications/test-order', {
+        orderCode: 'TEST123',
+        totalPrice: 150000,
+        userId: 'test-user-123'
+      });
+      console.log('🔍 [NotificationManagement] Order notification response:', response.data);
+      alert('Đã tạo thông báo đơn hàng test thành công!');
+      dispatch(getAllNotifications()); // Refresh danh sách
+    } catch (error) {
+      console.log('🔍 [NotificationManagement] Lỗi order notification:', error);
+      console.log('🔍 [NotificationManagement] Error response:', error.response?.data);
+      alert('Lỗi khi tạo thông báo đơn hàng test: ' + (error.response?.data?.message || error.message));
     } finally {
       setTestLoading(false);
     }
@@ -112,6 +139,14 @@ const NotificationManagement = () => {
         >
           <FaPlus className="mr-2" />
           {testLoading ? "Đang tạo..." : "Tạo thông báo test"}
+        </button>
+        <button
+          onClick={handleTestOrderNotification}
+          disabled={testLoading}
+          className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center"
+        >
+          <FaBell className="mr-2" />
+          {testLoading ? "Đang tạo..." : "Test thông báo đơn hàng"}
         </button>
         <button
           onClick={handleMarkAllAsRead}

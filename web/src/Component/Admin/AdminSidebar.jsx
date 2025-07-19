@@ -12,6 +12,9 @@ const AdminSidebar = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const { notifications, loading } = useSelector((state) => state.notification);
 
+  // Tính toán unreadCount trước khi sử dụng
+  const unreadCount = notifications.filter(notification => !notification.isRead).length;
+
   useEffect(() => {
     // Lấy tất cả thông báo cho admin
     dispatch(getAllNotifications());
@@ -35,8 +38,6 @@ const AdminSidebar = () => {
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications);
   };
-
-  const unreadCount = notifications.filter(notification => !notification.isRead).length;
 
   return (
     <div className="p-6 relative">
