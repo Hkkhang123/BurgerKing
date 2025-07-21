@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:get/get.dart';
 import 'package:client/core/services/auth_controller.dart';
 import 'package:client/core/services/cart_controller.dart';

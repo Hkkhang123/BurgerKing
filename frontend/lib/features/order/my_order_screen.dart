@@ -1,9 +1,12 @@
+import 'package:client/core/services/cart_controller.dart';
 import 'package:client/features/cart/order_confirmation_screen.dart';
 import 'package:client/shared/themes/app_textstyle.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:get_storage/get_storage.dart';
+
 import 'package:get/get.dart';
 import 'package:client/core/services/order_service.dart';
+
 import 'package:client/core/services/auth_controller.dart';
 
 class MyOrderScreen extends StatefulWidget {
@@ -344,6 +347,77 @@ class _MyOrderScreenState extends State<MyOrderScreen> {
                         ),
                       ),
                   ],
+                  // Nút Mua lại
+                  SizedBox(height: padding),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        try {
+                          final box = GetStorage();
+                          final token = box.read('token');
+                          final orderId =
+                              order['_id']; // Biến `order` là map từ API
+
+                          if (token == null || orderId == null) {
+                            Get.snackbar(
+                              'Lỗi',
+                              'Token hoặc orderId không hợp lệ',
+                            );
+                            return;
+                          }
+
+                          // Gọi API reorder
+                          final success = await OrderService.reorder(
+                            token,
+                            orderId,
+                          );
+
+                          if (success) {
+                            Get.snackbar(
+                              'Thành công',
+                              'Đơn hàng đã được thêm vào giỏ hàng',
+                            );
+
+                            // Load lại giỏ hàng
+                            final cartController = Get.find<CartController>();
+                            final cartData = await cartController.getCart(
+                              token,
+                            );
+                            if (cartData['success']) {
+                              print(
+                                'Giỏ hàng sau reorder: ${cartData['data']}',
+                              );
+                            } else {
+                              print(
+                                'Không lấy được giỏ hàng: ${cartData['error']}',
+                              );
+                            }
+                          } else {
+                            Get.snackbar('Lỗi', 'Đặt lại đơn hàng thất bại');
+                          }
+                        } catch (e) {
+                          print('Error in reorder: $e');
+                          Get.snackbar('Lỗi', 'Có lỗi xảy ra: $e');
+                        }
+                      },
+
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        'Mua lại',
+                        style: TextStyle(
+                          fontSize: fontBody,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

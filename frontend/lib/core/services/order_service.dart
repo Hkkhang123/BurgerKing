@@ -1,3 +1,6 @@
+import 'package:client/core/services/auth_controller.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -5,7 +8,10 @@ class OrderService {
   static const String baseUrl = 'https://burgerking-j92p.onrender.com';
 
   // Lấy thông tin đơn hàng chi tiết theo ID
-  static Future<Map<String, dynamic>> getOrderById(String token, String orderId) async {
+  static Future<Map<String, dynamic>> getOrderById(
+    String token,
+    String orderId,
+  ) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/order/$orderId'),
@@ -28,7 +34,10 @@ class OrderService {
   }
 
   // Lấy thông tin checkout chi tiết theo ID
-  static Future<Map<String, dynamic>> getCheckoutById(String token, String checkoutId) async {
+  static Future<Map<String, dynamic>> getCheckoutById(
+    String token,
+    String checkoutId,
+  ) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/checkout/$checkoutId'),
@@ -78,9 +87,7 @@ class OrderService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/product/$productId'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
@@ -95,26 +102,27 @@ class OrderService {
     }
   }
 
-  // Lấy thông tin sản phẩm theo danh sách ID
-  static Future<Map<String, dynamic>> getProductsByIds(List<String> productIds) async {
+  static Future<bool> reorder(String token, String orderId) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/product/get-by-ids'),
+        Uri.parse('$baseUrl/api/order/$orderId/reorder'),
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({'ids': productIds}),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return {'success': true, 'data': data};
+        print('Reorder response: $data');
+        return true;
       } else {
-        final errorData = jsonDecode(response.body);
-        return {'success': false, 'data': errorData};
+        print('Reorder failed: ${response.statusCode} ${response.body}');
+        return false;
       }
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      print('Error in reorder: $e');
+      return false;
     }
   }
-} 
+}
