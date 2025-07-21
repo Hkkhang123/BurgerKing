@@ -208,3 +208,46 @@ Content-Type: application/json
 3. **Multiple files:** Tối đa 10 files cho mỗi request
 4. **Authentication:** Cần token admin để tạo sản phẩm
 5. **Cloudinary:** Tự động tạo folder "product" trên Cloudinary 
+
+## Quên mật khẩu (OTP qua email)
+
+### 1. Gửi OTP về email
+- Endpoint: `POST /api/auth/forgot-password`
+- Body:
+```json
+{
+  "email": "user@example.com"
+}
+```
+- Response:
+```json
+{
+  "success": true,
+  "message": "Đã gửi OTP về email!"
+}
+```
+
+### 2. Đặt lại mật khẩu bằng OTP
+- Endpoint: `POST /api/auth/reset-password`
+- Body:
+```json
+{
+  "email": "user@example.com",
+  "otp": "123456",
+  "newPassword": "matkhaumoi"
+}
+```
+- Response thành công:
+```json
+{
+  "success": true,
+  "message": "Đặt lại mật khẩu thành công!"
+}
+```
+- Response lỗi:
+```json
+{
+  "success": false,
+  "message": "OTP không đúng hoặc đã hết hạn"
+}
+``` 

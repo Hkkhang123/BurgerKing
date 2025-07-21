@@ -6,6 +6,8 @@ import cloudinary from '../config/cloudinary.js';
 import { OAuth2Client } from 'google-auth-library';
 import admin from '../config/firebaseAdmin.js';
 import Notification from "../models/Notification.js";
+import { sendMail } from '../config/email.js';
+import crypto from 'crypto';
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -295,3 +297,57 @@ export const updateProfile = [
     }
   }
 ];
+
+// Gửi OTP về email để reset mật khẩu
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng với email này' });
+    }
+    // Tạo OTP 6 số
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordOTP = otp;
+    user.resetPasswordOTPExpires = Date.now() + 10 * 60 * 1000; // 10 phút
+    await user.save();
+    // Gửi email
+    await sendMail({
+      to: user.email,
+      subject: 'Mã OTP đặt lại mật khẩu',
+      text: `Mã OTP của bạn là: ${otp}`,
+      html: `<p>Mã OTP đặt lại mật khẩu của bạn là: <b>${otp}</b></p><p>OTP có hiệu lực trong 10 phút.</p>`
+    });
+    res.json({ success: true, message: 'Đã gửi OTP về email!' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Xác thực OTP và đặt lại mật khẩu
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng với email này' });
+    }
+    if (!user.resetPasswordOTP || !user.resetPasswordOTPExpires) {
+      return res.status(400).json({ success: false, message: 'Bạn chưa yêu cầu OTP hoặc OTP đã hết hạn' });
+    }
+    if (user.resetPasswordOTP !== otp) {
+      return res.status(400).json({ success: false, message: 'OTP không đúng' });
+    }
+    if (user.resetPasswordOTPExpires < Date.now()) {
+      return res.status(400).json({ success: false, message: 'OTP đã hết hạn' });
+    }
+    // Đặt lại mật khẩu
+    user.password = newPassword;
+    user.resetPasswordOTP = null;
+    user.resetPasswordOTPExpires = null;
+    await user.save();
+    res.json({ success: true, message: 'Đặt lại mật khẩu thành công!' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

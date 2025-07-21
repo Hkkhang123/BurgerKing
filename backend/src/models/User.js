@@ -38,6 +38,14 @@ const userSchema = mongoose.Schema({
         ref: 'Product',
         default: []
     },
+    resetPasswordOTP: {
+        type: String,
+        default: null
+    },
+    resetPasswordOTPExpires: {
+        type: Date,
+        default: null
+    },
 }, {timestamps: true});
 
 userSchema.pre("save", async function (next) {
