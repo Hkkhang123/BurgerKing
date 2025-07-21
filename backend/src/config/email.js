@@ -1,14 +1,14 @@
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // hoặc SMTP khác nếu bạn muốn
+  service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
 
-async function sendMail({ to, subject, text, html }) {
+export async function sendMail({ to, subject, text, html }) {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to,
@@ -17,6 +17,4 @@ async function sendMail({ to, subject, text, html }) {
     html,
   };
   return transporter.sendMail(mailOptions);
-}
-
-module.exports = { sendMail }; 
+} 
