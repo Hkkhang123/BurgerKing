@@ -23,6 +23,7 @@ void main() async {
   Get.put(CartController());
   Get.put(ReviewController());
   Get.put(NotificationController());
+  await GetStorage.init();
   runApp(const MyApp());
 }
 
