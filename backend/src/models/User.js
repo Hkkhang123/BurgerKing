@@ -19,6 +19,15 @@ const userSchema = mongoose.Schema({
         unique: true,
         sparse: true,
     },
+    facebookId: {
+        type: String,
+        unique: true,
+        sparse: true,
+    },
+    image: {
+        type: String,
+        default: null, // Không set default value để tránh lỗi URL
+    },
     password: {
         type: String,
         required: true,
@@ -28,10 +37,6 @@ const userSchema = mongoose.Schema({
         type: String,
         enum: ["customer", "admin"],
         default: "customer"
-    },
-    image: {
-        type: String,
-        default: null, // Không set default value để tránh lỗi URL
     },
     favorites: {
         type: [mongoose.Schema.Types.ObjectId],

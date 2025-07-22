@@ -8,6 +8,7 @@ import admin from '../config/firebaseAdmin.js';
 import Notification from "../models/Notification.js";
 import { sendMail } from '../config/email.js';
 import crypto from 'crypto';
+import fetch from 'node-fetch';
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -251,6 +252,74 @@ export const loginWithGoogle = async (req, res) => {
     );
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const loginWithFacebook = async (req, res) => {
+  const { access_token } = req.body;
+  if (!access_token) return res.status(400).json({ message: 'No access token' });
+
+  try {
+    // Kiểm tra access token với Facebook
+    const debugRes = await fetch(
+      `https://graph.facebook.com/debug_token?input_token=${access_token}&access_token=${process.env.FACEBOOK_APP_ID}|${process.env.FACEBOOK_APP_SECRET}`
+    );
+    const debugData = await debugRes.json();
+    if (!debugData.data || !debugData.data.is_valid) {
+      return res.status(401).json({ message: 'Invalid Facebook token' });
+    }
+
+    // Lấy thông tin user từ Facebook
+    const fbRes = await fetch(
+      `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${access_token}`
+    );
+    const fbData = await fbRes.json();
+
+    if (!fbData.id) return res.status(401).json({ message: 'Invalid Facebook user info' });
+
+    let user = await User.findOne({ facebookId: fbData.id });
+    if (!user) {
+      user = await User.create({
+        facebookId: fbData.id,
+        name: fbData.name,
+        email: fbData.email || `${fbData.id}@facebook.com`,
+        image: fbData.picture?.data?.url,
+        password: Math.random().toString(36).slice(-8)
+      });
+    }
+
+    const payload = {
+      user: {
+        _id: user._id,
+        role: user.role,
+      },
+    };
+
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "40h",
+      },
+      (err, token) => {
+        if (err) {
+          res.status(500).json({ message: 'JWT error', error: err.message });
+        } else {
+          res.status(200).json({
+            user: {
+              _id: user._id,
+              name: user.name,
+              email: user.email,
+              role: user.role,
+              image: user.image,
+            },
+            token,
+          });
+        }
+      }
+    );
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 
