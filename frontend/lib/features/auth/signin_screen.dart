@@ -7,6 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:client/core/utils/google_auth_service.dart';
 import 'package:client/features/auth/otp_verify_screen.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SigninScreen extends StatelessWidget {
   SigninScreen({super.key});
@@ -49,45 +52,16 @@ class SigninScreen extends StatelessWidget {
                 
                 // Error message display
                 Obx(() {
+                  if (authController.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
                   if (authController.errorMessage.isNotEmpty) {
-                    return Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.red[50],
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.red[200]!),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            color: Colors.red[700],
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              authController.errorMessage,
-                              style: TextStyle(
-                                color: Colors.red[700],
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () => authController.clearError(),
-                            icon: Icon(
-                              Icons.close,
-                              color: Colors.red[700],
-                              size: 18,
-                            ),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
-                        ],
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Text(
+                        authController.errorMessage,
+                        style: const TextStyle(color: Colors.red, fontSize: 14),
+                        textAlign: TextAlign.center,
                       ),
                     );
                   }
@@ -172,22 +146,44 @@ class SigninScreen extends StatelessWidget {
                           ),
                   ),
                 )),
-                const SizedBox(height: 16),
-                // Nút đăng nhập Google
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    icon: Icon(Icons.login, color: Colors.red), // Hoặc dùng Asset Google logo nếu có
-                    label: Text('Đăng nhập bằng Google', style: TextStyle(color: Colors.black)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: Colors.grey.shade300),
+                const SizedBox(height: 24),
+                // Social login buttons
+                Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        'Hoặc đăng nhập với',
+                        style: AppTextStyle.withColor(
+                          AppTextStyle.bodyMedium,
+                          isDark ? Colors.grey[400]! : Colors.grey[600]!,
+                        ),
                       ),
-                    ),
-                    onPressed: () => _handleGoogleSignIn(context),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _SocialIconButton(
+                            icon: Icons.facebook,
+                            color: Colors.blue[800]!,
+                            onTap: () => _handleFacebookSignIn(context),
+                          ),
+                          const SizedBox(width: 18),
+                          _SocialIconButton(
+                            icon: Icons.g_mobiledata,
+                            color: Colors.red,
+                            onTap: () => _handleGoogleSignIn(context),
+                          ),
+                          const SizedBox(width: 18),
+                          _SocialIconButton(
+                            icon: Icons.music_note,
+                            color: Colors.black,
+                            onTap: () {
+                              // TODO: TikTok login
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -252,6 +248,7 @@ class SigninScreen extends StatelessWidget {
 
   Future<void> _handleGoogleSignIn(BuildContext context) async {
     final result = await GoogleAuthService.signInWithGoogleAndSave();
+    print('Google login result: $result');
     if (result['success'] == true) {
       Get.snackbar(
         'Thành công',
@@ -358,4 +355,50 @@ class SigninScreen extends StatelessWidget {
       },
     );
   }
+}
+
+// Thêm widget nút mạng xã hội
+class _SocialIconButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  const _SocialIconButton({required this.icon, required this.color, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade400),
+          borderRadius: BorderRadius.circular(8),
+          color: Colors.white,
+        ),
+        child: Icon(icon, color: color, size: 24),
+      ),
+    );
+  }
+}
+
+// Thay thế hàm _handleFacebookSignIn
+Future<void> _handleFacebookSignIn(BuildContext context) async {
+  final AuthController authController = Get.find<AuthController>();
+  print('Bắt đầu đăng nhập Facebook...');
+  final result = await FacebookAuth.instance.login(permissions: ['email', 'public_profile']);
+  print('Facebook login result: $result');
+  if (result.status == LoginStatus.success) {
+    final accessToken = result.accessToken!.token;
+    print('Facebook access token: $accessToken');
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:5000/api/auth/facebook'), // Đổi thành IP backend nếu chạy thật
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'access_token': accessToken}),
+    );
+    print('Backend response: ${response.statusCode} ${response.body}');
+  }
+  await authController.loginWithFacebook(onSuccess: () {
+    Get.offAll(() => const MainScreen());
+  });
 }

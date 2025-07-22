@@ -6,6 +6,8 @@ import 'package:client/core/services/notification_controller.dart';
 import 'dart:io';
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:flutter/material.dart';
 
 class AuthController extends GetxController{
   static const String baseUrl = 'https://burgerking-j92p.onrender.com';
@@ -610,6 +612,61 @@ class AuthController extends GetxController{
       }
     } catch (e) {
       _errorMessage.value = 'Lỗi kết nối: $e';
+      _isLoading.value = false;
+      return false;
+    }
+  }
+
+  Future<bool> loginWithFacebook({VoidCallback? onSuccess}) async {
+    return await _loginWithSocial(
+      provider: 'facebook',
+      getAccessToken: () async {
+        final result = await FacebookAuth.instance.login(
+          permissions: ['email', 'public_profile'],
+        );
+        if (result.status == LoginStatus.success) {
+          return result.accessToken!.token;
+        } else {
+          throw Exception('Đăng nhập Facebook thất bại: ${result.status}');
+        }
+      },
+      onSuccess: onSuccess,
+    );
+  }
+
+  // Hàm dùng chung cho social login
+  Future<bool> _loginWithSocial({
+    required String provider,
+    required Future<String> Function() getAccessToken,
+    VoidCallback? onSuccess,
+  }) async {
+    _isLoading.value = true;
+    _errorMessage.value = '';
+    try {
+      final accessToken = await getAccessToken();
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/$provider'),
+        headers: _headers,
+        body: jsonEncode({'access_token': accessToken}),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        _storage.write('user', data['user']);
+        _storage.write('token', data['token']);
+        _storage.write('isLoggedIn', true);
+        _isLoggedIn.value = true;
+        _isLoading.value = false;
+        showSuccessMessage('Đăng nhập $provider thành công!');
+        onSuccess?.call();
+        return true;
+      } else {
+        final data = jsonDecode(response.body);
+        _errorMessage.value = data['message'] ?? 'Lỗi backend $provider login';
+        _isLoading.value = false;
+        return false;
+      }
+    } catch (e) {
+      _errorMessage.value = 'Lỗi đăng nhập $provider: $e';
       _isLoading.value = false;
       return false;
     }
