@@ -11,7 +11,7 @@ class NotificationController extends GetxController {
   String baseUrl =
       const String.fromEnvironment(
         'API_URL',
-        defaultValue: 'http://10.0.2.2:5000',
+        defaultValue: 'https://burgerking-j92p.onrender.com',
       ) +
       '/api';
   String token = '';

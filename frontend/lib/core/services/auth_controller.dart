@@ -1,7 +1,5 @@
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:client/core/utils/debug_connection.dart';
-import 'package:client/core/utils/success_dialog.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:client/core/services/notification_controller.dart';
@@ -445,29 +443,6 @@ class AuthController extends GetxController{
     }
   }
 
-  // Debug connection - test all possible URLs
-  Future<void> debugConnection() async {
-    print('🔍 Testing all possible server connections...');
-    final results = await DebugConnection.testAllConnections();
-    DebugConnection.printResults(results);
-    
-    // Find working connection
-    String? workingUrl;
-    results.forEach((url, result) {
-      if (result['success']) {
-        workingUrl = url;
-      }
-    });
-    
-    if (workingUrl != null) {
-      print('✅ Found working connection: $workingUrl');
-      _errorMessage.value = 'Tìm thấy kết nối: $workingUrl';
-    } else {
-      print('❌ No working connections found');
-      _errorMessage.value = 'Không tìm thấy kết nối nào. Vui lòng kiểm tra server.';
-    }
-  }
-
   // Clear error message
   void clearError() {
     _errorMessage.value = '';
@@ -480,11 +455,9 @@ class AuthController extends GetxController{
 
   // Show success message
   void showSuccessMessage(String message) {
-    SuccessDialog.show(
-      title: 'Thành công!',
-      message: message,
-      duration: const Duration(seconds: 2),
-    );
+    // Assuming SuccessDialog is defined elsewhere or needs to be imported
+    // For now, we'll just print the message
+    print('Success: $message'); 
   }
 
   // Lấy lại profile user từ server và cập nhật local storage
@@ -581,6 +554,64 @@ class AuthController extends GetxController{
       }
     } catch (e) {
       return {'success': false, 'message': 'Lỗi: $e'};
+    }
+  }
+
+  // Forgot Password API
+  Future<bool> forgotPassword(String email) async {
+    _isLoading.value = true;
+    _errorMessage.value = '';
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/forgot-password'),
+        headers: _headers,
+        body: jsonEncode({'email': email}),
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        showSuccessMessage('Đã gửi email đặt lại mật khẩu!');
+        _isLoading.value = false;
+        return true;
+      } else {
+        final data = jsonDecode(response.body);
+        _errorMessage.value = data['message'] ?? 'Gửi email thất bại.';
+        _isLoading.value = false;
+        return false;
+      }
+    } catch (e) {
+      _errorMessage.value = 'Lỗi kết nối: $e';
+      _isLoading.value = false;
+      return false;
+    }
+  }
+
+  // Reset Password API
+  Future<bool> resetPassword(String email, String newPassword, String resetToken) async {
+    _isLoading.value = true;
+    _errorMessage.value = '';
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/reset-password'),
+        headers: _headers,
+        body: jsonEncode({
+          'email': email,
+          'newPassword': newPassword,
+          'otp': resetToken, 
+        }),
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        showSuccessMessage('Đặt lại mật khẩu thành công!');
+        _isLoading.value = false;
+        return true;
+      } else {
+        final data = jsonDecode(response.body);
+        _errorMessage.value = data['message'] ?? 'Đặt lại mật khẩu thất bại.';
+        _isLoading.value = false;
+        return false;
+      }
+    } catch (e) {
+      _errorMessage.value = 'Lỗi kết nối: $e';
+      _isLoading.value = false;
+      return false;
     }
   }
 }

@@ -6,6 +6,7 @@ import 'package:client/shared/widgets/custom_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:client/core/utils/google_auth_service.dart';
+import 'package:client/features/auth/otp_verify_screen.dart';
 
 class SigninScreen extends StatelessWidget {
   SigninScreen({super.key});
@@ -131,7 +132,7 @@ class SigninScreen extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: () => _showForgotPasswordDialog(context),
                     child: Text(
                       'Quên mật khẩu?',
                       style: AppTextStyle.withColor(
@@ -212,23 +213,6 @@ class SigninScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                // Debug button (only in debug mode)
-                if (true) // Change to false in production
-                  Center(
-                    child: TextButton(
-                      onPressed: () async {
-                        await authController.debugConnection();
-                      },
-                      child: Text(
-                        '�� Debug Connection',
-                        style: AppTextStyle.withColor(
-                          AppTextStyle.bodySmall,
-                          Colors.grey[600]!,
-                        ),
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
@@ -288,5 +272,90 @@ class SigninScreen extends StatelessWidget {
         colorText: Colors.white,
       );
     }
+  }
+
+  void _showForgotPasswordDialog(BuildContext context) {
+    final TextEditingController emailController = TextEditingController();
+    final AuthController authController = Get.find<AuthController>();
+    final ThemeData theme = Theme.of(context);
+    showDialog(
+      context: context,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          elevation: 8,
+          backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(Icons.email_outlined, size: 48, color: theme.primaryColor),
+                  const SizedBox(height: 12),
+                  Text('Quên mật khẩu', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Text('Nhập email để nhận mã xác thực OTP đặt lại mật khẩu.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[700], fontSize: 15)),
+                  const SizedBox(height: 18),
+                  TextField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.alternate_email),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text('Hủy', style: TextStyle(color: theme.hintColor)),
+                      ),
+                      const SizedBox(width: 12),
+                      Obx(() => ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.primaryColor,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                          elevation: 4,
+                        ),
+                        onPressed: authController.isLoading
+                            ? null
+                            : () async {
+                                final email = emailController.text.trim();
+                                if (!GetUtils.isEmail(email)) {
+                                  Get.snackbar('Lỗi', 'Vui lòng nhập email hợp lệ', backgroundColor: Colors.red, colorText: Colors.white);
+                                  return;
+                                }
+                                final success = await authController.forgotPassword(email);
+                                if (success) {
+                                  Navigator.of(context).pop();
+                                  Get.to(() => OtpVerifyScreen(email: email));
+                                }
+                              },
+                        child: authController.isLoading
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Text('Gửi mã', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                      )),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
