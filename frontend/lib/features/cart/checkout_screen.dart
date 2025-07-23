@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:client/core/services/auth_controller.dart';
 import 'package:client/core/services/cart_controller.dart';
@@ -7,6 +8,9 @@ import 'package:intl/intl.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:convert'; // Added for json.decode
 import 'package:http/http.dart' as http; // Added for http
+import 'package:flutter/material.dart';
+import 'package:client/features/cart/address_selector.dart';
+import 'package:client/core/services/shipping_service.dart';
 
 enum PaymentMethod { cod, momo }
 
@@ -37,9 +41,66 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _cityController = TextEditingController(text: 'Hồ Chí Minh');
   final _districtController = TextEditingController(text: 'Quận 1');
   final TextEditingController _phoneController = TextEditingController();
-
+  int shippingFee = 0;
+  double discountAmount = 0.0;
+  double finalPrice = 0.0;
+  int? selectedDistrictId;
+  String? selectedWardCode;
   PaymentMethod _selectedMethod = PaymentMethod.cod;
   bool _isLoading = false; // Added for loading state
+  Future<void> _getShippingFee() async {
+    if (selectedDistrictId == null || selectedWardCode == null) {
+      print("Chưa chọn đủ thông tin địa chỉ để tính phí ship");
+      return;
+    }
+
+    try {
+      print("=== Bắt đầu tính phí vận chuyển ===");
+      print("selectedDistrictId: $selectedDistrictId");
+      print("selectedWardCode: $selectedWardCode");
+
+      // Lấy service_id từ GHN
+      final serviceId = await ShippingService.getAvailableServiceId(
+        fromDistrict: 1442, // Quận của shop - Quận 1
+        toDistrict: selectedDistrictId!,
+      );
+
+      if (serviceId == null) {
+        print("GiaoHangNhanh không hỗ trợ giao hàng tại địa điểm này");
+        setState(() {
+          shippingFee = 0;
+          finalPrice =
+              widget.totalPrice - discountAmount; // Không cộng phí ship
+        });
+        return;
+      }
+
+      print("Service ID lấy được: $serviceId");
+
+      // Tính phí ship
+      final fee = await ShippingService.calculateShippingFee(
+        fromDistrict: 1542,
+        toDistrict: selectedDistrictId!,
+        toWard: selectedWardCode!,
+        weight: 1000,
+        serviceId: serviceId,
+      );
+
+      print("Phí ship nhận được: $fee");
+
+      setState(() {
+        shippingFee = fee;
+        finalPrice = widget.totalPrice - discountAmount + shippingFee;
+      });
+
+      print("=== Kết thúc tính phí vận chuyển ===");
+    } catch (e) {
+      print("Lỗi tính phí vận chuyển: $e");
+      setState(() {
+        shippingFee = 0;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -97,6 +158,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ),
             SizedBox(height: screenWidth * 0.04),
+            //Card địa chỉ
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -104,8 +166,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               elevation: 2,
               color: Colors.white,
               child: ListTile(
-                leading: Icon(Icons.location_on, color: Colors.red),
-                title: Text(
+                leading: const Icon(Icons.location_on, color: Colors.red),
+                title: const Text(
                   'Địa chỉ giao hàng',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
@@ -115,46 +177,33 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       : 'Chưa có địa chỉ',
                 ),
                 trailing: IconButton(
-                  icon: Icon(Icons.edit, color: Colors.orange),
-                  onPressed: () {
-                    final tempController = TextEditingController(
-                      text: _addressController.text,
-                    );
-                    showDialog(
+                  icon: const Icon(Icons.edit, color: Colors.orange),
+                  onPressed: () async {
+                    final result = await showDialog(
                       context: context,
                       builder:
-                          (context) => AlertDialog(
-                            title: Text('Chỉnh sửa địa chỉ'),
-                            content: TextField(
-                              controller: tempController,
-                              decoration: InputDecoration(
-                                labelText: 'Địa chỉ giao hàng',
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: Text('Hủy'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _addressController.text =
-                                        tempController.text;
-                                  });
-                                  Navigator.of(context).pop();
-                                },
-                                child: Text('Lưu'),
-                              ),
-                            ],
+                          (context) => AddressSelector(
+                            addressController: _addressController,
                           ),
                     );
+
+                    if (result != null) {
+                      // Lưu lại districtId và wardCode để tính phí ship
+                      setState(() {
+                        selectedDistrictId = int.parse(result['districtId']);
+                        selectedWardCode = result['wardCode'];
+                      });
+
+                      // Gọi tính phí ship
+                      await _getShippingFee();
+                    }
                   },
                 ),
               ),
             ),
-            SizedBox(height: screenWidth * 0.04),
 
+            SizedBox(height: screenWidth * 0.04),
+            //Card số điện thoại
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -162,8 +211,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               elevation: 2,
               color: Colors.white,
               child: ListTile(
-                leading: Icon(Icons.phone, color: Colors.green),
-                title: Text(
+                leading: const Icon(Icons.phone, color: Colors.green),
+                title: const Text(
                   'Số điện thoại',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
@@ -173,7 +222,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       : 'Chưa có số điện thoại',
                 ),
                 trailing: IconButton(
-                  icon: Icon(Icons.edit, color: Colors.orange),
+                  icon: const Icon(Icons.edit, color: Colors.orange),
                   onPressed: () {
                     final tempPhoneController = TextEditingController(
                       text: _phoneController.text,
@@ -182,28 +231,48 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       context: context,
                       builder:
                           (context) => AlertDialog(
-                            title: Text('Chỉnh sửa số điện thoại'),
+                            title: const Text('Chỉnh sửa số điện thoại'),
                             content: TextField(
                               controller: tempPhoneController,
                               keyboardType: TextInputType.phone,
-                              decoration: InputDecoration(
+                              maxLength: 11, // Giới hạn tối đa 11 ký tự
+                              decoration: const InputDecoration(
+                                counterText: '', // Ẩn bộ đếm ký tự
                                 labelText: 'Số điện thoại giao hàng',
                               ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter
+                                    .digitsOnly, // Chỉ nhập số
+                              ],
                             ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.of(context).pop(),
-                                child: Text('Hủy'),
+                                child: const Text('Hủy'),
                               ),
                               ElevatedButton(
                                 onPressed: () {
-                                  setState(() {
-                                    _phoneController.text =
-                                        tempPhoneController.text;
-                                  });
-                                  Navigator.of(context).pop();
+                                  String phone =
+                                      tempPhoneController.text.trim();
+                                  // Kiểm tra số điện thoại 10-11 số
+                                  if (RegExp(
+                                    r'^[0-9]{10,11}$',
+                                  ).hasMatch(phone)) {
+                                    setState(() {
+                                      _phoneController.text = phone;
+                                    });
+                                    Navigator.of(context).pop();
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Số điện thoại phải là 10 hoặc 11 số!',
+                                        ),
+                                      ),
+                                    );
+                                  }
                                 },
-                                child: Text('Lưu'),
+                                child: const Text('Lưu'),
                               ),
                             ],
                           ),
@@ -284,10 +353,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       'Tổng gốc',
                       '${currencyFormat.format(widget.totalPrice)} đ',
                     ),
+                    _summaryRow(
+                      'Phí vận chuyển',
+                      '${currencyFormat.format(shippingFee)} đ',
+                    ),
                     Divider(),
                     _summaryRow(
                       'Tổng thanh toán',
-                      '${currencyFormat.format(finalPrice)} đ',
+                      '${currencyFormat.format(finalPrice + shippingFee)} đ',
                       isTotal: true,
                     ),
                   ],
@@ -431,7 +504,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               }
             },
             child: Text(
-              'Đặt hàng (${currencyFormat.format(finalPrice)} đ)',
+              'Đặt hàng (${currencyFormat.format(finalPrice + shippingFee)} đ)',
               style: TextStyle(fontSize: 18, color: Colors.white),
             ),
           ),
@@ -482,7 +555,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     // Polling: kiểm tra trạng thái mỗi 5 giây, tối đa 30 giây
     int attempts = 0;
-    const maxAttempts = 6; // 30 giây / 5 giây = 6 lần
+    const maxAttempts = 2; // 30 giây / 5 giây = 6 lần
 
     while (attempts < maxAttempts) {
       try {
@@ -541,6 +614,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           'city': _cityController.text,
                           'district': _districtController.text,
                         },
+                        phone:
+                            _phoneController
+                                .text, // Truyền số điện thoại từ controller
                         orderItems: widget.cartProducts,
                         isPaymentSuccess: true,
                       ),
@@ -695,6 +771,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           shippingAddress:
                               latestOrder['shippingAddress'] ??
                               {
+                                'phone': _phoneController.text.trim(),
                                 'address': _addressController.text,
                                 'city': _cityController.text,
                                 'district': _districtController.text,
@@ -702,9 +779,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           orderItems:
                               latestOrder['orderItems'] ?? widget.cartProducts,
                           isPaymentSuccess: latestOrder['isPaid'] ?? true,
+
+                          // Thêm dữ liệu từ checkout/cart
+                          cartData: {
+                            'phone': _phoneController.text.trim(),
+                            'address': _addressController.text,
+                            'district': _districtController.text,
+                            'city': _cityController.text,
+                          },
+                          shippingFee: shippingFee,
+                          totalPrice: widget.totalPrice,
+                          finalPrice: finalPrice,
                         ),
                   ),
                 );
+
                 Navigator.of(context).pop(true);
                 return;
               }
