@@ -79,6 +79,7 @@ export const reorderOrder = async (req, res) => {
           productId: product._id,
           name: product.name,
           price: product.price,
+          image: product.image,
           quantity: item.quantity,
         });
       }

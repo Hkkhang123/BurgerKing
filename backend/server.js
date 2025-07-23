@@ -17,6 +17,7 @@ import adminRoutes from "./src/routes/admin.routes.js";
 import paymentRoutes from "./src/routes/payment.routes.js";
 import notificationRoutes from "./src/routes/notification.routes.js";
 import couponRoutes from "./src/routes/coupon.routes.js";
+import shippingRoutes from "./src/routes/shipping.routes.js";
 
 
 dotenv.config();
@@ -43,6 +44,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/coupons", couponRoutes);
+
+app.use("/api/shipping", shippingRoutes);
 
 // Chỉ serve static files nếu thư mục client/build tồn tại
 if (process.env.NODE_ENV === "production") {

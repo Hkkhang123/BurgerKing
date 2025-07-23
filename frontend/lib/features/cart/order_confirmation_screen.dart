@@ -16,7 +16,11 @@ class OrderConfirmationScreen extends StatefulWidget {
   final Map<String, dynamic>? shippingAddress;
   final List<dynamic>? orderItems;
   final bool? isPaymentSuccess;
-
+  final Map<String, dynamic>? cartData;
+  final int? shippingFee;
+  final double? totalPrice;
+  final double? finalPrice;
+  final String? phone;
   // Constructor cho dữ liệu có sẵn (từ checkout)
   const OrderConfirmationScreen({
     super.key,
@@ -27,7 +31,12 @@ class OrderConfirmationScreen extends StatefulWidget {
     this.paymentMethod,
     this.shippingAddress,
     this.orderItems,
+    this.cartData,
+    this.shippingFee,
+    this.totalPrice,
+    this.finalPrice,
     this.isPaymentSuccess = true,
+    this.phone,
   });
 
   // Constructor factory để load từ database
@@ -324,8 +333,8 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          _buildInfoRow('Mã đơn hàng', orderCode),
-          _buildInfoRow('Ngày đặt', _getCurrentDate()),
+          _buildFlexibleInfoRow('Mã đơn hàng', orderCode),
+          _buildFlexibleInfoRow('Ngày đặt', _getCurrentDate()),
         ],
       ),
     );
@@ -333,6 +342,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
 
   Widget _buildShippingInfoCard(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final data = widget.cartData ?? widget.shippingAddress ?? {};
 
     return Container(
       width: screenWidth,
@@ -354,15 +364,43 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
             ),
           ),
           const SizedBox(height: 12),
+          if (data['receiver'] != null)
+            _buildFlexibleInfoRow('Người nhận', data['receiver']),
+          _buildFlexibleInfoRow(
+            'Số điện thoại',
+            data['phone'] ?? 'Chưa có số điện thoại',
+          ),
+          _buildFlexibleInfoRow('Địa chỉ', data['address'] ?? ''),
+        ],
+      ),
+    );
+  }
 
-          if (shippingAddress['receiver'] != null)
-            _buildInfoRow('Người nhận', shippingAddress['receiver']),
-          if (shippingAddress['phone'] != null)
-            _buildInfoRow('Số điện thoại', shippingAddress['phone']),
-
-          _buildInfoRow('Địa chỉ', shippingAddress['address'] ?? ''),
-          _buildInfoRow('Quận/Huyện', shippingAddress['district'] ?? ''),
-          _buildInfoRow('Thành phố', shippingAddress['city'] ?? ''),
+  Widget _buildFlexibleInfoRow(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$title: ',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 0, 45, 113),
+              ),
+              softWrap: true,
+              maxLines: 3, // tự động xuống dòng, tối đa 3 dòng
+              overflow: TextOverflow.ellipsis, // Thêm "..." nếu text quá dài
+            ),
+          ),
         ],
       ),
     );
