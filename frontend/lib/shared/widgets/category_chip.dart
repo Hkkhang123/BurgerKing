@@ -15,8 +15,8 @@ class _CategoryChipState extends State<CategoryChip> {
     'Tất cả',
     'Hamburger',
     'Khoai tây chiên',
-    'Gà',
-    'Đồ ăn vặt',
+    'Pizza',
+    'Đồ uống',
   ];
   @override
   Widget build(BuildContext context) {
@@ -66,10 +66,7 @@ class _CategoryChipState extends State<CategoryChip> {
                 ),
                 elevation: selectedIndex == index ? 2 : 0,
                 pressElevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 labelPadding: const EdgeInsets.symmetric(
                   horizontal: 4,
                   vertical: 0,
