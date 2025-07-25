@@ -367,6 +367,70 @@ export const updateProfile = [
   }
 ];
 
+// ==== ĐỊA CHỈ GIAO HÀNG ====
+
+// Lấy danh sách địa chỉ giao hàng của user
+export const getAddresses = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id || req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user.addresses || []);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Thêm địa chỉ giao hàng
+export const addAddress = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id || req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    // Nếu là địa chỉ mặc định, bỏ mặc định các địa chỉ khác
+    if (req.body.isDefault) {
+      user.addresses.forEach(addr => addr.isDefault = false);
+    }
+    user.addresses.push(req.body);
+    await user.save();
+    res.status(201).json(user.addresses);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Sửa địa chỉ giao hàng
+export const updateAddress = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id || req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    const { addressId } = req.params;
+    const idx = user.addresses.findIndex(addr => addr._id.toString() === addressId);
+    if (idx === -1) return res.status(404).json({ message: 'Address not found' });
+    // Nếu là địa chỉ mặc định, bỏ mặc định các địa chỉ khác
+    if (req.body.isDefault) {
+      user.addresses.forEach(addr => addr.isDefault = false);
+    }
+    user.addresses[idx] = { ...user.addresses[idx]._doc, ...req.body };
+    await user.save();
+    res.json(user.addresses);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Xóa địa chỉ giao hàng
+export const deleteAddress = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id || req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    const { addressId } = req.params;
+    user.addresses = user.addresses.filter(addr => addr._id.toString() !== addressId);
+    await user.save();
+    res.json(user.addresses);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Gửi OTP về email để reset mật khẩu
 export const forgotPassword = async (req, res) => {
   try {

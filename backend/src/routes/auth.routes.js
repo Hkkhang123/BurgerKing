@@ -1,5 +1,5 @@
 import express from "express";
-import { dangky, dangNhap, getProfile, uploadAvatar, loginWithGoogle, updateProfile, forgotPassword, resetPassword, loginWithFacebook } from "../controllers/auth.controller.js";
+import { dangky, dangNhap, getProfile, uploadAvatar, loginWithGoogle, updateProfile, forgotPassword, resetPassword, loginWithFacebook, getAddresses, addAddress, updateAddress, deleteAddress } from "../controllers/auth.controller.js";
 import { protectRoutes } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
@@ -13,5 +13,11 @@ router.post("/facebook", loginWithFacebook);
 router.put("/profile", protectRoutes, updateProfile);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
+
+// Địa chỉ giao hàng
+router.get("/addresses", protectRoutes, getAddresses);
+router.post("/addresses", protectRoutes, addAddress);
+router.put("/addresses/:addressId", protectRoutes, updateAddress);
+router.delete("/addresses/:addressId", protectRoutes, deleteAddress);
 
 export default router;

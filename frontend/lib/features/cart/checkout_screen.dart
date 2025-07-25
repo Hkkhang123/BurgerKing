@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http; // Added for http
 import 'package:flutter/material.dart';
 import 'package:client/features/cart/address_selector.dart';
 import 'package:client/core/services/shipping_service.dart';
+import 'package:client/core/utils/api_service.dart';
 
 enum PaymentMethod { cod, momo }
 
@@ -179,24 +180,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 trailing: IconButton(
                   icon: const Icon(Icons.edit, color: Colors.orange),
                   onPressed: () async {
-                    final result = await showDialog(
-                      context: context,
-                      builder:
-                          (context) => AddressSelector(
-                            addressController: _addressController,
-                          ),
-                    );
-
-                    if (result != null) {
-                      // Lưu lại districtId và wardCode để tính phí ship
-                      setState(() {
-                        selectedDistrictId = int.parse(result['districtId']);
-                        selectedWardCode = result['wardCode'];
-                      });
-
-                      // Gọi tính phí ship
-                      await _getShippingFee();
-                    }
+                    await _showSelectAddressDialog(context);
                   },
                 ),
               ),
@@ -950,5 +934,97 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ],
           ),
     );
+  }
+
+  Future<void> _showSelectAddressDialog(BuildContext context) async {
+    final authController = Get.find<AuthController>();
+    final token = authController.getToken();
+    List<dynamic> addresses = [];
+    bool isLoading = true;
+    String? error;
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            if (isLoading) {
+              ApiService.getAddresses(token!)
+                  .then((res) {
+                    setState(() {
+                      addresses = res;
+                      isLoading = false;
+                    });
+                  })
+                  .catchError((e) {
+                    setState(() {
+                      error = e.toString();
+                      isLoading = false;
+                    });
+                  });
+            }
+            return AlertDialog(
+              title: const Text('Chọn địa chỉ giao hàng'),
+              content:
+                  isLoading
+                      ? const SizedBox(
+                        height: 100,
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                      : error != null
+                      ? Text(error!)
+                      : addresses.isEmpty
+                      ? const Text('Bạn chưa có địa chỉ nào')
+                      : SizedBox(
+                        width: 350,
+                        height: 300,
+                        child: ListView.builder(
+                          itemCount: addresses.length,
+                          itemBuilder: (context, i) {
+                            final addr = addresses[i];
+                            return Card(
+                              color:
+                                  addr['isDefault'] == true
+                                      ? Colors.orange[50]
+                                      : null,
+                              child: ListTile(
+                                title: Text(
+                                  '${addr['name']} - ${addr['phone']}',
+                                ),
+                                subtitle: Text(
+                                  '${addr['street']}, ${addr['ward']}, ${addr['district']}, ${addr['city']}' +
+                                      (addr['isDefault'] == true
+                                          ? ' (Mặc định)'
+                                          : ''),
+                                ),
+                                onTap: () {
+                                  Navigator.of(context).pop(addr);
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Đóng'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    ).then((selectedAddr) {
+      if (selectedAddr != null) {
+        setState(() {
+          _addressController.text =
+              '${selectedAddr['street'] ?? ''}, ${selectedAddr['ward'] ?? ''}, ${selectedAddr['district'] ?? ''}, ${selectedAddr['city'] ?? ''}';
+          _cityController.text = selectedAddr['city'] ?? '';
+          _districtController.text = selectedAddr['district'] ?? '';
+          _phoneController.text = selectedAddr['phone'] ?? '';
+        });
+        // Nếu cần tính lại phí ship, có thể gọi _getShippingFee() ở đây
+      }
+    });
   }
 }

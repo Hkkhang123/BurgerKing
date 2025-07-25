@@ -4,7 +4,7 @@ import 'package:client/shared/themes/app_textstyle.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:client/features/home/main_screen.dart';
-
+import 'package:client/features/cart/address_management_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -14,7 +14,6 @@ class AccountScreen extends StatefulWidget {
 }
 
 class _AccountScreenState extends State<AccountScreen> {
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -118,9 +117,11 @@ class _AccountScreenState extends State<AccountScreen> {
         children: [
           CircleAvatar(
             radius: 50,
-            backgroundImage: (avatarUrl != null && avatarUrl.startsWith('http'))
-                ? NetworkImage(avatarUrl)
-                : const AssetImage('assets/images/person.png') as ImageProvider,
+            backgroundImage:
+                (avatarUrl != null && avatarUrl.startsWith('http'))
+                    ? NetworkImage(avatarUrl)
+                    : const AssetImage('assets/images/person.png')
+                        as ImageProvider,
           ),
           const SizedBox(height: 16),
           Text(
@@ -220,6 +221,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     } else if (item['title'] == 'Đơn hàng') {
                       Get.to(() => MyOrderScreen());
                     } else if (item['title'] == 'Địa chỉ giao hàng') {
+                      Get.to(() => AddressManagementScreen());
                     } else if (item['title'] == 'Trung tâm trợ giúp') {}
                   },
                 ),

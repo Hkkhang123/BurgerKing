@@ -51,6 +51,17 @@ const userSchema = mongoose.Schema({
         type: Date,
         default: null
     },
+    addresses: [
+        {
+            name: { type: String, required: true }, // Tên người nhận
+            phone: { type: String, required: true },
+            street: { type: String, required: true },
+            ward: { type: String, required: true },
+            district: { type: String, required: true },
+            city: { type: String, required: true },
+            isDefault: { type: Boolean, default: false }
+        }
+    ]
 }, {timestamps: true});
 
 userSchema.pre("save", async function (next) {

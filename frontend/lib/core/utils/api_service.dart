@@ -15,19 +15,29 @@ class ApiService {
   };
 
   // Generic GET method for making HTTP GET requests
-  static Future<Map<String, dynamic>> get(String endpoint, {Map<String, dynamic>? queryParams, String? token}) async {
+  static Future<Map<String, dynamic>> get(
+    String endpoint, {
+    Map<String, dynamic>? queryParams,
+    String? token,
+  }) async {
     try {
       Uri uri = Uri.parse('$baseUrl$endpoint');
-      
+
       // Add query parameters if provided
       if (queryParams != null) {
-        uri = uri.replace(queryParameters: queryParams.map((key, value) => MapEntry(key, value.toString())));
+        uri = uri.replace(
+          queryParameters: queryParams.map(
+            (key, value) => MapEntry(key, value.toString()),
+          ),
+        );
       }
-      
+
       final headers = token != null ? getAuthHeaders(token) : _headers;
-      
-      final response = await http.get(uri, headers: headers).timeout(const Duration(seconds: 10));
-      
+
+      final response = await http
+          .get(uri, headers: headers)
+          .timeout(const Duration(seconds: 10));
+
       if (response.statusCode == 200) {
         return {
           'success': true,
@@ -52,39 +62,43 @@ class ApiService {
     } on http.ClientException {
       return {
         'success': false,
-        'error': 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
+        'error':
+            'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
         'statusCode': 0,
       };
     } catch (e) {
       String errorMessage = 'Lỗi kết nối: $e';
-      
-      if (e.toString().contains('SocketException') || 
+
+      if (e.toString().contains('SocketException') ||
           e.toString().contains('Connection refused') ||
           e.toString().contains('Failed host lookup')) {
-        errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+        errorMessage =
+            'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
       } else if (e.toString().contains('TimeoutException')) {
         errorMessage = 'Kết nối bị timeout. Vui lòng thử lại.';
       }
-      
-      return {
-        'success': false,
-        'error': errorMessage,
-        'statusCode': 0,
-      };
+
+      return {'success': false, 'error': errorMessage, 'statusCode': 0};
     }
   }
 
   // Generic POST method for making HTTP POST requests
-  static Future<Map<String, dynamic>> post(String endpoint, Map<String, dynamic> body, {String? token}) async {
+  static Future<Map<String, dynamic>> post(
+    String endpoint,
+    Map<String, dynamic> body, {
+    String? token,
+  }) async {
     try {
       final headers = token != null ? getAuthHeaders(token) : _headers;
-      
-      final response = await http.post(
-        Uri.parse('$baseUrl$endpoint'),
-        headers: headers,
-        body: jsonEncode(body),
-      ).timeout(const Duration(seconds: 10));
-      
+
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl$endpoint'),
+            headers: headers,
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 10));
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         return {
           'success': true,
@@ -109,39 +123,43 @@ class ApiService {
     } on http.ClientException {
       return {
         'success': false,
-        'error': 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
+        'error':
+            'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
         'statusCode': 0,
       };
     } catch (e) {
       String errorMessage = 'Lỗi kết nối: $e';
-      
-      if (e.toString().contains('SocketException') || 
+
+      if (e.toString().contains('SocketException') ||
           e.toString().contains('Connection refused') ||
           e.toString().contains('Failed host lookup')) {
-        errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+        errorMessage =
+            'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
       } else if (e.toString().contains('TimeoutException')) {
         errorMessage = 'Kết nối bị timeout. Vui lòng thử lại.';
       }
-      
-      return {
-        'success': false,
-        'error': errorMessage,
-        'statusCode': 0,
-      };
+
+      return {'success': false, 'error': errorMessage, 'statusCode': 0};
     }
   }
 
   // Generic PUT method for making HTTP PUT requests
-  static Future<Map<String, dynamic>> put(String endpoint, Map<String, dynamic> body, {String? token}) async {
+  static Future<Map<String, dynamic>> put(
+    String endpoint,
+    Map<String, dynamic> body, {
+    String? token,
+  }) async {
     try {
       final headers = token != null ? getAuthHeaders(token) : _headers;
-      
-      final response = await http.put(
-        Uri.parse('$baseUrl$endpoint'),
-        headers: headers,
-        body: jsonEncode(body),
-      ).timeout(const Duration(seconds: 10));
-      
+
+      final response = await http
+          .put(
+            Uri.parse('$baseUrl$endpoint'),
+            headers: headers,
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 10));
+
       if (response.statusCode == 200) {
         return {
           'success': true,
@@ -166,43 +184,47 @@ class ApiService {
     } on http.ClientException {
       return {
         'success': false,
-        'error': 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
+        'error':
+            'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
         'statusCode': 0,
       };
     } catch (e) {
       String errorMessage = 'Lỗi kết nối: $e';
-      
-      if (e.toString().contains('SocketException') || 
+
+      if (e.toString().contains('SocketException') ||
           e.toString().contains('Connection refused') ||
           e.toString().contains('Failed host lookup')) {
-        errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+        errorMessage =
+            'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
       } else if (e.toString().contains('TimeoutException')) {
         errorMessage = 'Kết nối bị timeout. Vui lòng thử lại.';
       }
-      
-      return {
-        'success': false,
-        'error': errorMessage,
-        'statusCode': 0,
-      };
+
+      return {'success': false, 'error': errorMessage, 'statusCode': 0};
     }
   }
 
   // Generic DELETE method for making HTTP DELETE requests
-  static Future<Map<String, dynamic>> delete(String endpoint, {Map<String, dynamic>? body, String? token}) async {
+  static Future<Map<String, dynamic>> delete(
+    String endpoint, {
+    Map<String, dynamic>? body,
+    String? token,
+  }) async {
     try {
       final headers = token != null ? getAuthHeaders(token) : _headers;
-      
+
       final request = http.Request('DELETE', Uri.parse('$baseUrl$endpoint'));
       request.headers.addAll(headers);
-      
+
       if (body != null) {
         request.body = jsonEncode(body);
       }
-      
-      final response = await http.Client().send(request).timeout(const Duration(seconds: 10));
+
+      final response = await http.Client()
+          .send(request)
+          .timeout(const Duration(seconds: 10));
       final responseData = await response.stream.bytesToString();
-      
+
       if (response.statusCode == 200) {
         return {
           'success': true,
@@ -227,25 +249,74 @@ class ApiService {
     } on http.ClientException {
       return {
         'success': false,
-        'error': 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
+        'error':
+            'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
         'statusCode': 0,
       };
     } catch (e) {
       String errorMessage = 'Lỗi kết nối: $e';
-      
-      if (e.toString().contains('SocketException') || 
+
+      if (e.toString().contains('SocketException') ||
           e.toString().contains('Connection refused') ||
           e.toString().contains('Failed host lookup')) {
-        errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+        errorMessage =
+            'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
       } else if (e.toString().contains('TimeoutException')) {
         errorMessage = 'Kết nối bị timeout. Vui lòng thử lại.';
       }
-      
-      return {
-        'success': false,
-        'error': errorMessage,
-        'statusCode': 0,
-      };
+
+      return {'success': false, 'error': errorMessage, 'statusCode': 0};
+    }
+  }
+
+  // ==== ĐỊA CHỈ GIAO HÀNG ====
+  static Future<List<dynamic>> getAddresses(String token) async {
+    final res = await get('/api/auth/addresses', token: token);
+    if (res['success']) {
+      return List<dynamic>.from(res['data']);
+    } else {
+      throw Exception(res['error'] ?? 'Lỗi lấy danh sách địa chỉ');
+    }
+  }
+
+  static Future<List<dynamic>> addAddress(
+    Map<String, dynamic> address,
+    String token,
+  ) async {
+    final res = await post('/api/auth/addresses', address, token: token);
+    if (res['success']) {
+      return List<dynamic>.from(res['data']);
+    } else {
+      throw Exception(res['error'] ?? 'Lỗi thêm địa chỉ');
+    }
+  }
+
+  static Future<List<dynamic>> updateAddress(
+    String addressId,
+    Map<String, dynamic> address,
+    String token,
+  ) async {
+    final res = await put(
+      '/api/auth/addresses/$addressId',
+      address,
+      token: token,
+    );
+    if (res['success']) {
+      return List<dynamic>.from(res['data']);
+    } else {
+      throw Exception(res['error'] ?? 'Lỗi cập nhật địa chỉ');
+    }
+  }
+
+  static Future<List<dynamic>> deleteAddress(
+    String addressId,
+    String token,
+  ) async {
+    final res = await delete('/api/auth/addresses/$addressId', token: token);
+    if (res['success']) {
+      return List<dynamic>.from(res['data']);
+    } else {
+      throw Exception(res['error'] ?? 'Lỗi xóa địa chỉ');
     }
   }
 
@@ -268,4 +339,4 @@ class ApiService {
         return serverMessage ?? 'Đã xảy ra lỗi không xác định.';
     }
   }
-} 
+}
