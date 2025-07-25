@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FaBell, FaCheck, FaTrash, FaEye } from 'react-icons/fa';
-import { getAllNotifications, markAllAsRead, deleteAllNotifications } from '../../redux/slices/notificationSlice';
+import { getAllNotifications, markAllAsRead, deleteAllNotifications, createNotification } from '../../redux/slices/notificationSlice';
 import { useNotification } from '../../shared/hooks/useNotification';
 
 const NotificationManagement = () => {
@@ -9,6 +9,9 @@ const NotificationManagement = () => {
   const { notifications, loading } = useSelector((state) => state.notification);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const { showNotification } = useNotification();
+  const [newTitle, setNewTitle] = useState("");
+  const [newMessage, setNewMessage] = useState("");
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     dispatch(getAllNotifications());
@@ -34,6 +37,25 @@ const NotificationManagement = () => {
     }
   };
 
+  const handleCreateNotification = async (e) => {
+    e.preventDefault();
+    if (!newTitle.trim() || !newMessage.trim()) {
+      showNotification('Vui lòng nhập tiêu đề và nội dung!', 'error');
+      return;
+    }
+    setCreating(true);
+    try {
+      await dispatch(createNotification({ title: newTitle, message: newMessage })).unwrap();
+      showNotification('Tạo thông báo thành công!', 'success');
+      setNewTitle("");
+      setNewMessage("");
+    } catch (error) {
+      showNotification('Lỗi khi tạo thông báo: ' + (error?.message || 'Lỗi không xác định'), 'error');
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const unreadCount = notifications.filter(notification => !notification.isRead).length;
 
   const formatDate = (dateString) => {
@@ -54,6 +76,32 @@ const NotificationManagement = () => {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Quản lý thông báo</h1>
         <p className="text-gray-600">Quản lý tất cả thông báo trong hệ thống</p>
+        {/* Form tạo notification mới */}
+        <form onSubmit={handleCreateNotification} className="mt-4 bg-white p-4 rounded-lg shadow flex flex-col md:flex-row gap-4 items-center">
+          <input
+            type="text"
+            className="border rounded px-3 py-2 flex-1"
+            placeholder="Tiêu đề thông báo"
+            value={newTitle}
+            onChange={e => setNewTitle(e.target.value)}
+            disabled={creating}
+          />
+          <input
+            type="text"
+            className="border rounded px-3 py-2 flex-1"
+            placeholder="Nội dung thông báo"
+            value={newMessage}
+            onChange={e => setNewMessage(e.target.value)}
+            disabled={creating}
+          />
+          <button
+            type="submit"
+            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            disabled={creating}
+          >
+            {creating ? 'Đang gửi...' : 'Tạo thông báo'}
+          </button>
+        </form>
       </div>
 
       {/* Stats */}

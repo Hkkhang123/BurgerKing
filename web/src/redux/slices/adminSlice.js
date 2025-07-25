@@ -4,8 +4,7 @@ import axiosInstance from "../../utils/axios";
 export const fetchAllUsers = createAsyncThunk(
   "admin/fetchAllUsers",
   async () => {
-    const response = await axiosInstance.get("/api/admin");
-    return response.data;
+    return (await axiosInstance.get("/api/admin")).data;
   }
 );
 
@@ -13,8 +12,7 @@ export const createUser = createAsyncThunk(
   "admin/createUser",
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post("/api/admin", userData);
-      return response.data;
+      return (await axiosInstance.post("/api/admin", userData)).data;
     } catch (error) {
       return rejectWithValue(error.response.data);
     }
@@ -24,13 +22,12 @@ export const createUser = createAsyncThunk(
 export const updateUser = createAsyncThunk(
   "admin/updateUser",
   async ({ id, name, email, role }) => {
-    const response = await axiosInstance.put(`/api/admin/${id}`, { name, email, role });
-    return response.data.user;
+    return (await axiosInstance.put(`/api/admin/${id}`, { name, email, role })).data.user;
   }
 );
 
 export const deleteUser = createAsyncThunk("admin/deleteUser", async (id) => {
-  const response = await axiosInstance.delete(`/api/admin/${id}`);
+  await axiosInstance.delete(`/api/admin/${id}`);
   return id;
 });
 
@@ -116,7 +113,7 @@ const adminSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchAllUsers.pending, (state, action) => {
+      .addCase(fetchAllUsers.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
@@ -126,7 +123,7 @@ const adminSlice = createSlice({
       })
       .addCase(fetchAllUsers.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error = action.payload?.message || action.error?.message || 'Lỗi không xác định';
       })
 
       .addCase(updateUser.fulfilled, (state, action) => {
@@ -142,7 +139,7 @@ const adminSlice = createSlice({
         state.users = state.users.filter((user) => user._id !== action.payload);
       })
 
-      .addCase(createUser.pending, (state, action) => {
+      .addCase(createUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
@@ -152,10 +149,10 @@ const adminSlice = createSlice({
       })
       .addCase(createUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error = action.payload?.message || action.error?.message || 'Lỗi không xác định';
       })
 
-      .addCase(fetchAdminProducts.pending, (state, action) => {
+      .addCase(fetchAdminProducts.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
@@ -165,7 +162,7 @@ const adminSlice = createSlice({
       })
       .addCase(fetchAdminProducts.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error = action.payload?.message || action.error?.message || 'Lỗi không xác định';
       })
 
       .addCase(createProduct.fulfilled, (state, action) => {
@@ -186,7 +183,7 @@ const adminSlice = createSlice({
         );
       })
 
-      .addCase(fetchAllOrder.pending, (state, action) => {
+      .addCase(fetchAllOrder.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
@@ -202,7 +199,7 @@ const adminSlice = createSlice({
       })
       .addCase(fetchAllOrder.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error = action.payload?.message || action.error?.message || 'Lỗi không xác định';
       })
       .addCase(updateOrder.fulfilled, (state, action) => {
         const updateOrder = action.payload;

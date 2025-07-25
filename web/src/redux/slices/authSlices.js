@@ -5,12 +5,15 @@ const userFromStorage = localStorage.getItem("userInfo")
   ? JSON.parse(localStorage.getItem("userInfo"))
   : null;
 
+const tokenFromStorage = localStorage.getItem("userToken") || null;
+
 const initialGuest =
   localStorage.getItem("guestId") || `guest_${new Date().getTime()}`;
 localStorage.setItem("guestId", initialGuest);
 
 const initialState = {
   user: userFromStorage,
+  token: tokenFromStorage,
   guestId: initialGuest,
   loading: false,
   error: null,
@@ -24,7 +27,7 @@ export const loginUser = createAsyncThunk(
       const response = await axiosInstance.post("/api/auth/dangnhap", userData);
       localStorage.setItem("userInfo", JSON.stringify(response.data.user));
       localStorage.setItem("userToken", response.data.token);
-      return response.data.user;
+      return { user: response.data.user, token: response.data.token };
     } catch (error) {
       return rejectWithValue(error.response.data);
     }
@@ -38,7 +41,7 @@ export const registerUser = createAsyncThunk(
       const response = await axiosInstance.post("/api/auth/dangky", userData);
       localStorage.setItem("userInfo", JSON.stringify(response.data.user));
       localStorage.setItem("userToken", response.data.token);
-      return response.data.user;
+      return { user: response.data.user, token: response.data.token };
     } catch (error) {
       return rejectWithValue(error.response.data);
     }
@@ -55,7 +58,7 @@ export const loginAdmin = createAsyncThunk(
       }
       localStorage.setItem("userInfo", JSON.stringify(response.data.user));
       localStorage.setItem("userToken", response.data.token);
-      return response.data.user;
+      return { user: response.data.user, token: response.data.token };
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: "Lỗi không xác định" });
     }
@@ -68,6 +71,7 @@ const authSlice = createSlice({
   reducers: {
     logout: (state) => {
       state.user = null;
+      state.token = null;
       state.isAdminAuthenticated = false; // Đảm bảo luôn false khi logout
       state.guestId = `guest_${new Date().getTime()}`;
       localStorage.removeItem("userInfo");
@@ -89,11 +93,12 @@ const authSlice = createSlice({
     })
     .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
     })
     .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error = action.payload?.message || action.error?.message || 'Lỗi không xác định';
     })
     .addCase(registerUser.pending, (state) => {
         state.loading = true;
@@ -101,11 +106,12 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
           state.loading = false;
-          state.user = action.payload;
+          state.user = action.payload.user;
+          state.token = action.payload.token;
       })
       .addCase(registerUser.rejected, (state, action) => {
           state.loading = false;
-          state.error = action.payload.message;
+          state.error = action.payload?.message || action.error?.message || 'Lỗi không xác định';
       })
     .addCase(loginAdmin.pending, (state) => {
       state.loading = true;
@@ -113,12 +119,13 @@ const authSlice = createSlice({
     })
     .addCase(loginAdmin.fulfilled, (state, action) => {
       state.loading = false;
-      state.user = action.payload;
+      state.user = action.payload.user;
+      state.token = action.payload.token;
       state.isAdminAuthenticated = true;
     })
     .addCase(loginAdmin.rejected, (state, action) => {
       state.loading = false;
-      state.error = action.payload.message;
+      state.error = action.payload?.message || action.error?.message || 'Lỗi không xác định';
       state.isAdminAuthenticated = false; // Đảm bảo luôn false khi login fail
     })
   },

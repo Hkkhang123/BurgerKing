@@ -53,6 +53,19 @@ export const deleteAllNotifications = createAsyncThunk(
   }
 );
 
+// Tạo notification mới
+export const createNotification = createAsyncThunk(
+  "notification/createNotification",
+  async (notificationData, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post("/api/notifications", notificationData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: "Lỗi không xác định" });
+    }
+  }
+);
+
 const initialState = {
   notifications: [],
   loading: false,
@@ -83,7 +96,7 @@ const notificationSlice = createSlice({
       })
       .addCase(getNotifications.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || "Lỗi không xác định";
+        state.error = action.payload?.message || action.error?.message || 'Lỗi không xác định';
       })
       // getAllNotifications
       .addCase(getAllNotifications.pending, (state) => {
@@ -96,7 +109,7 @@ const notificationSlice = createSlice({
       })
       .addCase(getAllNotifications.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || "Lỗi không xác định";
+        state.error = action.payload?.message || action.error?.message || 'Lỗi không xác định';
       })
       // markAllAsRead
       .addCase(markAllAsRead.fulfilled, (state) => {
@@ -108,6 +121,10 @@ const notificationSlice = createSlice({
       // deleteAllNotifications
       .addCase(deleteAllNotifications.fulfilled, (state) => {
         state.notifications = [];
+      })
+      // createNotification
+      .addCase(createNotification.fulfilled, (state, action) => {
+        state.notifications.unshift(action.payload);
       });
   },
 });

@@ -6,16 +6,16 @@ import { loginAdmin } from "../redux/slices/authSlices";
 function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, isAdminAuthenticated } = useSelector((state) => state.auth);
+  const { user, loading, isAdminAuthenticated, error } = useSelector((state) => state.auth);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   useEffect(() => {
-    if (isAdminAuthenticated) {
+    if (!loading && isAdminAuthenticated && user) {
       navigate("/admin");
     }
-  }, [isAdminAuthenticated, navigate]);
+  }, [isAdminAuthenticated, user, loading, navigate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
