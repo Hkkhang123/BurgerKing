@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:client/core/utils/api_service.dart';
 import 'package:get/get.dart';
+import 'package:client/core/services/auth_controller.dart';
 
 class AddressManagementScreen extends StatefulWidget {
   const AddressManagementScreen({Key? key}) : super(key: key);
@@ -18,8 +19,8 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
   @override
   void initState() {
     super.initState();
-    // Lấy token từ GetX hoặc provider tuỳ app
-    token = Get.find<dynamic>().token; // Sửa lại cho đúng app bạn
+    // Lấy token từ AuthController qua GetX
+    token = Get.find<AuthController>().getToken();
     _fetchAddresses();
   }
 
