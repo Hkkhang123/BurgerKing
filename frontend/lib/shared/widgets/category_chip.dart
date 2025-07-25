@@ -12,11 +12,13 @@ class CategoryChip extends StatefulWidget {
 class _CategoryChipState extends State<CategoryChip> {
   int selectedIndex = 0;
   final categories = [
-    'Tất cả',
-    'Hamburger',
-    'Khoai tây chiên',
-    'Pizza',
-    'Đồ uống',
+    {'label': 'Tất cả', 'value': 'all'},
+    {'label': 'Hamburger', 'value': 'burger'},
+    {'label': 'Khoai tây chiên', 'value': 'fries'},
+    {'label': 'Pizza', 'value': 'pizza'},
+    {'label': 'Đồ uống', 'value': 'drink'},
+    {'label': 'Việt Nam', 'value': 'vietnamese'},
+    {'label': 'Sushi', 'value': 'sushi'},
   ];
   @override
   Widget build(BuildContext context) {
@@ -34,7 +36,7 @@ class _CategoryChipState extends State<CategoryChip> {
               curve: Curves.easeInOut,
               child: ChoiceChip(
                 label: Text(
-                  categories[index],
+                  categories[index]['label']!,
                   overflow: TextOverflow.visible,
                   softWrap: true,
                   style: AppTextStyle.withColor(
@@ -49,14 +51,15 @@ class _CategoryChipState extends State<CategoryChip> {
                         : Colors.grey[600]!,
                   ),
                 ),
-
                 selected: selectedIndex == index,
                 onSelected: (bool selected) {
                   setState(() {
                     selectedIndex = selected ? index : selectedIndex;
                   });
                   if (widget.onCategorySelected != null) {
-                    widget.onCategorySelected!(categories[selectedIndex]);
+                    widget.onCategorySelected!(
+                      categories[selectedIndex]['value']!,
+                    );
                   }
                 },
                 selectedColor: Theme.of(context).primaryColor,

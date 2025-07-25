@@ -50,10 +50,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadUserData() async {
     final user = authController.getCurrentUser();
     userToken = authController.getToken();
-    
+
     // Set default avatar if needed
     await authController.setDefaultAvatar();
-    
+
     // Load favorites từ server thay vì local storage
     if (userToken != null) {
       try {
@@ -74,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _handleFavoriteToggle(String productId, bool isFavorite) async {
     if (!mounted) return;
-    
+
     // Optimistic update: cập nhật UI ngay
     setState(() {
       if (isFavorite) {
@@ -88,10 +88,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Gọi API, nếu lỗi thì revert lại
     final productController = Get.find<ProductController>();
-    final result = await productController.toggleFavoriteProduct(userToken!, productId);
-    
+    final result = await productController.toggleFavoriteProduct(
+      userToken!,
+      productId,
+    );
+
     if (!mounted) return;
-    
+
     if (!result['success']) {
       setState(() {
         if (isFavorite) {
@@ -114,12 +117,14 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           userFavorites = serverFavorites.map((e) => e.toString()).toList();
         });
-        
+
         // Hiển thị thông báo thành công
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(isFavorite ? 'Đã thêm vào yêu thích' : 'Đã xóa khỏi yêu thích'),
+              content: Text(
+                isFavorite ? 'Đã thêm vào yêu thích' : 'Đã xóa khỏi yêu thích',
+              ),
               duration: const Duration(seconds: 1),
             ),
           );
@@ -130,10 +135,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<List<dynamic>> _fetchBestSellers() async {
     if (!mounted) return [];
-    
+
     final productController = Get.find<ProductController>();
     final products = await productController.fetchBestSellerProducts();
-    
+
     if (mounted) {
       setState(() {
         allProducts = products;
@@ -145,13 +150,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _applyFilters() {
     setState(() {
-      filteredProducts = allProducts.where((product) {
-        final name = (product['name'] ?? '').toString().toLowerCase();
-        final category = (product['category'] ?? '').toString();
-        final matchesCategory = selectedCategory == 'Tất cả' || category == selectedCategory;
-        final matchesSearch = searchQuery.isEmpty || name.contains(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
-      }).toList();
+      filteredProducts =
+          allProducts.where((product) {
+            final name = (product['name'] ?? '').toString().toLowerCase();
+            final category =
+                (product['category'] ?? '').toString().toLowerCase().trim();
+            final matchesCategory =
+                selectedCategory == 'all' || category == selectedCategory;
+            final matchesSearch =
+                searchQuery.isEmpty || name.contains(searchQuery.toLowerCase());
+            return matchesCategory && matchesSearch;
+          }).toList();
     });
   }
 
@@ -185,14 +194,19 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = authController.getCurrentUser();
-    final String userName = user != null && user['name'] != null ? user['name'] : (isLoggedIn() ? 'Khách' : getGuestId());
-    final String? avatarUrl = user != null && user['image'] != null ? user['image'] : null;
-    
+    final String userName =
+        user != null && user['name'] != null
+            ? user['name']
+            : (isLoggedIn() ? 'Khách' : getGuestId());
+    final String? avatarUrl =
+        user != null && user['image'] != null ? user['image'] : null;
+
     // Kiểm tra URL hợp lệ
-    bool isValidAvatarUrl = avatarUrl != null && 
-                           avatarUrl.isNotEmpty && 
-                           (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://'));
-    
+    bool isValidAvatarUrl =
+        avatarUrl != null &&
+        avatarUrl.isNotEmpty &&
+        (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://'));
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
@@ -204,15 +218,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   CircleAvatar(
                     radius: 20,
-                    backgroundImage: isValidAvatarUrl
-                        ? NetworkImage(avatarUrl)
-                        : AssetImage('assets/images/avatar.jpg') as ImageProvider,
+                    backgroundImage:
+                        isValidAvatarUrl
+                            ? NetworkImage(avatarUrl)
+                            : AssetImage('assets/images/avatar.jpg')
+                                as ImageProvider,
                     onBackgroundImageError: (exception, stackTrace) {
                       // Fallback to default avatar if network image fails
                     },
-                    child: isValidAvatarUrl
-                        ? null
-                        : Icon(Icons.person, color: Colors.grey),
+                    child:
+                        isValidAvatarUrl
+                            ? null
+                            : Icon(Icons.person, color: Colors.grey),
                   ),
                   SizedBox(width: 12),
                   Column(
@@ -264,6 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             CategoryChip(
               onCategorySelected: (category) {
+                print('Category selected: "' + category + '"');
                 selectedCategory = category;
                 _applyFilters();
               },
@@ -272,63 +290,58 @@ class _HomeScreenState extends State<HomeScreen> {
             const SaleBanner(),
 
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'Món ăn bán chạy',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    )
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   Row(
                     children: [
-                    
                       const SizedBox(width: 8),
                       GestureDetector(
                         onTap: () => Get.to(() => AllProduct()),
                         child: Text(
                           'Xem tất cả',
                           style: TextStyle(
-                            color: Theme.of(context).primaryColor
-                          )
+                            color: Theme.of(context).primaryColor,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ],
-              )
+              ),
             ),
             Expanded(
-              child: allProducts.isEmpty
-                  ? FutureBuilder<List<dynamic>>(
-                      future: _fetchBestSellers(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return Center(child: CircularProgressIndicator());
-                        } else if (snapshot.hasError) {
-                          return Center(child: Text('Lỗi khi tải sản phẩm.'));
-                        } else {
-                          return ProductGrid(
-                            products: filteredProducts,
-                            userFavorites: userFavorites,
-                            userToken: userToken,
-                            onFavoriteToggle: _handleFavoriteToggle,
-                          );
-                        }
-                      },
-                    )
-                  : ProductGrid(
-                      products: filteredProducts,
-                      userFavorites: userFavorites,
-                      userToken: userToken,
-                      onFavoriteToggle: _handleFavoriteToggle,
-                    ),
+              child:
+                  allProducts.isEmpty
+                      ? FutureBuilder<List<dynamic>>(
+                        future: _fetchBestSellers(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Center(child: CircularProgressIndicator());
+                          } else if (snapshot.hasError) {
+                            return Center(child: Text('Lỗi khi tải sản phẩm.'));
+                          } else {
+                            return ProductGrid(
+                              products: filteredProducts,
+                              userFavorites: userFavorites,
+                              userToken: userToken,
+                              onFavoriteToggle: _handleFavoriteToggle,
+                            );
+                          }
+                        },
+                      )
+                      : ProductGrid(
+                        products: filteredProducts,
+                        userFavorites: userFavorites,
+                        userToken: userToken,
+                        onFavoriteToggle: _handleFavoriteToggle,
+                      ),
             ),
           ],
         ),
