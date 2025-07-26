@@ -5,7 +5,8 @@ import {
   createNotification,
   sendCustomNotification,
   markAllAsRead,
-  deleteAllNotifications
+  deleteAllNotifications,
+  checkNotificationsCount
 } from "../controllers/notification.controller.js";
 import { protectRoutes, isAdmin } from "../middleware/auth.middleware.js";
 
@@ -28,5 +29,8 @@ router.put("/mark-read", protectRoutes, markAllAsRead);
 
 // Xóa tất cả thông báo của user
 router.delete("/", protectRoutes, deleteAllNotifications);
+
+// Kiểm tra số lượng notifications của tất cả users (cho admin)
+router.get("/count", protectRoutes, isAdmin, checkNotificationsCount);
 
 export default router;

@@ -49,26 +49,34 @@ export const createNotification = async (req, res) => {
 export const sendCustomNotification = async (req, res) => {
   try {
     const { title, message } = req.body;
+    console.log(`[sendCustomNotification] Bắt đầu gửi thông báo: "${title}" - "${message}"`);
     
-    // Lấy tất cả users
-    const users = await User.find({});
+    // Lấy tất cả users (trừ admin)
+    const users = await User.find({ role: { $ne: 'admin' } });
+    console.log(`[sendCustomNotification] Tìm thấy ${users.length} users để gửi thông báo`);
     
     // Tạo thông báo cho mỗi user
     const notifications = [];
     for (const user of users) {
+      console.log(`[sendCustomNotification] Đang tạo notification cho user: ${user.email} (${user._id})`);
       const notification = await Notification.create({
         user: user._id,
         title,
         message,
+        isRead: false,
+        createdAt: new Date()
       });
       notifications.push(notification);
+      console.log(`[sendCustomNotification] Đã tạo notification: ${notification._id} cho user: ${user.email}`);
     }
     
-    res.status(201).json({ 
-      message: `Đã gửi thông báo đến ${notifications.length} users`,
-      notifications: notifications 
-    });
+    console.log(`[sendCustomNotification] Hoàn thành! Đã tạo ${notifications.length} notifications`);
+    
+    // Trả về notification đầu tiên để frontend có thể thêm vào state
+    const firstNotification = notifications[0];
+    res.status(201).json(firstNotification);
   } catch (e) {
+    console.log('sendCustomNotification error:', e.message);
     res.status(500).json({ message: "Server error", error: e.message });
   }
 };
@@ -94,6 +102,38 @@ export const deleteAllNotifications = async (req, res) => {
     await Notification.deleteMany({ user: userId });
     res.json({ message: "All notifications deleted" });
   } catch (e) {
+    res.status(500).json({ message: "Server error", error: e.message });
+  }
+};
+
+// Kiểm tra số lượng notifications của tất cả users (cho admin)
+export const checkNotificationsCount = async (req, res) => {
+  try {
+    const notifications = await Notification.find({}).populate('user', 'name email role');
+    
+    // Nhóm theo user
+    const userNotificationCounts = {};
+    notifications.forEach(notification => {
+      const userEmail = notification.user.email;
+      if (!userNotificationCounts[userEmail]) {
+        userNotificationCounts[userEmail] = {
+          total: 0,
+          unread: 0,
+          user: notification.user
+        };
+      }
+      userNotificationCounts[userEmail].total++;
+      if (!notification.isRead) {
+        userNotificationCounts[userEmail].unread++;
+      }
+    });
+    
+    res.json({
+      totalNotifications: notifications.length,
+      userCounts: userNotificationCounts
+    });
+  } catch (e) {
+    console.log('checkNotificationsCount error:', e.message);
     res.status(500).json({ message: "Server error", error: e.message });
   }
 };

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:5000/",
+  baseURL: import.meta.env.VITE_BACKEND_URL || "https://burgerking-j92p.onrender.com/",
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -16,6 +16,12 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log('Request config:', {
+      url: config.url,
+      method: config.method,
+      hasToken: !!token,
+      baseURL: config.baseURL
+    });
     return config;
   },
   (error) => {
@@ -27,6 +33,11 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.log('Response error:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url
+    });
     if (error.response?.status === 401) {
       // Xử lý token hết hạn
       localStorage.removeItem('userToken');

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { FaBell, FaCheck, FaTrash, FaEye } from 'react-icons/fa';
+import { FaBell, FaCheck, FaTrash, FaEye, FaInfoCircle } from 'react-icons/fa';
 import { getAllNotifications, markAllAsRead, deleteAllNotifications, createNotification } from '../../redux/slices/notificationSlice';
 import { useNotification } from '../../shared/hooks/useNotification';
+import axiosInstance from '../../utils/axios';
 
 const NotificationManagement = () => {
   const dispatch = useDispatch();
@@ -12,9 +13,13 @@ const NotificationManagement = () => {
   const [newTitle, setNewTitle] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [creating, setCreating] = useState(false);
+  const [checkingCount, setCheckingCount] = useState(false);
 
   useEffect(() => {
-    dispatch(getAllNotifications());
+    const token = localStorage.getItem('userToken');
+    if (token) {
+      dispatch(getAllNotifications());
+    }
   }, [dispatch]);
 
   const handleMarkAllAsRead = async () => {
@@ -46,13 +51,35 @@ const NotificationManagement = () => {
     setCreating(true);
     try {
       await dispatch(createNotification({ title: newTitle, message: newMessage })).unwrap();
-      showNotification('Tạo thông báo thành công!', 'success');
+      showNotification('Đã gửi thông báo đến tất cả users!', 'success');
       setNewTitle("");
       setNewMessage("");
+      // Refresh danh sách notifications
+      dispatch(getAllNotifications());
     } catch (error) {
       showNotification('Lỗi khi tạo thông báo: ' + (error?.message || 'Lỗi không xác định'), 'error');
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleCheckNotificationsCount = async () => {
+    setCheckingCount(true);
+    try {
+      const response = await axiosInstance.get('/api/notifications/count');
+      const { totalNotifications, userCounts } = response.data;
+      
+      let message = `Tổng số notifications: ${totalNotifications}\n\n`;
+      Object.keys(userCounts).forEach(email => {
+        const userData = userCounts[email];
+        message += `${email}:\n- Tổng: ${userData.total}\n- Chưa đọc: ${userData.unread}\n\n`;
+      });
+      
+      alert(message);
+    } catch (error) {
+      showNotification('Lỗi khi kiểm tra: ' + (error?.message || 'Lỗi không xác định'), 'error');
+    } finally {
+      setCheckingCount(false);
     }
   };
 
@@ -105,7 +132,7 @@ const NotificationManagement = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center">
             <FaBell className="text-blue-500 text-2xl mr-3" />
@@ -130,6 +157,21 @@ const NotificationManagement = () => {
             <div>
               <p className="text-sm text-gray-600">Đã đọc</p>
               <p className="text-2xl font-bold text-gray-800">{notifications.length - unreadCount}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="flex items-center">
+            <FaInfoCircle className="text-blue-500 text-2xl mr-3" />
+            <div>
+              <p className="text-sm text-gray-600">Kiểm tra</p>
+              <button
+                onClick={handleCheckNotificationsCount}
+                disabled={checkingCount}
+                className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 disabled:bg-gray-300"
+              >
+                {checkingCount ? 'Đang kiểm tra...' : 'Xem chi tiết'}
+              </button>
             </div>
           </div>
         </div>

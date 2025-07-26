@@ -6,9 +6,15 @@ export const getNotifications = createAsyncThunk(
   "notification/getNotifications",
   async (_, { rejectWithValue }) => {
     try {
+      const token = localStorage.getItem('userToken');
+      if (!token) {
+        return rejectWithValue({ message: "Chưa đăng nhập" });
+      }
+      
       const response = await axiosInstance.get("/api/notifications");
       return response.data;
     } catch (error) {
+      console.log('getNotifications error:', error);
       return rejectWithValue(error.response?.data || { message: "Lỗi không xác định" });
     }
   }
@@ -19,9 +25,15 @@ export const getAllNotifications = createAsyncThunk(
   "notification/getAllNotifications",
   async (_, { rejectWithValue }) => {
     try {
+      const token = localStorage.getItem('userToken');
+      if (!token) {
+        return rejectWithValue({ message: "Chưa đăng nhập" });
+      }
+      
       const response = await axiosInstance.get("/api/notifications/all");
       return response.data;
     } catch (error) {
+      console.log('getAllNotifications error:', error);
       return rejectWithValue(error.response?.data || { message: "Lỗi không xác định" });
     }
   }
@@ -58,9 +70,10 @@ export const createNotification = createAsyncThunk(
   "notification/createNotification",
   async (notificationData, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post("/api/notifications", notificationData);
+      const response = await axiosInstance.post("/api/notifications/send", notificationData);
       return response.data;
     } catch (error) {
+      console.log('createNotification error:', error);
       return rejectWithValue(error.response?.data || { message: "Lỗi không xác định" });
     }
   }
