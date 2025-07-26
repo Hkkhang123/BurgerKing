@@ -10,19 +10,13 @@ class OrderService {
     String orderId,
   ) async {
     try {
-      final url = '$baseUrl/api/order/$orderId';
-      print('OrderService: Calling API: $url');
-
       final response = await http.get(
-        Uri.parse(url),
+        Uri.parse('$baseUrl/api/order/$orderId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
       );
-
-      print('OrderService: Response status: ${response.statusCode}');
-      print('OrderService: Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

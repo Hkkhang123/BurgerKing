@@ -14,21 +14,13 @@ export const myOrder = async (req, res) => {
 
 export const getOrders = async (req, res) => {
     try {
-        console.log('=== DEBUG GET ORDER ===');
-        console.log('Order ID requested:', req.params.id);
-        
-        const order = await Order.findById(req.params.id).populate("user", "name email");
-        console.log('Order found:', order);
-        
-        if (!order) {
-            console.log('Order not found in database');
-            return res.status(404).json({message: "Order not found"});
-        }
-        
-        console.log('Returning order:', order._id);
+            const order = await Order.findById(req.params.id).populate("user", "name email");
+    
+    if (!order) {
+      return res.status(404).json({message: "Order not found"});
+    }
         res.json(order);
     } catch (error) {
-        console.log('Error getting order:', error);
         res.status(500).json({message: error.message})
     }
 }

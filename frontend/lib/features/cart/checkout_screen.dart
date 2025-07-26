@@ -405,13 +405,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 totalPrice: finalPrice,
               );
 
-              print('=== DEBUG CHECKOUT RESULT ===');
-              print('Result: $result');
-              print('Success: ${result['success']}');
-              print('Data: ${result['data']}');
-              print('Data ID: ${result['data']?['_id']}');
-              print('Data orderCode: ${result['data']?['orderCode']}');
-
               if (_selectedMethod == PaymentMethod.momo) {
                 if (result['success'] == true &&
                     result['data'] != null &&

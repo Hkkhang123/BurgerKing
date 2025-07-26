@@ -219,19 +219,12 @@ class CartController extends GetxController {
           'totalPrice': totalPrice,
         }),
       );
-      print('=== DEBUG CART CONTROLLER ===');
-      print('Response status: ${response.statusCode}');
-      print('Response headers: ${response.headers}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 201) {
         try {
           final data = jsonDecode(response.body);
-          print('Parsed data: $data');
           // Backend đã trả về {success: true, data: ...} nên không cần wrap thêm
           return data;
         } catch (e) {
-          print('JSON parse error: $e');
           return {'success': false, 'error': 'Invalid JSON response: $e'};
         }
       } else {
@@ -239,7 +232,6 @@ class CartController extends GetxController {
           final errorData = jsonDecode(response.body);
           return {'success': false, 'data': errorData};
         } catch (e) {
-          print('Error JSON parse error: $e');
           return {
             'success': false,
             'error': 'HTTP ${response.statusCode}: ${response.body}',

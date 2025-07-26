@@ -104,13 +104,10 @@ export const getAllOrders = async (req, res) => {
 
 export const updateOrder = async (req, res) => {
   try {
-    console.log("=== DEBUG UPDATE ORDER ===");
-    console.log("[updateOrder] req.params.id:", req.params.id);
-    console.log("[updateOrder] req.body:", req.body);
-    console.log("[updateOrder] req.user:", req.user?._id);
+
     const order = await Order.findById(req.params.id).populate("user", "name email");
     if (!order) {
-      console.log("[updateOrder] Order not found for id:", req.params.id);
+      
       return res.status(404).json({ message: "Order not found" });
     }
 
@@ -137,7 +134,6 @@ export const updateOrder = async (req, res) => {
             }
           }
         } catch (productError) {
-          console.log("[updateOrder] Error updating product purchaseCount:", productError);
           // Không throw error vì đây không phải lỗi nghiêm trọng
         }
       }
@@ -157,7 +153,7 @@ export const updateOrder = async (req, res) => {
 
     const updatedOrder = await order.save();
     
-    console.log(`Admin ${req.user._id} updated order ${order._id} to payment: ${paymentStatus}, delivery: ${status}`);
+
     
     res.json({
       success: true,
@@ -165,7 +161,6 @@ export const updateOrder = async (req, res) => {
       order: updatedOrder
     });
   } catch (error) {
-    console.log("[updateOrder] Error updating order:", error);
     res.status(500).json({ message: error.message });
   }
 };

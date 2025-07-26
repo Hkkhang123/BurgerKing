@@ -17,13 +17,7 @@ export const createCheckout = async (req, res) => {
       // Tạo Order ngay lập tức cho thanh toán khi nhận hàng
       const orderCode = generateOrderCode();
       
-      console.log('=== DEBUG CREATING ORDER ===');
-      console.log('User ID:', req.user._id);
-      console.log('Checkout items:', checkoutItem);
-      console.log('Shipping address:', shippingAddress);
-      console.log('Payment method:', paymentMethod);
-      console.log('Total price:', totalPrice);
-      console.log('Order code:', orderCode);
+
       
       const newOrder = await Order.create({
         user: req.user._id,
@@ -37,9 +31,7 @@ export const createCheckout = async (req, res) => {
         orderCode: orderCode,
       });
       
-      console.log('=== ORDER CREATED ===');
-      console.log('Order ID:', newOrder._id);
-      console.log('Order object:', newOrder);
+
       
       // Xóa giỏ hàng sau khi tạo order thành công
       await Cart.findOneAndDelete({ user: req.user._id });
