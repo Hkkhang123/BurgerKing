@@ -23,9 +23,24 @@ import shippingRoutes from "./src/routes/shipping.routes.js";
 dotenv.config();
 const app = express();
 app.use(express.json());
-app.use(
-  cors({ origin: "*", methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"] })
-);
+
+// CORS configuration
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? [
+        "https://burgerking-j92p.onrender.com",
+        "https://burger-king-omega-three.vercel.app"
+      ]
+    : true, // Allow all origins in development
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"]
+};
+
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 const port = process.env.PORT || 5000;
 const __dirname = path.resolve();
 
