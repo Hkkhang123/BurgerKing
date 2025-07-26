@@ -54,7 +54,10 @@ export const createCheckout = async (req, res) => {
       }
       
       console.log(`Order created for user ${req.user._id} with cash on delivery. Cart cleared.`);
-      res.status(201).json(newOrder);
+      res.status(201).json({
+        success: true,
+        data: newOrder
+      });
     } else if (paymentMethod === "momo") {
       // Tạo checkout trước
       const newCheckout = await Checkout.create({
@@ -128,8 +131,11 @@ export const createCheckout = async (req, res) => {
             console.log('[MoMo] Parsed response:', result);
             console.log('[MoMo] payUrl:', result.payUrl);
             res.status(201).json({
-              ...newCheckout.toObject(),
-              payUrl: result.payUrl,
+              success: true,
+              data: {
+                ...newCheckout.toObject(),
+                payUrl: result.payUrl,
+              }
             });
           } catch (e) {
             console.log('[MoMo] Parse error:', e);
@@ -168,7 +174,10 @@ export const createCheckout = async (req, res) => {
       await Cart.findOneAndDelete({ user: req.user._id });
       
       console.log(`Checkout created for user ${req.user._id} with payment method: ${paymentMethod}. Cart cleared.`);
-      res.status(201).json(newCheckout);
+      res.status(201).json({
+        success: true,
+        data: newCheckout
+      });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });

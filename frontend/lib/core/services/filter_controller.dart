@@ -9,13 +9,13 @@ class FilterController extends GetxController {
   var selectedRating = 0.0.obs;
   var selectedSortBy = 'newest'.obs;
   var searchQuery = ''.obs;
-  
+
   // Products state
   var products = [].obs;
   var isLoading = false.obs;
   var hasError = false.obs;
   var errorMessage = ''.obs;
-  
+
   // Pagination
   var currentPage = 1.obs;
   var hasMoreData = true.obs;
@@ -29,16 +29,21 @@ class FilterController extends GetxController {
 
   // Apply filter and reload products
   void applyFilter(Map<String, dynamic> filterParams) {
+    print('=== APPLY FILTER ===');
+    print('filterParams: $filterParams');
+
     minPrice.value = filterParams['minPrice'] ?? 0;
     maxPrice.value = filterParams['maxPrice'] ?? 500000;
     selectedCategory.value = filterParams['category'] ?? 'all';
     selectedRating.value = filterParams['minRating'] ?? 0.0;
     selectedSortBy.value = filterParams['sortBy'] ?? 'newest';
-    
+
+    print('selectedCategory set to: "${selectedCategory.value}"');
+
     // Reset pagination
     currentPage.value = 1;
     hasMoreData.value = true;
-    
+
     // Reload products with new filter
     loadProducts();
   }
@@ -54,44 +59,73 @@ class FilterController extends GetxController {
   // Load products with current filter
   Future<void> loadProducts({bool loadMore = false}) async {
     if (isLoading.value) return;
-    
+
     if (loadMore) {
       currentPage.value++;
     } else {
       currentPage.value = 1;
       products.clear();
     }
-    
+
     isLoading.value = true;
     hasError.value = false;
-    
+
     try {
       // Build query parameters
       final queryParams = <String, dynamic>{
         'page': currentPage.value,
         'limit': limit.value,
       };
-      
+
       // Add filter parameters
       if (minPrice.value > 0) queryParams['minPrice'] = minPrice.value;
       if (maxPrice.value < 500000) queryParams['maxPrice'] = maxPrice.value;
-      if (selectedCategory.value != 'all') queryParams['category'] = selectedCategory.value;
-      if (selectedRating.value > 0) queryParams['minRating'] = selectedRating.value;
-      if (selectedSortBy.value.isNotEmpty) queryParams['sortBy'] = selectedSortBy.value;
-      if (searchQuery.value.isNotEmpty) queryParams['search'] = searchQuery.value;
-      
-      final response = await ApiService.get('/api/products', queryParams: queryParams);
-      
+      if (selectedCategory.value != 'all')
+        queryParams['category'] = selectedCategory.value;
+      if (selectedRating.value > 0)
+        queryParams['minRating'] = selectedRating.value;
+      if (selectedSortBy.value.isNotEmpty)
+        queryParams['sortBy'] = selectedSortBy.value;
+      if (searchQuery.value.isNotEmpty)
+        queryParams['search'] = searchQuery.value;
+
+      print('API call with queryParams: $queryParams');
+
+      // Debug: Gọi API không có filter để xem tất cả sản phẩm
+      if (queryParams.containsKey('category')) {
+        print('=== DEBUG: Checking all products ===');
+        final allProductsResponse = await ApiService.get('/api/products');
+        print('All products response: $allProductsResponse');
+        if (allProductsResponse['success']) {
+          final allProducts = allProductsResponse['data'] as List;
+          print('All products count: ${allProducts.length}');
+          for (var product in allProducts) {
+            print(
+              'Product: ${product['name']} - Category: ${product['category']}',
+            );
+          }
+        }
+        print('=== END DEBUG ===');
+      }
+
+      final response = await ApiService.get(
+        '/api/products',
+        queryParams: queryParams,
+      );
+
+      print('API response: $response');
+
       if (response['success']) {
         // Backend returns array directly, not wrapped in 'data'
         final newProducts = response['data'] as List;
-        
+        print('Products count: ${newProducts.length}');
+
         if (loadMore) {
           products.addAll(newProducts);
         } else {
           products.value = newProducts;
         }
-        
+
         // Check if there's more data
         hasMoreData.value = newProducts.length >= limit.value;
       } else {
@@ -129,46 +163,49 @@ class FilterController extends GetxController {
   // Get current filter summary
   String getFilterSummary() {
     final filters = <String>[];
-    
+
     if (selectedCategory.value != 'all') {
       filters.add(_getCategoryName(selectedCategory.value));
     }
-    
+
     if (minPrice.value > 0 || maxPrice.value < 500000) {
-      filters.add('${(minPrice.value / 1000).round()}k - ${(maxPrice.value / 1000).round()}k');
+      filters.add(
+        '${(minPrice.value / 1000).round()}k - ${(maxPrice.value / 1000).round()}k',
+      );
     }
-    
+
     if (selectedRating.value > 0) {
       filters.add('${selectedRating.value.toInt()}+ sao');
     }
-    
+
     if (searchQuery.value.isNotEmpty) {
       filters.add('"${searchQuery.value}"');
     }
-    
+
     return filters.isEmpty ? 'Tất cả sản phẩm' : filters.join(', ');
   }
 
   String _getCategoryName(String category) {
     switch (category) {
-      case 'pizza': return 'Pizza';
-      case 'burger': return 'Burger';
-      case 'sushi': return 'Sushi';
-      case 'vietnamese': return 'Món Việt';
-      case 'asian': return 'Món Á';
-      case 'western': return 'Món Âu';
-      case 'dessert': return 'Tráng miệng';
-      case 'drink': return 'Đồ uống';
-      default: return category;
+      case 'pizza':
+        return 'Pizza';
+      case 'burger':
+        return 'Burger';
+      case 'fries':
+        return 'Khoai tây chiên';
+      case 'Đồ uống':
+        return 'Đồ uống';
+      default:
+        return category;
     }
   }
 
   // Check if any filter is active
   bool get hasActiveFilters {
     return selectedCategory.value != 'all' ||
-           minPrice.value > 0 ||
-           maxPrice.value < 500000 ||
-           selectedRating.value > 0 ||
-           searchQuery.value.isNotEmpty;
+        minPrice.value > 0 ||
+        maxPrice.value < 500000 ||
+        selectedRating.value > 0 ||
+        searchQuery.value.isNotEmpty;
   }
-} 
+}

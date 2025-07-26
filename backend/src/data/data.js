@@ -19,7 +19,7 @@ const product = [
     tag: ["burger", "bò", "phô mai", "đồ ăn"],
     metaTitle: "Burger Bò Phô Mai - Hương vị đặc biệt",
     metaDescription: "Thưởng thức burger bò với phô mai tan chảy thơm ngon",
-    purchaseCount: 17,
+    purchaseCount: 25,
     isFavorite: false
   },
   {
@@ -41,7 +41,7 @@ const product = [
     tag: ["burger", "gà", "rán", "đồ ăn"],
     metaTitle: "Burger Gà Rán - Giòn tan hương vị",
     metaDescription: "Burger gà rán giòn với sốt mayonnaise đặc biệt",
-    purchaseCount: 23,
+    purchaseCount: 30,
     isFavorite: false
   },
 
@@ -65,7 +65,7 @@ const product = [
     tag: ["pizza", "margherita", "phô mai", "đồ ăn"],
     metaTitle: "Pizza Margherita - Hương vị truyền thống",
     metaDescription: "Pizza Margherita với phô mai mozzarella thơm ngon",
-    purchaseCount: 14,
+    purchaseCount: 22,
     isFavorite: false
   },
   {
@@ -87,55 +87,31 @@ const product = [
     tag: ["pizza", "pepperoni", "cay", "đồ ăn"],
     metaTitle: "Pizza Pepperoni - Cay nồng",
     metaDescription: "Pizza Pepperoni với hương vị cay nồng đặc trưng",
-    purchaseCount: 25,
+    purchaseCount: 28,
     isFavorite: false
   },
 
-  // ===== SUSHI =====
+  // ===== KHOAI TÂY CHIÊN =====
   {
-    name: "Sushi California Roll",
-    description: "Sushi cuộn với cua, bơ và dưa leo, phủ trứng cá",
-    price: 85000,
-    discountPrice: 75000,
-    sku: "SUSHI-001",
-    category: "sushi",
-    material: "Cơm sushi, cua, bơ, dưa leo, trứng cá",
+    name: "Khoai tây chiên",
+    description: "Khoai tây chiên giòn rụm với muối và gia vị đặc biệt",
+    price: 45000,
+    discountPrice: 35000,
+    sku: "FRIES-001",
+    category: "fries",
+    material: "Khoai tây, dầu ăn, muối, gia vị",
     image: [
       {
-        url: "https://images.pexels.com/photos/2097090/pexels-photo-2097090.jpeg?w=500",
-        altText: "Sushi California Roll"
+        url: "https://images.pexels.com/photos/1583884/pexels-photo-1583884.jpeg?w=500",
+        altText: "Khoai tây chiên"
       }
     ],
-    rating: 4.5,
-    numReviews: 89,
-    tag: ["sushi", "california roll", "cua", "đồ ăn"],
-    metaTitle: "Sushi California Roll - Tươi ngon",
-    metaDescription: "Sushi California Roll với cua và bơ",
-    purchaseCount: 19,
-    isFavorite: false
-  },
-
-  // ===== MÓN VIỆT =====
-  {
-    name: "Phở Bò",
-    description: "Phở bò truyền thống với nước dùng đậm đà, bánh phở mềm",
-    price: 65000,
-    discountPrice: 55000,
-    sku: "VIETNAMESE-001",
-    category: "vietnamese",
-    material: "Bánh phở, thịt bò, nước dùng, rau thơm",
-    image: [
-      {
-        url: "https://images.pexels.com/photos/1907244/pexels-photo-1907244.jpeg?w=500",
-        altText: "Phở bò"
-      }
-    ],
-    rating: 4.7,
-    numReviews: 189,
-    tag: ["phở", "bò", "truyền thống", "món việt"],
-    metaTitle: "Phở Bò - Truyền thống",
-    metaDescription: "Phở bò với nước dùng đậm đà truyền thống",
-    purchaseCount: 32,
+    rating: 4.3,
+    numReviews: 156,
+    tag: ["khoai tây", "chiên", "giòn", "đồ ăn"],
+    metaTitle: "Khoai tây chiên - Giòn rụm",
+    metaDescription: "Khoai tây chiên giòn rụm với gia vị đặc biệt",
+    purchaseCount: 35,
     isFavorite: false
   },
 
@@ -159,31 +135,7 @@ const product = [
     tag: ["nước ngọt", "coca cola", "có ga", "thức uống"],
     metaTitle: "Coca Cola - Hương vị đặc trưng",
     metaDescription: "Nước ngọt Coca Cola mát lạnh",
-    purchaseCount: 28,
-    isFavorite: false
-  },
-
-  // ===== TRÁNG MIỆNG =====
-  {
-    name: "Kem Chocolate",
-    description: "Kem chocolate đậm đà với hạt dẻ giòn",
-    price: 35000,
-    discountPrice: 30000,
-    sku: "DESSERT-001",
-    category: "dessert",
-    material: "Kem, chocolate, hạt dẻ",
-    image: [
-      {
-        url: "https://images.pexels.com/photos/1352281/pexels-photo-1352281.jpeg?w=500",
-        altText: "Kem chocolate"
-      }
-    ],
-    rating: 4.4,
-    numReviews: 98,
-    tag: ["kem", "chocolate", "ngọt", "tráng miệng"],
-    metaTitle: "Kem Chocolate - Đậm đà",
-    metaDescription: "Kem chocolate với hạt dẻ giòn",
-    purchaseCount: 15,
+    purchaseCount: 40,
     isFavorite: false
   }
 ];

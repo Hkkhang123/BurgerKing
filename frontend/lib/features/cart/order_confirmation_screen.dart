@@ -128,15 +128,23 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
         Map<String, dynamic>? result;
 
         if (widget.orderId != null) {
+          print('=== DEBUG ORDER CONFIRMATION ===');
+          print('Trying to get order with ID: ${widget.orderId}');
+
           // Thử lấy order trước
           result = await OrderService.getOrderById(token, widget.orderId!);
 
+          print('OrderService result: $result');
+
           if (result['success'] == true) {
+            print('Order found successfully');
             setState(() {
               _orderData = result!['data'];
               _isLoading = false;
             });
             return;
+          } else {
+            print('Failed to get order: ${result['data']?['message']}');
           }
         }
 

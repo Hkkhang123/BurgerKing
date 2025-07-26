@@ -9,11 +9,11 @@ class FilterBottomSheet {
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Filter state
-    RangeValues priceRange = const RangeValues(0, 500000);
-    String selectedCategory = 'all';
-    double selectedRating = 0;
-    String selectedSortBy = 'newest';
+    // Filter state - moved outside to persist across setState calls
+    RangeValues _priceRange = const RangeValues(0, 500000);
+    String _selectedCategory = 'all';
+    double _selectedRating = 0;
+    String _selectedSortBy = 'newest';
 
     showModalBottomSheet(
       context: context,
@@ -86,15 +86,11 @@ class FilterBottomSheet {
                                           'all',
                                           'pizza',
                                           'burger',
-                                          'sushi',
-                                          'vietnamese',
-                                          'asian',
-                                          'western',
-                                          'dessert',
-                                          'drink',
+                                          'fries',
+                                          'Đồ uống',
                                         ].map((category) {
                                           final isSelected =
-                                              selectedCategory == category;
+                                              _selectedCategory == category;
                                           return FilterChip(
                                             label: Text(
                                               _getCategoryName(category),
@@ -102,7 +98,7 @@ class FilterBottomSheet {
                                             selected: isSelected,
                                             onSelected: (selected) {
                                               setState(() {
-                                                selectedCategory = category;
+                                                _selectedCategory = category;
                                               });
                                             },
                                             backgroundColor:
@@ -132,17 +128,17 @@ class FilterBottomSheet {
                                   ),
                                   const SizedBox(height: 12),
                                   RangeSlider(
-                                    values: priceRange,
+                                    values: _priceRange,
                                     min: 0,
                                     max: 500000,
                                     divisions: 50,
                                     labels: RangeLabels(
-                                      '${(priceRange.start / 1000).round()}k',
-                                      '${(priceRange.end / 1000).round()}k',
+                                      '${(_priceRange.start / 1000).round()}k',
+                                      '${(_priceRange.end / 1000).round()}k',
                                     ),
                                     onChanged: (values) {
                                       setState(() {
-                                        priceRange = values;
+                                        _priceRange = values;
                                       });
                                     },
                                   ),
@@ -151,10 +147,10 @@ class FilterBottomSheet {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        '${(priceRange.start / 1000).round()}k',
+                                        '${(_priceRange.start / 1000).round()}k',
                                       ),
                                       Text(
-                                        '${(priceRange.end / 1000).round()}k',
+                                        '${(_priceRange.end / 1000).round()}k',
                                       ),
                                     ],
                                   ),
@@ -177,18 +173,18 @@ class FilterBottomSheet {
                                       return GestureDetector(
                                         onTap: () {
                                           setState(() {
-                                            selectedRating =
-                                                selectedRating == index + 1
+                                            _selectedRating =
+                                                _selectedRating == index + 1
                                                     ? 0
                                                     : index + 1;
                                           });
                                         },
                                         child: Icon(
-                                          index < selectedRating
+                                          index < _selectedRating
                                               ? Icons.star
                                               : Icons.star_border,
                                           color:
-                                              index < selectedRating
+                                              index < _selectedRating
                                                   ? Colors.amber
                                                   : Colors.grey,
                                           size: 30,
@@ -196,11 +192,11 @@ class FilterBottomSheet {
                                       );
                                     }),
                                   ),
-                                  if (selectedRating > 0)
+                                  if (_selectedRating > 0)
                                     Padding(
                                       padding: const EdgeInsets.only(top: 8),
                                       child: Text(
-                                        'Từ ${selectedRating.toInt()} sao trở lên',
+                                        'Từ ${_selectedRating.toInt()} sao trở lên',
                                         style: TextStyle(
                                           color: Theme.of(context).primaryColor,
                                           fontSize: 12,
@@ -247,14 +243,14 @@ class FilterBottomSheet {
                                           },
                                         ].map((sortOption) {
                                           final isSelected =
-                                              selectedSortBy ==
+                                              _selectedSortBy ==
                                               sortOption['value'];
                                           return FilterChip(
                                             label: Text(sortOption['label']!),
                                             selected: isSelected,
                                             onSelected: (selected) {
                                               setState(() {
-                                                selectedSortBy =
+                                                _selectedSortBy =
                                                     sortOption['value']!;
                                               });
                                             },
@@ -280,15 +276,27 @@ class FilterBottomSheet {
                                         child: OutlinedButton(
                                           onPressed: () {
                                             setState(() {
-                                              priceRange = const RangeValues(
+                                              _priceRange = const RangeValues(
                                                 0,
                                                 500000,
                                               );
-                                              selectedCategory = 'all';
-                                              selectedRating = 0;
-                                              selectedSortBy = 'newest';
+                                              _selectedCategory = 'all';
+                                              _selectedRating = 0;
+                                              _selectedSortBy = 'newest';
                                             });
+                                            // Force rebuild to ensure UI updates
+                                            Future.delayed(
+                                              const Duration(milliseconds: 100),
+                                              () {
+                                                setState(() {});
+                                              },
+                                            );
                                           },
+                                          style: OutlinedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 12,
+                                            ),
+                                          ),
                                           child: const Text('Đặt lại'),
                                         ),
                                       ),
@@ -298,16 +306,21 @@ class FilterBottomSheet {
                                           onPressed: () {
                                             final filterParams = {
                                               'minPrice':
-                                                  priceRange.start.round(),
+                                                  _priceRange.start.round(),
                                               'maxPrice':
-                                                  priceRange.end.round(),
-                                              'category': selectedCategory,
-                                              'minRating': selectedRating,
-                                              'sortBy': selectedSortBy,
+                                                  _priceRange.end.round(),
+                                              'category': _selectedCategory,
+                                              'minRating': _selectedRating,
+                                              'sortBy': _selectedSortBy,
                                             };
                                             onApplyFilter(filterParams);
                                             Get.back();
                                           },
+                                          style: ElevatedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 12,
+                                            ),
+                                          ),
                                           child: const Text('Áp dụng'),
                                         ),
                                       ),
@@ -332,17 +345,9 @@ class FilterBottomSheet {
         return 'Pizza';
       case 'burger':
         return 'Burger';
-      case 'sushi':
-        return 'Sushi';
-      case 'vietnamese':
-        return 'Món Việt';
-      case 'asian':
-        return 'Món Á';
-      case 'western':
-        return 'Món Âu';
-      case 'dessert':
-        return 'Tráng miệng';
-      case 'drink':
+      case 'fries':
+        return 'Khoai tây chiên';
+      case 'Đồ uống':
         return 'Đồ uống';
       default:
         return category;

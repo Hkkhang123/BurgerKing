@@ -4,7 +4,7 @@ import 'dart:convert';
 
 class ProductController extends GetxController {
   static const String baseUrl = 'https://burgerking-j92p.onrender.com';
-  
+
   // Observable variables
   final RxList<dynamic> bestSellerProducts = <dynamic>[].obs;
   final RxBool isLoading = false.obs;
@@ -31,12 +31,12 @@ class ProductController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      
+
       final response = await http.get(
         Uri.parse('$baseUrl/api/products/best-seller'),
         headers: _headers,
       );
-      
+
       if (response.statusCode == 200) {
         final products = jsonDecode(response.body);
         bestSellerProducts.assignAll(products);
@@ -56,12 +56,17 @@ class ProductController extends GetxController {
   }
 
   // Toggle favorite product
-  Future<Map<String, dynamic>> toggleFavoriteProduct(String token, String productId) async {
+  Future<Map<String, dynamic>> toggleFavoriteProduct(
+    String token,
+    String productId,
+  ) async {
     try {
-      final response = await http.patch(
-        Uri.parse('$baseUrl/api/products/favorite/$productId'),
-        headers: getAuthHeaders(token),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .patch(
+            Uri.parse('$baseUrl/api/products/favorite/$productId'),
+            headers: getAuthHeaders(token),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         return {
@@ -87,25 +92,23 @@ class ProductController extends GetxController {
     } on http.ClientException {
       return {
         'success': false,
-        'error': 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
+        'error':
+            'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
         'statusCode': 0,
       };
     } catch (e) {
       String errorMessage = 'Lỗi kết nối: $e';
-      
-      if (e.toString().contains('SocketException') || 
+
+      if (e.toString().contains('SocketException') ||
           e.toString().contains('Connection refused') ||
           e.toString().contains('Failed host lookup')) {
-        errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+        errorMessage =
+            'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
       } else if (e.toString().contains('TimeoutException')) {
         errorMessage = 'Kết nối bị timeout. Vui lòng thử lại.';
       }
-      
-      return {
-        'success': false,
-        'error': errorMessage,
-        'statusCode': 0,
-      };
+
+      return {'success': false, 'error': errorMessage, 'statusCode': 0};
     }
   }
 
@@ -117,7 +120,7 @@ class ProductController extends GetxController {
         headers: _headers,
         body: jsonEncode({'ids': ids}),
       );
-      
+
       final data = jsonDecode(response.body);
       if (data['success'] == true && data['products'] != null) {
         return List<Map<String, dynamic>>.from(data['products']);
@@ -129,21 +132,28 @@ class ProductController extends GetxController {
   }
 
   // Lấy danh sách tất cả sản phẩm
-  Future<List<dynamic>> fetchAllProducts({Map<String, dynamic>? filters}) async {
+  Future<List<dynamic>> fetchAllProducts({
+    Map<String, dynamic>? filters,
+  }) async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      
+
       Uri uri = Uri.parse('$baseUrl/api/products');
       if (filters != null) {
-        uri = uri.replace(queryParameters: filters.map((key, value) => MapEntry(key, value.toString())));
+        uri = uri.replace(
+          queryParameters: filters.map(
+            (key, value) => MapEntry(key, value.toString()),
+          ),
+        );
       }
-      
+
       final response = await http.get(uri, headers: _headers);
-      
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['products'] ?? [];
+        // Backend returns array directly, not wrapped in 'products' key
+        return data is List ? data : [];
       } else {
         errorMessage.value = 'Không thể tải danh sách sản phẩm';
         return [];
@@ -163,7 +173,7 @@ class ProductController extends GetxController {
         Uri.parse('$baseUrl/api/products/$productId'),
         headers: _headers,
       );
-      
+
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
@@ -181,12 +191,12 @@ class ProductController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      
+
       final response = await http.get(
         Uri.parse('$baseUrl/api/products/search?q=$query'),
         headers: _headers,
       );
-      
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['products'] ?? [];
@@ -207,12 +217,12 @@ class ProductController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      
+
       final response = await http.get(
         Uri.parse('$baseUrl/api/products/category/$categoryId'),
         headers: _headers,
       );
-      
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['products'] ?? [];
@@ -235,7 +245,7 @@ class ProductController extends GetxController {
         Uri.parse('$baseUrl/api/categories'),
         headers: _headers,
       );
-      
+
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
@@ -260,4 +270,4 @@ class ProductController extends GetxController {
   Future<void> refreshBestSellerProducts() async {
     await fetchBestSellerProducts();
   }
-} 
+}

@@ -17,8 +17,6 @@ class _CategoryChipState extends State<CategoryChip> {
     {'label': 'Khoai tây chiên', 'value': 'fries'},
     {'label': 'Pizza', 'value': 'pizza'},
     {'label': 'Đồ uống', 'value': 'drink'},
-    {'label': 'Việt Nam', 'value': 'vietnamese'},
-    {'label': 'Sushi', 'value': 'sushi'},
   ];
   @override
   Widget build(BuildContext context) {

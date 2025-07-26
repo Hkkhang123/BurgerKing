@@ -1,6 +1,3 @@
-import 'package:client/core/services/auth_controller.dart';
-import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -13,13 +10,19 @@ class OrderService {
     String orderId,
   ) async {
     try {
+      final url = '$baseUrl/api/order/$orderId';
+      print('OrderService: Calling API: $url');
+
       final response = await http.get(
-        Uri.parse('$baseUrl/api/order/$orderId'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
       );
+
+      print('OrderService: Response status: ${response.statusCode}');
+      print('OrderService: Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

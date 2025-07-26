@@ -23,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late AuthController authController;
   List<String> userFavorites = [];
   String? userToken;
-  String selectedCategory = 'Tất cả';
+  String selectedCategory = 'all';
   String searchQuery = '';
   List<dynamic> allProducts = [];
   List<dynamic> filteredProducts = [];
@@ -159,6 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 selectedCategory == 'all' || category == selectedCategory;
             final matchesSearch =
                 searchQuery.isEmpty || name.contains(searchQuery.toLowerCase());
+
             return matchesCategory && matchesSearch;
           }).toList();
     });
@@ -281,7 +282,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
             CategoryChip(
               onCategorySelected: (category) {
-                print('Category selected: "' + category + '"');
                 selectedCategory = category;
                 _applyFilters();
               },
