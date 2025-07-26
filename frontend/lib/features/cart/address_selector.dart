@@ -153,22 +153,44 @@ class AddressSelectorState extends State<AddressSelector> {
         ),
         ElevatedButton(
           onPressed: () {
-            if (selectedDistrict != null && selectedWard != null) {
+            if (selectedProvince != null &&
+                selectedDistrict != null &&
+                selectedWard != null) {
+              final wardName = _getName(
+                wards,
+                selectedWard,
+                "WardCode",
+                "WardName",
+              );
+              final districtName = _getName(
+                districts,
+                selectedDistrict,
+                "DistrictID",
+                "DistrictName",
+              );
+              final cityName = _getName(
+                provinces,
+                selectedProvince,
+                "ProvinceID",
+                "ProvinceName",
+              );
+
               widget.addressController.text =
-                  '${_detailController.text}, '
-                  '${_getName(wards, selectedWard, "WardCode", "WardName")}, '
-                  '${_getName(districts, selectedDistrict, "DistrictID", "DistrictName")}, '
-                  '${_getName(provinces, selectedProvince, "ProvinceID", "ProvinceName")}';
+                  '${_detailController.text}, $wardName, $districtName, $cityName';
 
               print("Địa chỉ đã chọn: ${widget.addressController.text}");
 
-              Navigator.of(
-                context,
-              ).pop({"districtId": selectedDistrict, "wardCode": selectedWard});
+              Navigator.of(context).pop({
+                "street": _detailController.text,
+                "ward": wardName,
+                "district": districtName,
+                "city": cityName,
+              });
             } else {
               print("Vui lòng chọn đầy đủ địa chỉ!");
             }
           },
+
           child: const Text('Lưu'),
         ),
       ],
