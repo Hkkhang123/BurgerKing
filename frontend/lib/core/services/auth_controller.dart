@@ -712,7 +712,7 @@ class AuthController extends GetxController {
   }
 
   // Gửi OTP cho đăng ký
-  Future<bool> sendSignupOtp(String email) async {
+  Future<bool> sendSignupOtp(String email, String name, String password) async {
     _isLoading.value = true;
     _errorMessage.value = '';
     try {
@@ -720,7 +720,11 @@ class AuthController extends GetxController {
           .post(
             Uri.parse('$baseUrl/api/auth/send-signup-otp'),
             headers: _headers,
-            body: jsonEncode({'email': email}),
+            body: jsonEncode({
+              'email': email,
+              'name': name,
+              'password': password,
+            }),
           )
           .timeout(const Duration(seconds: 10));
 
@@ -742,12 +746,7 @@ class AuthController extends GetxController {
   }
 
   // Đăng ký với OTP
-  Future<bool> registerWithOtp(
-    String name,
-    String email,
-    String password,
-    String otp,
-  ) async {
+  Future<bool> registerWithOtp(String email, String otp) async {
     _isLoading.value = true;
     _errorMessage.value = '';
     try {
@@ -755,12 +754,7 @@ class AuthController extends GetxController {
           .post(
             Uri.parse('$baseUrl/api/auth/register-with-otp'),
             headers: _headers,
-            body: jsonEncode({
-              'name': name,
-              'email': email,
-              'password': password,
-              'otp': otp,
-            }),
+            body: jsonEncode({'email': email, 'otp': otp}),
           )
           .timeout(const Duration(seconds: 10));
 

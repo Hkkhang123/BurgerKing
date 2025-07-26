@@ -267,6 +267,8 @@ class SignupScreen extends StatelessWidget {
 
     final success = await authController.sendSignupOtp(
       _emailController.text.trim(),
+      _nameController.text.trim(),
+      _passwordController.text,
     );
 
     if (success) {

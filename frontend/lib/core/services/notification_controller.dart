@@ -47,8 +47,8 @@ class NotificationController extends GetxController {
   /// Đánh dấu tất cả thông báo đã đọc
   Future<void> markAllAsRead() async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/notifications/mark-all-read'),
+      final response = await http.put(
+        Uri.parse('$baseUrl/notifications/mark-read'),
         headers: _headers(),
       );
       if (response.statusCode == 200) {
@@ -67,7 +67,7 @@ class NotificationController extends GetxController {
   Future<void> deleteAllNotifications() async {
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/notifications/delete-all'),
+        Uri.parse('$baseUrl/notifications'),
         headers: _headers(),
       );
       if (response.statusCode == 200) {

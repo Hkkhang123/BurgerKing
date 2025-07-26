@@ -51,20 +51,7 @@ const userSchema = mongoose.Schema({
         type: Date,
         default: null
     },
-    // OTP cho đăng ký
-    signupOTP: {
-        type: String,
-        default: null
-    },
-    signupOTPExpires: {
-        type: Date,
-        default: null
-    },
-    // Trạng thái tạm thời cho user đăng ký
-    isTemporary: {
-        type: Boolean,
-        default: false
-    },
+
     addresses: [
         {
             name: { type: String, required: true }, // Tên người nhận

@@ -617,7 +617,7 @@ export const verifyLoginOtp = async (req, res) => {
 // Gửi OTP cho đăng ký
 export const sendSignupOtp = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, name, password } = req.body;
     
     // Kiểm tra email đã tồn tại chưa
     const existingUser = await User.findOne({ email });
@@ -631,16 +631,19 @@ export const sendSignupOtp = async (req, res) => {
     // Tạo OTP 6 số
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     
-    // Lưu OTP vào user tạm thời
-    const tempUser = new User({
-      email,
-      signupOTP: otp,
-      signupOTPExpires: Date.now() + 10 * 60 * 1000, // 10 phút
-      name: 'temp', // Tạm thời
-      password: 'temp', // Tạm thời
-      isTemporary: true
+    // Lưu OTP vào session hoặc cache (không tạo user)
+    // Có thể sử dụng Redis, hoặc lưu tạm trong memory
+    // Ở đây ta sẽ lưu vào một collection riêng hoặc sử dụng Map
+    if (!global.signupOTPs) {
+      global.signupOTPs = new Map();
+    }
+    
+    global.signupOTPs.set(email, {
+      otp,
+      name,
+      password,
+      expires: Date.now() + 10 * 60 * 1000 // 10 phút
     });
-    await tempUser.save();
     
     // Gửi email
     await sendMail({
@@ -665,28 +668,37 @@ export const sendSignupOtp = async (req, res) => {
 // Đăng ký với OTP
 export const registerWithOtp = async (req, res) => {
   try {
-    const { name, email, password, otp } = req.body;
+    const { email, otp } = req.body;
     
-    // Tìm user tạm thời với OTP
-    const tempUser = await User.findOne({ 
-      email, 
-      signupOTP: otp,
-      signupOTPExpires: { $gt: Date.now() },
-      isTemporary: true
-    });
-    
-    if (!tempUser) {
+    // Kiểm tra OTP từ cache
+    if (!global.signupOTPs || !global.signupOTPs.has(email)) {
       return res.status(400).json({ 
         success: false, 
-        message: 'OTP không đúng hoặc đã hết hạn' 
+        message: 'OTP không tồn tại hoặc đã hết hạn' 
       });
     }
     
-    // Kiểm tra email đã tồn tại chưa (user thật)
-    const existingUser = await User.findOne({ 
-      email, 
-      isTemporary: { $ne: true } // Không phải user tạm
-    });
+    const otpData = global.signupOTPs.get(email);
+    
+    // Kiểm tra OTP có đúng không
+    if (otpData.otp !== otp) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'OTP không đúng' 
+      });
+    }
+    
+    // Kiểm tra OTP có hết hạn không
+    if (otpData.expires < Date.now()) {
+      global.signupOTPs.delete(email);
+      return res.status(400).json({ 
+        success: false, 
+        message: 'OTP đã hết hạn' 
+      });
+    }
+    
+    // Kiểm tra email đã tồn tại chưa
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ 
         success: false, 
@@ -694,13 +706,16 @@ export const registerWithOtp = async (req, res) => {
       });
     }
     
-    // Cập nhật thông tin user
-    tempUser.name = name;
-    tempUser.password = password;
-    tempUser.signupOTP = null;
-    tempUser.signupOTPExpires = null;
-    tempUser.isTemporary = false;
-    await tempUser.save();
+    // Tạo user thật với thông tin từ cache
+    const newUser = new User({
+      email: email, // Sử dụng email từ request
+      name: otpData.name,
+      password: otpData.password
+    });
+    await newUser.save();
+    
+    // Xóa OTP khỏi cache
+    global.signupOTPs.delete(email);
     
     // Tạo JWT token
     const payload = {

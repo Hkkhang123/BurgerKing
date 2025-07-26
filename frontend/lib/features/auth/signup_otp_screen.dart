@@ -71,9 +71,7 @@ class _SignupOtpScreenState extends State<SignupOtpScreen> {
     }
 
     final success = await authController.registerWithOtp(
-      widget.name,
       widget.email,
-      widget.password,
       _otpController.text.trim(),
     );
 
@@ -85,7 +83,11 @@ class _SignupOtpScreenState extends State<SignupOtpScreen> {
   }
 
   void _handleResend() async {
-    final success = await authController.sendSignupOtp(widget.email);
+    final success = await authController.sendSignupOtp(
+      widget.email,
+      widget.name,
+      widget.password,
+    );
     if (success) {
       _otpController.clear();
       _startTimer();
