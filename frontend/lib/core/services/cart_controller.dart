@@ -221,7 +221,8 @@ class CartController extends GetxController {
       );
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        return {'success': true, 'data': data};
+        // Backend đã trả về {success: true, data: ...} nên không cần wrap thêm
+        return data;
       } else {
         final errorData = jsonDecode(response.body);
         return {'success': false, 'data': errorData};
