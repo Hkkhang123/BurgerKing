@@ -188,73 +188,43 @@ class SignupScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
 
-                // Signup buttons
-                Column(
-                  children: [
-                    // Đăng ký bằng password
-                    Obx(
-                      () => SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed:
-                              authController.isLoading ? null : _handleSignUp,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).primaryColor,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child:
-                              authController.isLoading
-                                  ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                  : Text(
-                                    'Đăng ký',
-                                    style: AppTextStyle.withColor(
-                                      AppTextStyle.buttonMedium,
-                                      Colors.white,
-                                    ),
+                // Signup button
+                Obx(
+                  () => SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed:
+                          authController.isLoading
+                              ? null
+                              : _handleSignUpWithOtp,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child:
+                          authController.isLoading
+                              ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
                                   ),
-                        ),
-                      ),
+                                ),
+                              )
+                              : Text(
+                                'Đăng ký bằng OTP',
+                                style: AppTextStyle.withColor(
+                                  AppTextStyle.buttonMedium,
+                                  Colors.white,
+                                ),
+                              ),
                     ),
-                    const SizedBox(height: 12),
-                    // Đăng ký bằng OTP
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed:
-                            authController.isLoading
-                                ? null
-                                : _handleSignUpWithOtp,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          side: BorderSide(
-                            color: Theme.of(context).primaryColor,
-                          ),
-                        ),
-                        child: Text(
-                          'Đăng ký bằng OTP',
-                          style: AppTextStyle.withColor(
-                            AppTextStyle.buttonMedium,
-                            Theme.of(context).primaryColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -285,36 +255,6 @@ class SignupScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  void _handleSignUp() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    final AuthController authController = Get.find<AuthController>();
-
-    // Clear any previous error messages
-    authController.clearError();
-
-    // Kiểm tra kết nối server trước
-    final isConnected = await authController.testConnection();
-    if (!isConnected) {
-      authController.setErrorMessage('Không thể kết nối đến server.');
-      return;
-    }
-
-    final success = await authController.registerWithApi(
-      _nameController.text.trim(),
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
-
-    if (success) {
-      // Delay 2 giây để hiển thị thông báo thành công trước khi chuyển màn hình
-      await Future.delayed(const Duration(seconds: 2));
-      Get.offAll(() => const MainScreen());
-    }
   }
 
   void _handleSignUpWithOtp() async {

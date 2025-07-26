@@ -752,3 +752,143 @@ export const registerWithOtp = async (req, res) => {
     });
   }
 };
+
+// ===== TWO-FACTOR AUTHENTICATION =====
+
+// Bước 1: Đăng nhập bằng password và gửi OTP
+export const loginWithPasswordAndSendOtp = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Không tìm thấy người dùng với email này' 
+      });
+    }
+
+    // Kiểm tra password
+    if (!(await user.matchPassword(password))) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Mật khẩu không đúng' 
+      });
+    }
+
+    // Tạo OTP 6 số
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordOTP = otp; // Tạm thời dùng field này cho 2FA
+    user.resetPasswordOTPExpires = Date.now() + 10 * 60 * 1000; // 10 phút
+    await user.save();
+    
+    // Gửi email OTP
+    await sendMail({
+      to: user.email,
+      subject: 'Mã xác thực hai yếu tố',
+      text: `Mã xác thực hai yếu tố của bạn là: ${otp}`,
+      html: `<p>Mã xác thực hai yếu tố của bạn là: <b>${otp}</b></p><p>OTP có hiệu lực trong 10 phút.</p>`
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Đã gửi mã xác thực hai yếu tố về email!',
+      userId: user._id // Trả về userId để frontend sử dụng
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
+  }
+};
+
+// Bước 2: Xác thực OTP và hoàn tất đăng nhập
+export const verifyTwoFactorAuth = async (req, res) => {
+  try {
+    const { userId, otp } = req.body;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Không tìm thấy người dùng' 
+      });
+    }
+    
+    if (!user.resetPasswordOTP || !user.resetPasswordOTPExpires) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Bạn chưa yêu cầu OTP hoặc OTP đã hết hạn' 
+      });
+    }
+    
+    if (user.resetPasswordOTP !== otp) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Mã xác thực không đúng' 
+      });
+    }
+    
+    if (user.resetPasswordOTPExpires < Date.now()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Mã xác thực đã hết hạn' 
+      });
+    }
+    
+    // Xóa OTP sau khi xác thực thành công
+    user.resetPasswordOTP = null;
+    user.resetPasswordOTPExpires = null;
+    await user.save();
+    
+    // Tạo JWT token
+    const payload = {
+      user: {
+        _id: user._id,
+        role: user.role,
+      },
+    };
+
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "40h",
+      },
+      async (err, token) => {
+        if (err) {
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Lỗi tạo token' 
+          });
+        }
+        
+        // Tạo notification đăng nhập thành công
+        await Notification.create({
+          user: user._id,
+          title: "Đăng nhập thành công",
+          message: "Xác thực hai yếu tố thành công!",
+        });
+        
+        res.json({
+          success: true,
+          user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            image: sanitizeUserImage(user),
+          },
+          token,
+          message: "Đăng nhập thành công",
+        });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
+  }
+};

@@ -851,4 +851,86 @@ class AuthController extends GetxController {
       return false;
     }
   }
+
+  // ===== TWO-FACTOR AUTHENTICATION =====
+
+  // Bước 1: Đăng nhập bằng password và gửi OTP
+  Future<Map<String, dynamic>?> loginWithPasswordAndSendOtp(
+    String email,
+    String password,
+  ) async {
+    try {
+      _isLoading.value = true;
+      _errorMessage.value = '';
+
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/auth/login-2fa'),
+            headers: _headers,
+            body: jsonEncode({'email': email, 'password': password}),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        showSuccessMessage(data['message'] ?? 'Đã gửi mã xác thực hai yếu tố!');
+        return {'userId': data['userId'], 'message': data['message']};
+      } else {
+        _errorMessage.value = data['message'] ?? 'Có lỗi xảy ra';
+        return null;
+      }
+    } catch (e) {
+      _errorMessage.value = 'Không thể kết nối đến server';
+      return null;
+    } finally {
+      _isLoading.value = false;
+    }
+  }
+
+  // Bước 2: Xác thực OTP và hoàn tất đăng nhập
+  Future<bool> verifyTwoFactorAuth(String userId, String otp) async {
+    try {
+      _isLoading.value = true;
+      _errorMessage.value = '';
+
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/auth/verify-2fa'),
+            headers: _headers,
+            body: jsonEncode({'userId': userId, 'otp': otp}),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        // Lưu thông tin user và token
+        _storage.write('user', data['user']);
+        _storage.write('token', data['token']);
+        _storage.write('isLoggedIn', true);
+
+        _isLoggedIn.value = true;
+        _isLoading.value = false;
+
+        // Cập nhật token và fetch notifications
+        final notificationController = Get.find<NotificationController>();
+        notificationController.setToken(data['token']);
+        await notificationController.fetchNotifications();
+
+        showSuccessMessage(
+          data['message'] ?? 'Xác thực hai yếu tố thành công!',
+        );
+        return true;
+      } else {
+        _errorMessage.value = data['message'] ?? 'Có lỗi xảy ra';
+        return false;
+      }
+    } catch (e) {
+      _errorMessage.value = 'Không thể kết nối đến server';
+      return false;
+    } finally {
+      _isLoading.value = false;
+    }
+  }
 }

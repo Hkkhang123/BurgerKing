@@ -16,7 +16,9 @@ import {
   sendLoginOtp,
   verifyLoginOtp,
   sendSignupOtp,
-  registerWithOtp
+  registerWithOtp,
+  loginWithPasswordAndSendOtp,
+  verifyTwoFactorAuth
 } from "../controllers/auth.controller.js";
 import { protectRoutes } from "../middleware/auth.middleware.js";
 
@@ -37,6 +39,10 @@ router.post("/send-login-otp", sendLoginOtp);
 router.post("/verify-login-otp", verifyLoginOtp);
 router.post("/send-signup-otp", sendSignupOtp);
 router.post("/register-with-otp", registerWithOtp);
+
+// Two-Factor Authentication
+router.post("/login-2fa", loginWithPasswordAndSendOtp);
+router.post("/verify-2fa", verifyTwoFactorAuth);
 
 // Địa chỉ giao hàng
 router.get("/addresses", protectRoutes, getAddresses);

@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:client/core/utils/google_auth_service.dart';
 import 'package:client/features/auth/otp_verify_screen.dart';
-import 'package:client/features/auth/login_otp_screen.dart';
+import 'package:client/features/auth/two_factor_screen.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -118,73 +118,40 @@ class SigninScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // Login buttons
-                Column(
-                  children: [
-                    // Đăng nhập bằng password
-                    Obx(
-                      () => SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed:
-                              authController.isLoading ? null : _handleSignIn,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).primaryColor,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child:
-                              authController.isLoading
-                                  ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                  : Text(
-                                    'Đăng nhập',
-                                    style: AppTextStyle.withColor(
-                                      AppTextStyle.buttonMedium,
-                                      Colors.white,
-                                    ),
+                Obx(
+                  () => SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed:
+                          authController.isLoading ? null : _handleSignIn,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child:
+                          authController.isLoading
+                              ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
                                   ),
-                        ),
-                      ),
+                                ),
+                              )
+                              : Text(
+                                'Đăng nhập (2FA)',
+                                style: AppTextStyle.withColor(
+                                  AppTextStyle.buttonMedium,
+                                  Colors.white,
+                                ),
+                              ),
                     ),
-                    const SizedBox(height: 12),
-                    // Đăng nhập bằng OTP
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed:
-                            authController.isLoading
-                                ? null
-                                : _handleLoginWithOtp,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          side: BorderSide(
-                            color: Theme.of(context).primaryColor,
-                          ),
-                        ),
-                        child: Text(
-                          'Đăng nhập bằng OTP',
-                          style: AppTextStyle.withColor(
-                            AppTextStyle.buttonMedium,
-                            Theme.of(context).primaryColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
                 const SizedBox(height: 24),
                 // Social login buttons
@@ -205,15 +172,7 @@ class SigninScreen extends StatelessWidget {
                           _SocialIconButton(
                             icon: Icons.facebook,
                             color: Colors.blue[800]!,
-                            onTap: () {
-                              Get.snackbar(
-                                'Thông báo',
-                                'Tính năng đăng nhập Facebook đang được cập nhật. Vui lòng sử dụng email/password hoặc Google.',
-                                backgroundColor: Colors.orange,
-                                colorText: Colors.white,
-                                duration: const Duration(seconds: 3),
-                              );
-                            },
+                            onTap: () => _handleFacebookSignIn(context),
                           ),
                           const SizedBox(width: 18),
                           _SocialIconButton(
@@ -271,59 +230,17 @@ class SigninScreen extends StatelessWidget {
     }
 
     final AuthController authController = Get.find<AuthController>();
-
-    // Clear any previous error messages
     authController.clearError();
 
-    // Kiểm tra kết nối server trước
-    final isConnected = await authController.testConnection();
-    if (!isConnected) {
-      authController.setErrorMessage('Không thể kết nối đến server.');
-      return;
-    }
-
-    final success = await authController.loginWithApi(
+    // Bước 1: Đăng nhập bằng password và gửi OTP
+    final result = await authController.loginWithPasswordAndSendOtp(
       _emailController.text.trim(),
       _passwordController.text,
     );
 
-    if (success) {
-      // Delay 2 giây để hiển thị thông báo thành công trước khi chuyển màn hình
-      await Future.delayed(const Duration(seconds: 2));
-      Get.offAll(() => const MainScreen());
-    }
-  }
-
-  void _handleLoginWithOtp() async {
-    if (_emailController.text.trim().isEmpty) {
-      Get.snackbar(
-        'Lỗi',
-        'Vui lòng nhập email',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return;
-    }
-
-    if (!GetUtils.isEmail(_emailController.text.trim())) {
-      Get.snackbar(
-        'Lỗi',
-        'Vui lòng nhập email hợp lệ',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return;
-    }
-
-    final AuthController authController = Get.find<AuthController>();
-    authController.clearError();
-
-    final success = await authController.sendLoginOtp(
-      _emailController.text.trim(),
-    );
-
-    if (success) {
-      Get.to(() => LoginOtpScreen(email: _emailController.text.trim()));
+    if (result != null) {
+      // Bước 2: Chuyển đến màn hình xác thực hai yếu tố
+      Get.to(() => TwoFactorScreen(userId: result['userId']));
     }
   }
 
@@ -514,81 +431,27 @@ class _SocialIconButton extends StatelessWidget {
 
 // Thay thế hàm _handleFacebookSignIn
 Future<void> _handleFacebookSignIn(BuildContext context) async {
-  try {
-    final AuthController authController = Get.find<AuthController>();
-    print('Bắt đầu đăng nhập Facebook...');
-
-    // Kiểm tra xem Facebook Auth có sẵn sàng không
-    if (!await FacebookAuth.instance.isWebSdkInitialized) {
-      print('Facebook Web SDK chưa được khởi tạo');
-      Get.snackbar(
-        'Lỗi',
-        'Facebook đăng nhập chưa được cấu hình. Vui lòng thử lại sau.',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return;
-    }
-
-    final result = await FacebookAuth.instance.login(
-      permissions: ['email', 'public_profile'],
+  final AuthController authController = Get.find<AuthController>();
+  print('Bắt đầu đăng nhập Facebook...');
+  final result = await FacebookAuth.instance.login(
+    permissions: ['email', 'public_profile'],
+  );
+  print('Facebook login result: $result');
+  if (result.status == LoginStatus.success) {
+    final accessToken = result.accessToken!.token;
+    print('Facebook access token: $accessToken');
+    final response = await http.post(
+      Uri.parse(
+        'http://10.0.2.2:5000/api/auth/facebook',
+      ), // Đổi thành IP backend nếu chạy thật
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'access_token': accessToken}),
     );
-    print('Facebook login result: $result');
-
-    if (result.status == LoginStatus.success) {
-      final accessToken = result.accessToken!.token;
-      print('Facebook access token: $accessToken');
-
-      // Gọi backend API
-      try {
-        final response = await http.post(
-          Uri.parse('https://burgerking-j92p.onrender.com/api/auth/facebook'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'access_token': accessToken}),
-        );
-        print('Backend response: ${response.statusCode} ${response.body}');
-
-        if (response.statusCode == 200) {
-          await authController.loginWithFacebook(
-            onSuccess: () {
-              Get.offAll(() => const MainScreen());
-            },
-          );
-        } else {
-          Get.snackbar(
-            'Lỗi',
-            'Không thể xác thực với Facebook. Vui lòng thử lại.',
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
-        }
-      } catch (e) {
-        print('Backend API error: $e');
-        Get.snackbar(
-          'Lỗi',
-          'Không thể kết nối đến server. Vui lòng thử lại.',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-      }
-    } else if (result.status == LoginStatus.cancelled) {
-      print('Facebook login cancelled by user');
-    } else {
-      print('Facebook login failed: ${result.status}');
-      Get.snackbar(
-        'Lỗi',
-        'Đăng nhập Facebook thất bại. Vui lòng thử lại.',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    }
-  } catch (e) {
-    print('Facebook login error: $e');
-    Get.snackbar(
-      'Lỗi',
-      'Có lỗi xảy ra khi đăng nhập Facebook. Vui lòng thử lại.',
-      backgroundColor: Colors.red,
-      colorText: Colors.white,
-    );
+    print('Backend response: ${response.statusCode} ${response.body}');
   }
+  await authController.loginWithFacebook(
+    onSuccess: () {
+      Get.offAll(() => const MainScreen());
+    },
+  );
 }
