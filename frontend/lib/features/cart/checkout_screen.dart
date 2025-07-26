@@ -399,7 +399,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 checkoutItem: checkoutItems,
                 shippingAddress: shippingAddress,
                 paymentMethod:
-                    _selectedMethod == PaymentMethod.momo ? 'momo' : 'cod',
+                    _selectedMethod == PaymentMethod.momo
+                        ? 'momo'
+                        : 'Thanh toán khi nhận hàng',
                 totalPrice: finalPrice,
               );
 

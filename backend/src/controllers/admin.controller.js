@@ -104,8 +104,10 @@ export const getAllOrders = async (req, res) => {
 
 export const updateOrder = async (req, res) => {
   try {
+    console.log("=== DEBUG UPDATE ORDER ===");
     console.log("[updateOrder] req.params.id:", req.params.id);
     console.log("[updateOrder] req.body:", req.body);
+    console.log("[updateOrder] req.user:", req.user?._id);
     const order = await Order.findById(req.params.id).populate("user", "name email");
     if (!order) {
       console.log("[updateOrder] Order not found for id:", req.params.id);
@@ -123,13 +125,20 @@ export const updateOrder = async (req, res) => {
       order.isPaid = isPaid;
       if (isPaid && !order.paidAt) {
         order.paidAt = Date.now();
-        // Cập nhật purchaseCount cho từng sản phẩm
-        for (const item of order.orderItems) {
-          await Product.findByIdAndUpdate(
-            item.productId,
-            { $inc: { purchaseCount: item.quantity } },
-            { new: true }
-          );
+        // Cập nhật purchaseCount cho từng sản phẩm chỉ khi thanh toán
+        try {
+          for (const item of order.orderItems) {
+            if (item.productId) {
+              await Product.findByIdAndUpdate(
+                item.productId,
+                { $inc: { purchaseCount: item.quantity } },
+                { new: true }
+              );
+            }
+          }
+        } catch (productError) {
+          console.log("[updateOrder] Error updating product purchaseCount:", productError);
+          // Không throw error vì đây không phải lỗi nghiêm trọng
         }
       }
     }
