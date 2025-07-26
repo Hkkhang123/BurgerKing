@@ -24,12 +24,19 @@ export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async (userData, { rejectWithValue }) => {
     try {
+      console.log('Login attempt with:', userData);
       const response = await axiosInstance.post("/api/auth/dangnhap", userData);
+      console.log('Login response:', response.data);
       localStorage.setItem("userInfo", JSON.stringify(response.data.user));
       localStorage.setItem("userToken", response.data.token);
       return { user: response.data.user, token: response.data.token };
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      console.log('Login error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        url: error.config?.url
+      });
+      return rejectWithValue(error.response?.data || { message: "Lỗi không xác định" });
     }
   }
 );

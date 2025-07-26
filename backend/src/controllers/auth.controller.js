@@ -83,49 +83,69 @@ export const dangNhap = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (user && (await user.matchPassword(password))) {
-      const payload = {
-        user: {
-          _id: user._id,
-          role: user.role,
-        },
-      };
-
-      jwt.sign(
-        payload,
-        process.env.JWT_SECRET,
-        {
-          expiresIn: "40h",
-        },
-        async (err, token) => {
-          if (err) {
-            console.log(err);
-          } else {
-            // Tạo notification đăng nhập thành công
-            await Notification.create({
-              user: user._id,
-              title: "Đăng nhập thành công",
-              message: "Chào mừng bạn quay trở lại!",
-            });
-            res.json({
-              user: {
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                image: sanitizeUserImage(user),
-              },
-              token,
-              message: "Success",
-            });
-          }
-        }
-      );
+    
+    if (!user) {
+      return res.status(401).json({ 
+        success: false,
+        message: "Email hoặc mật khẩu không đúng" 
+      });
     }
+    
+    if (!(await user.matchPassword(password))) {
+      return res.status(401).json({ 
+        success: false,
+        message: "Email hoặc mật khẩu không đúng" 
+      });
+    }
+    
+    const payload = {
+      user: {
+        _id: user._id,
+        role: user.role,
+      },
+    };
+
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "40h",
+      },
+      async (err, token) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).json({ 
+            success: false,
+            message: "Lỗi tạo token" 
+          });
+        } else {
+          // Tạo notification đăng nhập thành công
+          await Notification.create({
+            user: user._id,
+            title: "Đăng nhập thành công",
+            message: "Chào mừng bạn quay trở lại!",
+          });
+          res.json({
+            success: true,
+            user: {
+              _id: user._id,
+              name: user.name,
+              email: user.email,
+              role: user.role,
+              image: sanitizeUserImage(user),
+            },
+            token,
+            message: "Đăng nhập thành công",
+          });
+        }
+      }
+    );
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Lỗi đăng nhập controller", message: error.message });
+    console.log('Login error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: "Lỗi đăng nhập: " + error.message 
+    });
   }
 };
 
