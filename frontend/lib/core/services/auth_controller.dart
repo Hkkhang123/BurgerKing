@@ -9,9 +9,9 @@ import 'package:mime/mime.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:flutter/material.dart';
 
-class AuthController extends GetxController{
+class AuthController extends GetxController {
   static const String baseUrl = 'https://burgerking-j92p.onrender.com';
-  
+
   final _storage = GetStorage();
 
   final RxBool _isFisrtTime = true.obs;
@@ -41,12 +41,12 @@ class AuthController extends GetxController{
     _loadInitState();
   }
 
-  void _loadInitState(){
+  void _loadInitState() {
     _isFisrtTime.value = _storage.read('isFirstTime') ?? true;
     _isLoggedIn.value = _storage.read('isLoggedIn') ?? false;
   }
 
-  void setFirstTimeDone(){
+  void setFirstTimeDone() {
     _isFisrtTime.value = false;
     _storage.write('isFirstTime', false);
   }
@@ -57,18 +57,18 @@ class AuthController extends GetxController{
 
     try {
       final result = await _login(email, password);
-      
+
       if (result['success']) {
         final data = result['data'];
-        
+
         // Store user data and token
         _storage.write('user', data['user']);
         _storage.write('token', data['token']);
         _storage.write('isLoggedIn', true);
-        
+
         _isLoggedIn.value = true;
         _isLoading.value = false;
-        
+
         // Cập nhật token và fetch notifications
         final notificationController = Get.find<NotificationController>();
         notificationController.setToken(data['token']);
@@ -76,21 +76,23 @@ class AuthController extends GetxController{
 
         // Hiển thị thông báo thành công
         showSuccessMessage('Đăng nhập thành công! Chào mừng bạn quay trở lại.');
-        
+
         return true;
       } else {
         final data = result['data'];
         final statusCode = result['statusCode'];
-        
+
         // Xử lý các trường hợp lỗi cụ thể
         if (statusCode == 400) {
-          _errorMessage.value = 'Email hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.';
+          _errorMessage.value =
+              'Email hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.';
         } else if (statusCode == 404) {
           _errorMessage.value = 'Không tìm thấy tài khoản với email này.';
         } else if (statusCode == 500) {
           _errorMessage.value = 'Lỗi server. Vui lòng thử lại sau.';
         } else if (statusCode == 0) {
-          _errorMessage.value = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+          _errorMessage.value =
+              'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
         } else if (data != null && data['message'] != null) {
           _errorMessage.value = data['message'];
         } else if (result['error'] != null) {
@@ -98,7 +100,7 @@ class AuthController extends GetxController{
         } else {
           _errorMessage.value = 'Đăng nhập thất bại. Vui lòng thử lại.';
         }
-        
+
         _isLoading.value = false;
         return false;
       }
@@ -112,14 +114,13 @@ class AuthController extends GetxController{
   // Login API method
   Future<Map<String, dynamic>> _login(String email, String password) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/auth/dangnhap'),
-        headers: _headers,
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/auth/dangnhap'),
+            headers: _headers,
+            body: jsonEncode({'email': email, 'password': password}),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         return {
@@ -146,26 +147,24 @@ class AuthController extends GetxController{
     } on http.ClientException {
       return {
         'success': false,
-        'error': 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
+        'error':
+            'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
         'statusCode': 0,
       };
     } catch (e) {
       String errorMessage = 'Lỗi kết nối: $e';
-      
+
       // Kiểm tra loại lỗi cụ thể
-      if (e.toString().contains('SocketException') || 
+      if (e.toString().contains('SocketException') ||
           e.toString().contains('Connection refused') ||
           e.toString().contains('Failed host lookup')) {
-        errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+        errorMessage =
+            'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
       } else if (e.toString().contains('TimeoutException')) {
         errorMessage = 'Kết nối bị timeout. Vui lòng thử lại.';
       }
-      
-      return {
-        'success': false,
-        'error': errorMessage,
-        'statusCode': 0,
-      };
+
+      return {'success': false, 'error': errorMessage, 'statusCode': 0};
     }
   }
 
@@ -187,41 +186,50 @@ class AuthController extends GetxController{
     }
   }
 
-  Future<bool> registerWithApi(String name, String email, String password) async {
+  Future<bool> registerWithApi(
+    String name,
+    String email,
+    String password,
+  ) async {
     _isLoading.value = true;
     _errorMessage.value = '';
 
     try {
       final result = await _register(name, email, password);
-      
+
       if (result['success']) {
         final data = result['data'];
-        
+
         // Store user data and token
         _storage.write('user', data['user']);
         _storage.write('token', data['token']);
         _storage.write('isLoggedIn', true);
-        
+
         _isLoggedIn.value = true;
         _isLoading.value = false;
-        
+
         // Hiển thị thông báo thành công
-        showSuccessMessage('Đăng ký thành công! Chào mừng bạn đến với ứng dụng.');
-        
+        showSuccessMessage(
+          'Đăng ký thành công! Chào mừng bạn đến với ứng dụng.',
+        );
+
         return true;
       } else {
         final data = result['data'];
         final statusCode = result['statusCode'];
-        
+
         // Xử lý các trường hợp lỗi cụ thể cho đăng ký
         if (statusCode == 400) {
-          _errorMessage.value = 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.';
+          _errorMessage.value =
+              'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.';
         } else if (statusCode == 409) {
-          _errorMessage.value = 'Email đã tồn tại. Vui lòng sử dụng email khác.';
+          _errorMessage.value =
+              'Email đã tồn tại. Vui lòng sử dụng email khác.';
         } else if (statusCode == 500) {
           _errorMessage.value = 'Lỗi server. Vui lòng thử lại sau.';
         } else if (statusCode == 0) {
-          _errorMessage.value = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+          _errorMessage.value =
+              'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
         } else if (data != null && data['message'] != null) {
           _errorMessage.value = data['message'];
         } else if (result['error'] != null) {
@@ -229,7 +237,7 @@ class AuthController extends GetxController{
         } else {
           _errorMessage.value = 'Đăng ký thất bại. Vui lòng thử lại.';
         }
-        
+
         _isLoading.value = false;
         return false;
       }
@@ -241,17 +249,23 @@ class AuthController extends GetxController{
   }
 
   // Register API method
-  Future<Map<String, dynamic>> _register(String name, String email, String password) async {
+  Future<Map<String, dynamic>> _register(
+    String name,
+    String email,
+    String password,
+  ) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/auth/dangky'),
-        headers: _headers,
-        body: jsonEncode({
-          'name': name,
-          'email': email,
-          'password': password,
-        }),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/auth/dangky'),
+            headers: _headers,
+            body: jsonEncode({
+              'name': name,
+              'email': email,
+              'password': password,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 201) {
         return {
@@ -272,32 +286,33 @@ class AuthController extends GetxController{
           'success': false,
           'data': errorData,
           'statusCode': response.statusCode,
-          'error': _getRegisterErrorMessage(response.statusCode, errorData['message']),
+          'error': _getRegisterErrorMessage(
+            response.statusCode,
+            errorData['message'],
+          ),
         };
       }
-    } on http.ClientException  {
+    } on http.ClientException {
       return {
         'success': false,
-        'error': 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
+        'error':
+            'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.',
         'statusCode': 0,
       };
     } catch (e) {
       String errorMessage = 'Lỗi kết nối: $e';
-      
+
       // Kiểm tra loại lỗi cụ thể
-      if (e.toString().contains('SocketException') || 
+      if (e.toString().contains('SocketException') ||
           e.toString().contains('Connection refused') ||
           e.toString().contains('Failed host lookup')) {
-        errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+        errorMessage =
+            'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
       } else if (e.toString().contains('TimeoutException')) {
         errorMessage = 'Kết nối bị timeout. Vui lòng thử lại.';
       }
-      
-      return {
-        'success': false,
-        'error': errorMessage,
-        'statusCode': 0,
-      };
+
+      return {'success': false, 'error': errorMessage, 'statusCode': 0};
     }
   }
 
@@ -317,12 +332,12 @@ class AuthController extends GetxController{
     }
   }
 
-  void login(){
+  void login() {
     _isLoggedIn.value = true;
     _storage.write('isLoggedIn', true);
   }
-  
-  void logout(){
+
+  void logout() {
     _isLoggedIn.value = false;
     _storage.write('isLoggedIn', false);
     _storage.remove('user');
@@ -370,15 +385,11 @@ class AuthController extends GetxController{
   // Test connection method
   Future<Map<String, dynamic>> _testConnection() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/'),
-        headers: _headers,
-      ).timeout(const Duration(seconds: 5));
+      final response = await http
+          .get(Uri.parse('$baseUrl/'), headers: _headers)
+          .timeout(const Duration(seconds: 5));
 
-      return {
-        'success': true,
-        'statusCode': response.statusCode,
-      };
+      return {'success': true, 'statusCode': response.statusCode};
     } catch (e) {
       return {
         'success': false,
@@ -402,16 +413,15 @@ class AuthController extends GetxController{
         'statusCode': response.statusCode,
       };
     } catch (e) {
-      return {
-        'success': false,
-        'error': 'Lỗi kết nối: $e',
-        'statusCode': 0,
-      };
+      return {'success': false, 'error': 'Lỗi kết nối: $e', 'statusCode': 0};
     }
   }
 
   // Upload avatar method
-  Future<Map<String, dynamic>> _uploadAvatar(String token, String filePath) async {
+  Future<Map<String, dynamic>> _uploadAvatar(
+    String token,
+    String filePath,
+  ) async {
     try {
       var request = http.MultipartRequest(
         'POST',
@@ -437,11 +447,7 @@ class AuthController extends GetxController{
         'statusCode': response.statusCode,
       };
     } catch (e) {
-      return {
-        'success': false,
-        'error': 'Lỗi kết nối: $e',
-        'statusCode': 0,
-      };
+      return {'success': false, 'error': 'Lỗi kết nối: $e', 'statusCode': 0};
     }
   }
 
@@ -459,7 +465,7 @@ class AuthController extends GetxController{
   void showSuccessMessage(String message) {
     // Assuming SuccessDialog is defined elsewhere or needs to be imported
     // For now, we'll just print the message
-    print('Success: $message'); 
+    print('Success: $message');
   }
 
   // Lấy lại profile user từ server và cập nhật local storage
@@ -499,7 +505,7 @@ class AuthController extends GetxController{
   Future<bool> refreshUserData() async {
     final token = getToken();
     if (token == null) return false;
-    
+
     final result = await _getProfile(token);
     if (result['success']) {
       final user = result['data'];
@@ -519,7 +525,8 @@ class AuthController extends GetxController{
   // Set default avatar for user
   Future<void> setDefaultAvatar() async {
     final currentUser = getCurrentUser();
-    if (currentUser != null && (currentUser['image'] == null || currentUser['image'].isEmpty)) {
+    if (currentUser != null &&
+        (currentUser['image'] == null || currentUser['image'].isEmpty)) {
       // Set a default avatar URL or use local asset
       currentUser['image'] = null; // Let UI handle default avatar
       _storage.write('user', currentUser);
@@ -552,7 +559,10 @@ class AuthController extends GetxController{
         _storage.write('user', data['user']);
         return {'success': true, 'user': data['user']};
       } else {
-        return {'success': false, 'message': data['message'] ?? 'Cập nhật thất bại'};
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Cập nhật thất bại',
+        };
       }
     } catch (e) {
       return {'success': false, 'message': 'Lỗi: $e'};
@@ -564,11 +574,13 @@ class AuthController extends GetxController{
     _isLoading.value = true;
     _errorMessage.value = '';
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/auth/forgot-password'),
-        headers: _headers,
-        body: jsonEncode({'email': email}),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/auth/forgot-password'),
+            headers: _headers,
+            body: jsonEncode({'email': email}),
+          )
+          .timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         showSuccessMessage('Đã gửi email đặt lại mật khẩu!');
         _isLoading.value = false;
@@ -587,19 +599,25 @@ class AuthController extends GetxController{
   }
 
   // Reset Password API
-  Future<bool> resetPassword(String email, String newPassword, String resetToken) async {
+  Future<bool> resetPassword(
+    String email,
+    String newPassword,
+    String resetToken,
+  ) async {
     _isLoading.value = true;
     _errorMessage.value = '';
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/auth/reset-password'),
-        headers: _headers,
-        body: jsonEncode({
-          'email': email,
-          'newPassword': newPassword,
-          'otp': resetToken, 
-        }),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/auth/reset-password'),
+            headers: _headers,
+            body: jsonEncode({
+              'email': email,
+              'newPassword': newPassword,
+              'otp': resetToken,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         showSuccessMessage('Đặt lại mật khẩu thành công!');
         _isLoading.value = false;
@@ -607,6 +625,168 @@ class AuthController extends GetxController{
       } else {
         final data = jsonDecode(response.body);
         _errorMessage.value = data['message'] ?? 'Đặt lại mật khẩu thất bại.';
+        _isLoading.value = false;
+        return false;
+      }
+    } catch (e) {
+      _errorMessage.value = 'Lỗi kết nối: $e';
+      _isLoading.value = false;
+      return false;
+    }
+  }
+
+  // ===== OTP METHODS =====
+
+  // Gửi OTP cho đăng nhập
+  Future<bool> sendLoginOtp(String email) async {
+    _isLoading.value = true;
+    _errorMessage.value = '';
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/auth/send-login-otp'),
+            headers: _headers,
+            body: jsonEncode({'email': email}),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        showSuccessMessage('Đã gửi mã OTP đến email của bạn!');
+        _isLoading.value = false;
+        return true;
+      } else {
+        final data = jsonDecode(response.body);
+        _errorMessage.value = data['message'] ?? 'Gửi OTP thất bại.';
+        _isLoading.value = false;
+        return false;
+      }
+    } catch (e) {
+      _errorMessage.value = 'Lỗi kết nối: $e';
+      _isLoading.value = false;
+      return false;
+    }
+  }
+
+  // Xác thực OTP đăng nhập
+  Future<bool> verifyLoginOtp(String email, String otp) async {
+    _isLoading.value = true;
+    _errorMessage.value = '';
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/auth/verify-login-otp'),
+            headers: _headers,
+            body: jsonEncode({'email': email, 'otp': otp}),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // Store user data and token
+        _storage.write('user', data['user']);
+        _storage.write('token', data['token']);
+        _storage.write('isLoggedIn', true);
+
+        _isLoggedIn.value = true;
+        _isLoading.value = false;
+
+        // Cập nhật token và fetch notifications
+        final notificationController = Get.find<NotificationController>();
+        notificationController.setToken(data['token']);
+        await notificationController.fetchNotifications();
+
+        showSuccessMessage('Đăng nhập thành công! Chào mừng bạn quay trở lại.');
+        return true;
+      } else {
+        final data = jsonDecode(response.body);
+        _errorMessage.value = data['message'] ?? 'Xác thực OTP thất bại.';
+        _isLoading.value = false;
+        return false;
+      }
+    } catch (e) {
+      _errorMessage.value = 'Lỗi kết nối: $e';
+      _isLoading.value = false;
+      return false;
+    }
+  }
+
+  // Gửi OTP cho đăng ký
+  Future<bool> sendSignupOtp(String email) async {
+    _isLoading.value = true;
+    _errorMessage.value = '';
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/auth/send-signup-otp'),
+            headers: _headers,
+            body: jsonEncode({'email': email}),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        showSuccessMessage('Đã gửi mã OTP đến email của bạn!');
+        _isLoading.value = false;
+        return true;
+      } else {
+        final data = jsonDecode(response.body);
+        _errorMessage.value = data['message'] ?? 'Gửi OTP thất bại.';
+        _isLoading.value = false;
+        return false;
+      }
+    } catch (e) {
+      _errorMessage.value = 'Lỗi kết nối: $e';
+      _isLoading.value = false;
+      return false;
+    }
+  }
+
+  // Đăng ký với OTP
+  Future<bool> registerWithOtp(
+    String name,
+    String email,
+    String password,
+    String otp,
+  ) async {
+    _isLoading.value = true;
+    _errorMessage.value = '';
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/auth/register-with-otp'),
+            headers: _headers,
+            body: jsonEncode({
+              'name': name,
+              'email': email,
+              'password': password,
+              'otp': otp,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+
+        // Store user data and token
+        _storage.write('user', data['user']);
+        _storage.write('token', data['token']);
+        _storage.write('isLoggedIn', true);
+
+        _isLoggedIn.value = true;
+        _isLoading.value = false;
+
+        // Cập nhật token và fetch notifications
+        final notificationController = Get.find<NotificationController>();
+        notificationController.setToken(data['token']);
+        await notificationController.fetchNotifications();
+
+        showSuccessMessage(
+          'Đăng ký thành công! Chào mừng bạn đến với ứng dụng.',
+        );
+        return true;
+      } else {
+        final data = jsonDecode(response.body);
+        _errorMessage.value = data['message'] ?? 'Đăng ký thất bại.';
         _isLoading.value = false;
         return false;
       }

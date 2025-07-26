@@ -484,3 +484,271 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ===== OTP AUTHENTICATION FUNCTIONS =====
+
+// Gửi OTP cho đăng nhập
+export const sendLoginOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Không tìm thấy người dùng với email này' 
+      });
+    }
+    
+    // Tạo OTP 6 số
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordOTP = otp; // Tạm thời dùng field này
+    user.resetPasswordOTPExpires = Date.now() + 10 * 60 * 1000; // 10 phút
+    await user.save();
+    
+    // Gửi email
+    await sendMail({
+      to: user.email,
+      subject: 'Mã OTP đăng nhập',
+      text: `Mã OTP đăng nhập của bạn là: ${otp}`,
+      html: `<p>Mã OTP đăng nhập của bạn là: <b>${otp}</b></p><p>OTP có hiệu lực trong 10 phút.</p>`
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Đã gửi OTP về email!' 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
+  }
+};
+
+// Xác thực OTP đăng nhập
+export const verifyLoginOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Không tìm thấy người dùng với email này' 
+      });
+    }
+    
+    if (!user.resetPasswordOTP || !user.resetPasswordOTPExpires) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Bạn chưa yêu cầu OTP hoặc OTP đã hết hạn' 
+      });
+    }
+    
+    if (user.resetPasswordOTP !== otp) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'OTP không đúng' 
+      });
+    }
+    
+    if (user.resetPasswordOTPExpires < Date.now()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'OTP đã hết hạn' 
+      });
+    }
+    
+    // Xóa OTP sau khi xác thực thành công
+    user.resetPasswordOTP = null;
+    user.resetPasswordOTPExpires = null;
+    await user.save();
+    
+    // Tạo JWT token
+    const payload = {
+      user: {
+        _id: user._id,
+        role: user.role,
+      },
+    };
+
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "40h",
+      },
+      async (err, token) => {
+        if (err) {
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Lỗi tạo token' 
+          });
+        }
+        
+        // Tạo notification đăng nhập thành công
+        await Notification.create({
+          user: user._id,
+          title: "Đăng nhập thành công",
+          message: "Chào mừng bạn quay trở lại!",
+        });
+        
+        res.json({
+          success: true,
+          user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            image: sanitizeUserImage(user),
+          },
+          token,
+          message: "Đăng nhập thành công",
+        });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
+  }
+};
+
+// Gửi OTP cho đăng ký
+export const sendSignupOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Kiểm tra email đã tồn tại chưa
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email đã được sử dụng' 
+      });
+    }
+    
+    // Tạo OTP 6 số
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Lưu OTP vào user tạm thời
+    const tempUser = new User({
+      email,
+      signupOTP: otp,
+      signupOTPExpires: Date.now() + 10 * 60 * 1000, // 10 phút
+      name: 'temp', // Tạm thời
+      password: 'temp', // Tạm thời
+      isTemporary: true
+    });
+    await tempUser.save();
+    
+    // Gửi email
+    await sendMail({
+      to: email,
+      subject: 'Mã OTP đăng ký',
+      text: `Mã OTP đăng ký của bạn là: ${otp}`,
+      html: `<p>Mã OTP đăng ký của bạn là: <b>${otp}</b></p><p>OTP có hiệu lực trong 10 phút.</p>`
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Đã gửi OTP về email!' 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
+  }
+};
+
+// Đăng ký với OTP
+export const registerWithOtp = async (req, res) => {
+  try {
+    const { name, email, password, otp } = req.body;
+    
+    // Tìm user tạm thời với OTP
+    const tempUser = await User.findOne({ 
+      email, 
+      signupOTP: otp,
+      signupOTPExpires: { $gt: Date.now() },
+      isTemporary: true
+    });
+    
+    if (!tempUser) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'OTP không đúng hoặc đã hết hạn' 
+      });
+    }
+    
+    // Kiểm tra email đã tồn tại chưa (user thật)
+    const existingUser = await User.findOne({ 
+      email, 
+      isTemporary: { $ne: true } // Không phải user tạm
+    });
+    if (existingUser) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email đã được sử dụng' 
+      });
+    }
+    
+    // Cập nhật thông tin user
+    tempUser.name = name;
+    tempUser.password = password;
+    tempUser.signupOTP = null;
+    tempUser.signupOTPExpires = null;
+    tempUser.isTemporary = false;
+    await tempUser.save();
+    
+    // Tạo JWT token
+    const payload = {
+      user: {
+        _id: tempUser._id,
+        role: tempUser.role,
+      },
+    };
+
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "40h",
+      },
+      async (err, token) => {
+        if (err) {
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Lỗi tạo token' 
+          });
+        }
+        
+        // Tạo notification đăng ký thành công
+        await Notification.create({
+          user: tempUser._id,
+          title: "Đăng ký thành công",
+          message: "Chào mừng bạn đến với ứng dụng!",
+        });
+        
+        res.status(201).json({
+          success: true,
+          user: {
+            _id: tempUser._id,
+            name: tempUser.name,
+            email: tempUser.email,
+            role: tempUser.role,
+            image: sanitizeUserImage(tempUser),
+          },
+          token,
+          message: "Đăng ký thành công",
+        });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
+  }
+};

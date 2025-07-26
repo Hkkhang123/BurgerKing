@@ -232,8 +232,11 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
       );
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      backgroundColor:
+          isDark ? Colors.grey[900] : const Color.fromARGB(255, 255, 255, 255),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 16),
@@ -244,13 +247,16 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? Colors.grey[800] : Colors.white,
                   borderRadius: BorderRadius.circular(
                     0,
                   ), // hoặc giữ radius nếu thích bo góc
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color:
+                          isDark
+                              ? Colors.black.withOpacity(0.3)
+                              : Colors.black.withOpacity(0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -272,17 +278,20 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       'Thanh toán đã hoàn tất',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'Cảm ơn đã thanh toán',
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[300] : Colors.grey,
+                      ),
                     ),
                   ],
                 ),
@@ -318,19 +327,27 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
   }
 
   Widget _buildOrderInfoCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? Colors.grey[800] : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.grey[600]! : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Thông tin đơn hàng',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black,
+            ),
           ),
           const SizedBox(height: 12),
           _buildFlexibleInfoRow('Mã đơn hàng', orderCode),
@@ -342,25 +359,28 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
 
   Widget _buildShippingInfoCard(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final data = widget.cartData ?? widget.shippingAddress ?? {};
 
     return Container(
       width: screenWidth,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? Colors.grey[800] : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.grey[600]! : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Thông tin giao hàng',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 0, 0, 0),
+              color: isDark ? Colors.white : Colors.black,
             ),
           ),
           const SizedBox(height: 12),
@@ -377,6 +397,8 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
   }
 
   Widget _buildFlexibleInfoRow(String title, String value) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -384,17 +406,20 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
         children: [
           Text(
             '$title: ',
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: isDark ? Colors.grey[300] : Colors.black87,
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 0, 45, 113),
+                color:
+                    isDark
+                        ? Theme.of(context).primaryColor
+                        : const Color.fromARGB(255, 0, 45, 113),
               ),
               softWrap: true,
               maxLines: 3, // tự động xuống dòng, tối đa 3 dòng
@@ -408,24 +433,27 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
 
   Widget _buildOrderItemsCard(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       width: screenWidth,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? Colors.grey[800] : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.grey[600]! : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Sản phẩm đã đặt',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 0, 0, 0),
+              color: isDark ? Colors.white : Colors.black,
             ),
           ),
           const SizedBox(height: 12),
@@ -433,20 +461,30 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
           // Danh sách sản phẩm
           ...orderItems.map((item) => _buildOrderItem(item)),
 
-          const Divider(height: 32),
+          Divider(
+            height: 32,
+            color: isDark ? Colors.grey[600] : Colors.grey[300],
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Tổng tiền:',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
               ),
               Text(
                 currencyFormatter.format(totalAmount), // ✅ Đúng,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 0, 45, 113),
+                  color:
+                      isDark
+                          ? Theme.of(context).primaryColor
+                          : const Color.fromARGB(255, 0, 45, 113),
                 ),
               ),
             ],
@@ -458,24 +496,27 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
 
   Widget _buildPaymentInfoCard(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       width: screenWidth,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? Colors.grey[800] : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isDark ? Colors.grey[600]! : Colors.grey.shade200,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Thông tin thanh toán',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 0, 0, 0), // tím đậm
+              color: isDark ? Colors.white : Colors.black,
             ),
           ),
           const SizedBox(height: 12),
@@ -485,7 +526,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
             isPaymentSuccess ? 'Đã thanh toán' : 'Chờ thanh toán',
             statusColor:
                 isPaymentSuccess
-                    ? Color.fromARGB(255, 0, 45, 113)
+                    ? Theme.of(context).primaryColor
                     : Colors.orange,
           ),
         ],
@@ -494,11 +535,13 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
   }
 
   Widget _buildOrderItem(Map<String, dynamic> item) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: isDark ? Colors.grey[700] : Colors.grey[50],
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -516,10 +559,13 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: isDark ? Colors.grey[600] : Colors.grey[300],
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.image, color: Colors.grey),
+                    child: Icon(
+                      Icons.image,
+                      color: isDark ? Colors.grey[400] : Colors.grey,
+                    ),
                   );
                 },
               ),
@@ -529,10 +575,13 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: isDark ? Colors.grey[600] : Colors.grey[300],
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.image, color: Colors.grey),
+              child: Icon(
+                Icons.image,
+                color: isDark ? Colors.grey[400] : Colors.grey,
+              ),
             ),
           const SizedBox(width: 12),
           Expanded(
@@ -541,25 +590,32 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
               children: [
                 Text(
                   item['name'] ?? '',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Số lượng: ${item['quantity'] ?? 1}',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[300] : Colors.grey[600],
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
           ),
           Text(
             currencyFormatter.format(item['price']),
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14,
-              color: Color.fromARGB(255, 0, 45, 113),
+              color:
+                  isDark
+                      ? Theme.of(context).primaryColor
+                      : const Color.fromARGB(255, 0, 45, 113),
             ),
           ),
         ],
@@ -568,6 +624,8 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
   }
 
   Widget _buildInfoRow(String label, String value, {Color? statusColor}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -575,24 +633,16 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
         children: [
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color.fromARGB(255, 0, 0, 0), // label cũng xanh dương đậm
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: isDark ? Colors.grey[300] : Colors.grey[700],
             ),
           ),
           Text(
             value,
             style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color:
-                  statusColor ??
-                  Color.fromARGB(
-                    255,
-                    0,
-                    45,
-                    113,
-                  ), // value cũng xanh dương trừ khi có màu riêng
+              fontWeight: FontWeight.w600,
+              color: statusColor ?? (isDark ? Colors.white : Colors.black),
             ),
           ),
         ],
@@ -616,7 +666,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color.fromRGBO(255, 124, 31, 1),
+              backgroundColor: Theme.of(context).primaryColor,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(

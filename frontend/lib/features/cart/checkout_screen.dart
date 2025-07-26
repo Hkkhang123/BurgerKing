@@ -122,9 +122,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
     final double finalPrice = widget.totalPrice - discountAmount;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Checkout'), centerTitle: true),
-      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('Checkout'),
+        centerTitle: true,
+        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black,
+      ),
+      backgroundColor: isDark ? Colors.grey[900] : Colors.white,
       body: SingleChildScrollView(
         padding: EdgeInsets.all(screenWidth * 0.04),
         child: Column(
@@ -135,7 +142,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               elevation: 2,
-              color: Colors.white,
+              color: isDark ? Colors.grey[800] : Colors.white,
               child: Column(
                 children:
                     widget.cartProducts
@@ -149,10 +156,32 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                       height: screenWidth * 0.1,
                                       fit: BoxFit.cover,
                                     )
-                                    : Icon(Icons.image),
-                            title: Text(e['name'] ?? ''),
-                            subtitle: Text('Số lượng: ${e['quantity'] ?? 1}'),
-                            trailing: Text('${e['price'] ?? 0} đ'),
+                                    : Icon(
+                                      Icons.image,
+                                      color:
+                                          isDark ? Colors.white : Colors.grey,
+                                    ),
+                            title: Text(
+                              e['name'] ?? '',
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Số lượng: ${e['quantity'] ?? 1}',
+                              style: TextStyle(
+                                color:
+                                    isDark
+                                        ? Colors.grey[300]
+                                        : Colors.grey[600],
+                              ),
+                            ),
+                            trailing: Text(
+                              '${e['price'] ?? 0} đ',
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                            ),
                           ),
                         )
                         .toList(),
@@ -165,20 +194,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               elevation: 2,
-              color: Colors.white,
+              color: isDark ? Colors.grey[800] : Colors.white,
               child: ListTile(
-                leading: const Icon(Icons.location_on, color: Colors.red),
-                title: const Text(
+                leading: Icon(Icons.location_on, color: Colors.red),
+                title: Text(
                   'Địa chỉ giao hàng',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
                 ),
                 subtitle: Text(
                   _addressController.text.isNotEmpty
                       ? _addressController.text
                       : 'Chưa có địa chỉ',
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[300] : Colors.grey[600],
+                  ),
                 ),
                 trailing: IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.orange),
+                  icon: Icon(Icons.edit, color: Theme.of(context).primaryColor),
                   onPressed: () async {
                     await _showSelectAddressDialog(context);
                   },
@@ -193,20 +228,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               elevation: 2,
-              color: Colors.white,
+              color: isDark ? Colors.grey[800] : Colors.white,
               child: ListTile(
-                leading: const Icon(Icons.phone, color: Colors.green),
-                title: const Text(
+                leading: Icon(Icons.phone, color: Colors.green),
+                title: Text(
                   'Số điện thoại',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
                 ),
                 subtitle: Text(
                   _phoneController.text.isNotEmpty
                       ? _phoneController.text
                       : 'Chưa có số điện thoại',
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[300] : Colors.grey[600],
+                  ),
                 ),
                 trailing: IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.orange),
+                  icon: Icon(Icons.edit, color: Theme.of(context).primaryColor),
                   onPressed: () {
                     final tempPhoneController = TextEditingController(
                       text: _phoneController.text,
@@ -215,7 +256,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       context: context,
                       builder:
                           (context) => AlertDialog(
-                            title: const Text('Chỉnh sửa số điện thoại'),
+                            backgroundColor:
+                                isDark ? Colors.grey[800] : Colors.white,
+                            title: Text(
+                              'Chỉnh sửa số điện thoại',
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                            ),
                             content: TextField(
                               controller: tempPhoneController,
                               keyboardType: TextInputType.phone,
@@ -232,7 +280,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.of(context).pop(),
-                                child: const Text('Hủy'),
+                                child: Text(
+                                  'Hủy',
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white : Colors.black,
+                                  ),
+                                ),
                               ),
                               ElevatedButton(
                                 onPressed: () {
@@ -256,7 +309,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     );
                                   }
                                 },
-                                child: const Text('Lưu'),
+                                child: Text(
+                                  'Lưu',
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white : Colors.black,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -272,7 +330,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               elevation: 2,
-              color: Colors.white,
+              color: isDark ? Colors.grey[800] : Colors.white,
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: screenWidth * 0.02),
                 child: Column(
@@ -285,7 +343,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                       child: Text(
                         'Phương thức thanh toán',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
                       ),
                     ),
                     RadioListTile<PaymentMethod>(
@@ -293,7 +354,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       groupValue: _selectedMethod,
                       onChanged:
                           (value) => setState(() => _selectedMethod = value!),
-                      title: Text('Thanh toán khi nhận hàng'),
+                      title: Text(
+                        'Thanh toán khi nhận hàng',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
                       secondary: Icon(Icons.money, color: Colors.green),
                     ),
                     RadioListTile<PaymentMethod>(
@@ -301,7 +367,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       groupValue: _selectedMethod,
                       onChanged:
                           (value) => setState(() => _selectedMethod = value!),
-                      title: Text('Thanh toán bằng MoMo'),
+                      title: Text(
+                        'Thanh toán bằng MoMo',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                      ),
                       secondary: SizedBox(
                         width: 32,
                         height: 32,
@@ -318,7 +389,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               elevation: 2,
-              color: Colors.white,
+              color: isDark ? Colors.grey[800] : Colors.white,
               child: Padding(
                 padding: EdgeInsets.all(screenWidth * 0.04),
                 child: Column(
@@ -341,7 +412,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       'Phí vận chuyển',
                       '${currencyFormat.format(shippingFee)} đ',
                     ),
-                    Divider(),
+                    Divider(
+                      color: isDark ? Colors.grey[600] : Colors.grey[300],
+                    ),
                     _summaryRow(
                       'Tổng thanh toán',
                       '${currencyFormat.format(finalPrice + shippingFee)} đ',
@@ -367,7 +440,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           height: 50,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
+              backgroundColor: Theme.of(context).primaryColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -508,6 +581,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _summaryRow(String label, String value, {bool isTotal = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -517,14 +592,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             label,
             style: TextStyle(
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              color: isTotal ? Colors.orange : Colors.black,
+              color:
+                  isTotal
+                      ? Theme.of(context).primaryColor
+                      : (isDark ? Colors.white : Colors.black),
             ),
           ),
           Text(
             value,
             style: TextStyle(
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              color: isTotal ? Colors.orange : Colors.black,
+              color:
+                  isTotal
+                      ? Theme.of(context).primaryColor
+                      : (isDark ? Colors.white : Colors.black),
             ),
           ),
         ],
