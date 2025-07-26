@@ -720,8 +720,8 @@ export const registerWithOtp = async (req, res) => {
     // Tạo JWT token
     const payload = {
       user: {
-        _id: tempUser._id,
-        role: tempUser.role,
+        _id: newUser._id,
+        role: newUser.role,
       },
     };
 
@@ -741,7 +741,7 @@ export const registerWithOtp = async (req, res) => {
         
         // Tạo notification đăng ký thành công
         await Notification.create({
-          user: tempUser._id,
+          user: newUser._id,
           title: "Đăng ký thành công",
           message: "Chào mừng bạn đến với ứng dụng!",
         });
@@ -749,11 +749,11 @@ export const registerWithOtp = async (req, res) => {
         res.status(201).json({
           success: true,
           user: {
-            _id: tempUser._id,
-            name: tempUser.name,
-            email: tempUser.email,
-            role: tempUser.role,
-            image: sanitizeUserImage(tempUser),
+            _id: newUser._id,
+            name: newUser.name,
+            email: newUser.email,
+            role: newUser.role,
+            image: sanitizeUserImage(newUser),
           },
           token,
           message: "Đăng ký thành công",
