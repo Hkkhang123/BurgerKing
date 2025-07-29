@@ -27,11 +27,12 @@ app.use(express.json());
 // CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? [
-        "https://burgerking-j92p.onrender.com",
-        "https://burger-king-omega-three.vercel.app"
-      ]
-    : true, // Allow all origins in development
+  ? [
+      "https://burgerking-j92p.onrender.com",
+      "https://burger-king-omega-three.vercel.app",
+      "http://localhost:5173" // Thêm dòng này để cho phép truy cập từ local
+    ]
+  : true, // Allow all origins in development
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"]
