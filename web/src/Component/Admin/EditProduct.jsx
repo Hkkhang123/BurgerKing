@@ -121,17 +121,6 @@ useEffect(() => {
         </div>
 
         <div className="mb-6">
-          <label className="block font-semibold mb-2">Số lượng tồn kho</label>
-          <input
-            type="number"
-            name="countInStock"
-            value={productData.countInStock}
-            className="w-full border border-gray-300 rounded-md p-2"
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="mb-6">
           <label className="block font-semibold mb-2">SKU</label>
           <input
             type="text"
@@ -139,38 +128,6 @@ useEffect(() => {
             value={productData.sku}
             className="w-full border border-gray-300 rounded-md p-2"
             onChange={handleChange}
-          />
-        </div>
-
-        <div className="mb-6">
-          <label className="block font-semibold mb-2">Kich cỡ</label>
-          <input
-            type="text"
-            name="size"
-            value={productData.size.join(", ")}
-            className="w-full border border-gray-300 rounded-md p-2"
-            onChange={(e) =>
-              setProductData({
-                ...productData,
-                size: e.target.value.split(",").map((item) => item.trim()),
-              })
-            }
-          />
-        </div>
-
-        <div className="mb-6">
-          <label className="block font-semibold mb-2">Màu sắc</label>
-          <input
-            type="text"
-            name="color"
-            value={productData.colors.join(", ")}
-            className="w-full border border-gray-300 rounded-md p-2"
-            onChange={(e) =>
-              setProductData({
-                ...productData,
-                colors: e.target.value.split(",").map((item) => item.trim()),
-              })
-            }
           />
         </div>
 
