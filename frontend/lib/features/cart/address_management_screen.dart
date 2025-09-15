@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:client/core/utils/api_service.dart';
 import 'package:get/get.dart';
 import 'package:client/core/services/auth_controller.dart';
+import 'address_selector.dart';
 
 class AddressManagementScreen extends StatefulWidget {
   const AddressManagementScreen({Key? key}) : super(key: key);
@@ -51,10 +52,9 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
     final _formKey = GlobalKey<FormState>();
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
-    final streetController = TextEditingController();
-    final wardController = TextEditingController();
-    final districtController = TextEditingController();
-    final cityController = TextEditingController();
+    final addressController =
+        TextEditingController(); // hiển thị địa chỉ đầy đủ
+    String street = '', ward = '', district = '', city = '';
     bool isDefault = false;
 
     showDialog(
@@ -88,39 +88,29 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                                   : null,
                     ),
                     TextFormField(
-                      controller: streetController,
+                      controller: addressController,
                       decoration: const InputDecoration(
-                        labelText: 'Số nhà, tên đường',
+                        labelText: 'Địa chỉ đầy đủ',
                       ),
+                      readOnly: true,
+                      onTap: () async {
+                        final result = await showDialog<Map<String, String>>(
+                          context: context,
+                          builder:
+                              (_) => AddressSelector(
+                                addressController: addressController,
+                              ),
+                        );
+
+                        if (result != null) {
+                          street = result['street'] ?? '';
+                          ward = result['ward'] ?? '';
+                          district = result['district'] ?? '';
+                          city = result['city'] ?? '';
+                        }
+                      },
                       validator:
-                          (v) => v == null || v.isEmpty ? 'Nhập địa chỉ' : null,
-                    ),
-                    TextFormField(
-                      controller: wardController,
-                      decoration: const InputDecoration(labelText: 'Phường/Xã'),
-                      validator:
-                          (v) =>
-                              v == null || v.isEmpty ? 'Nhập phường/xã' : null,
-                    ),
-                    TextFormField(
-                      controller: districtController,
-                      decoration: const InputDecoration(
-                        labelText: 'Quận/Huyện',
-                      ),
-                      validator:
-                          (v) =>
-                              v == null || v.isEmpty ? 'Nhập quận/huyện' : null,
-                    ),
-                    TextFormField(
-                      controller: cityController,
-                      decoration: const InputDecoration(
-                        labelText: 'Tỉnh/Thành phố',
-                      ),
-                      validator:
-                          (v) =>
-                              v == null || v.isEmpty
-                                  ? 'Nhập tỉnh/thành phố'
-                                  : null,
+                          (v) => v == null || v.isEmpty ? 'Chọn địa chỉ' : null,
                     ),
                     CheckboxListTile(
                       value: isDefault,
@@ -144,10 +134,10 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                       await ApiService.addAddress({
                         'name': nameController.text,
                         'phone': phoneController.text,
-                        'street': streetController.text,
-                        'ward': wardController.text,
-                        'district': districtController.text,
-                        'city': cityController.text,
+                        'street': street,
+                        'ward': ward,
+                        'district': district,
+                        'city': city,
                         'isDefault': isDefault,
                       }, token!);
                       Navigator.pop(context);
@@ -181,16 +171,32 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                 itemCount: addresses.length,
                 itemBuilder: (context, i) {
                   final addr = addresses[i];
+                  final fullAddress =
+                      addr['fullAddress'] ??
+                      '${addr['street'] ?? ''}, '
+                          '${addr['ward'] ?? ''}, '
+                          '${addr['district'] ?? ''}, '
+                          '${addr['city'] ?? ''}';
+
                   return Card(
                     margin: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 8,
                     ),
                     child: ListTile(
-                      title: Text('${addr['name']} - ${addr['phone']}'),
-                      subtitle: Text(
-                        '${addr['street']}, ${addr['ward']}, ${addr['district']}, ${addr['city']}' +
-                            (addr['isDefault'] == true ? ' (Mặc định)' : ''),
+                      title: Text(
+                        '${addr['name'] ?? ''} - ${addr['phone'] ?? ''}',
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(fullAddress),
+                          if (addr['isDefault'] == true)
+                            const Text(
+                              '(Mặc định)',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                        ],
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -224,6 +230,7 @@ class _AddressManagementScreenState extends State<AddressManagementScreen> {
                   );
                 },
               ),
+
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddAddressDialog,
         child: const Icon(Icons.add),
